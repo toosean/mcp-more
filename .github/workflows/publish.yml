@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 任何 tag 触发
+
+jobs:
+  make:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Make installer
+        run: npm run make
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ matrix.os }}
+          path: out/make  # Forge 默认输出目录
+
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: make  # 等待所有 make job 完成
+
+    permissions:
+      contents: write  # 允许写入 release 和上传文件
+    
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    steps:
+      
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set version variable
+        id: version
+        run: |
+          # Remove the v prefix, e.g. v1.0.0 -> 1.0.0
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version without v prefix: $VERSION"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: out/make
+          merge-multiple: true
+
+      - name: rename windows installer
+        run: |
+          mv "out/make/squirrel.windows/x64/mcp-more-${{ steps.version.outputs.version }} Setup.exe" \
+             "out/make/squirrel.windows/x64/mcp-more-${{ steps.version.outputs.version }}-Setup.exe"
+
+      - name: Generate yml
+        run: npm run generate-yml
+
+      - name: List out directory
+        run: tree -a out/
+
+      - name: Create release
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }}" \
+            --notes "create by github action" \
+            --draft
+
+      - name: Upload Windows installer
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            "out/make/squirrel.windows/x64/mcp-more-${{ steps.version.outputs.version }}-Setup.exe" \
+            --clobber
+
+      - name: Upload macOS zip
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            "out/make/zip/darwin/arm64/mcp-more-darwin-arm64-${{ steps.version.outputs.version }}.zip" \
+            --clobber
+
+      - name: Upload Debian package
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            "out/make/deb/x64/mcp-more_${{ steps.version.outputs.version }}_amd64.deb" \
+            --clobber
+
+      - name: Upload RPM package
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            "out/make/rpm/x64/mcp-more-${{ steps.version.outputs.version }}-1.x86_64.rpm" \
+            --clobber
+
+      - name: Upload latest.yml
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            "out/make/latest*.yml" \
+            --clobber

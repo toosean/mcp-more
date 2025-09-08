@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --primary-glow: 221.2 100% 70%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 262.1 83.3% 57.8%;
+    --accent-foreground: 210 40% 98%;
+    --accent-glow: 262.1 100% 75%;
+
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 98%), hsl(210 40% 96%));
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.15);
+    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.12);
+
+    --radius: 0.75rem;
+
+    /* Custom utilities */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --primary-glow: 221.2 100% 70%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 262.1 83.3% 57.8%;
+    --accent-foreground: 210 40% 98%;
+    --accent-glow: 262.1 100% 75%;
+
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    --gradient-card: linear-gradient(145deg, hsl(240 5.9% 10%), hsl(240 3.7% 15.9%));
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.15);
+    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.12);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font: 14px/1.5 "Helvetica Neue",Helvetica,Arial,"Microsoft Yahei","Hiragino Sans GB","Heiti SC","WenQuanYi Micro Hei",sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  /* 现代化滚动条样式 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background: hsl(var(--muted-foreground) / 0.7);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Firefox 滚动条样式 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  /* 悬浮时的滚动条样式优化 */
+  .scrollbar-hover:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.4);
+  }
+
+  .scrollbar-hover:hover::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.6);
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "warning": "警告",
+    "info": "信息"
+  },
+  "navigation": {
+    "market": "市场",
+    "installed": "已安装",
+    "settings": "设置"
+  },
+  "settings": {
+    "title": "设置",
+    "description": "配置您的 MCP Client 和包管理首选项",
+    "quickSetup": {
+      "title": "快速设置助手",
+      "description": "让我们自动为您配置 MCP Client 的最佳设置",
+      "detectClient": "检测本地 MCP Client",
+      "exportConfig": "导出配置",
+      "importConfig": "导入配置"
+    },
+    "general": {
+      "title": "通用设置",
+      "description": "管理通用应用程序首选项",
+      "autoStart": {
+        "label": "开机自启动",
+        "description": "在系统启动时自动启动应用程序"
+      },
+      "enableTelemetry": {
+        "label": "启用遥测",
+        "description": "通过分享使用数据帮助改进平台"
+      },
+      "theme": {
+        "label": "主题",
+        "description": "选择应用界面主题",
+        "light": "浅色",
+        "dark": "深色",
+        "system": "跟随系统"
+      },
+      "language": {
+        "label": "语言",
+        "description": "选择应用界面语言"
+      },
+      "minimizeOnStartup": {
+        "label": "启动时最小化",
+        "description": "应用启动时自动最小化到系统托盘"
+      },
+      "portNumber": {
+        "label": "端口号",
+        "description": "MCP Client 监听端口号"
+      }
+    },
+    "system": {
+      "title": "系统状态",
+      "description": "当前系统信息和诊断",
+      "version": "版本",
+      "status": "状态",
+      "uptime": "运行时间",
+      "memoryUsage": "内存使用",
+      "healthy": "健康",
+      "viewLogs": "查看详细日志"
+    },
+    "actions": {
+      "resetAll": "重置所有设置",
+      "saveAll": "保存所有设置",
+      "saving": "保存中..."
+    },
+    "messages": {
+      "saveSuccess": {
+        "title": "设置已保存",
+        "description": "您的配置已成功更新。"
+      },
+      "saveFailed": {
+        "title": "保存失败",
+        "description": "保存配置时发生错误"
+      },
+      "resetSuccess": {
+        "title": "配置已重置",
+        "description": "所有设置已恢复为默认值。"
+      },
+      "resetFailed": {
+        "title": "重置失败",
+        "description": "重置配置时发生错误"
+      },
+      "exportSuccess": {
+        "title": "配置已导出",
+        "description": "配置文件已下载。"
+      },
+      "exportFailed": {
+        "title": "导出失败",
+        "description": "导出配置时发生错误"
+      },
+      "importSuccess": {
+        "title": "配置已导入",
+        "description": "配置文件已成功导入。"
+      },
+      "importFailed": {
+        "title": "导入失败",
+        "description": "配置文件格式错误或导入失败"
+      },
+      "detectClient": {
+        "title": "检测本地 MCP Client",
+        "description": "正在扫描本地 MCP Client 配置..."
+      },
+      "openLogsSuccess": {
+        "title": "日志目录已打开",
+        "description": "日志目录已在文件管理器中打开。"
+      },
+      "openLogsFailed": {
+        "title": "打开日志目录失败",
+        "description": "无法打开日志目录"
+      },
+      "loadConfigError": "加载配置失败"
+    }
+  },
+  "market": {
+    "title": "市场",
+    "description": "发现并安装新的 MCP 包",
+    "search": "搜索包...",
+    "type": {
+      "local": "本地",
+      "remote": "远程",
+      "hybrid": "混合"
+    }
+  },
+  "installed": {
+    "title": "已安装",
+    "description": "管理您已安装的 MCP 包",
+    "source": {
+      "manual": "手动添加",
+      "market": "市场安装"
+    },
+    "stats": {
+      "totalCalls": "总调用次数",
+      "currentlyRunning": "当前运行中",
+      "totalInstalled": "总计安装"
+    },
+    "actions": {
+      "addMCP": "手动添加 MCP",
+      "startAll": "全部启动",
+      "stopAll": "全部停止"
+    },
+    "status": {
+      "running": "运行中",
+      "stopped": "已停止",
+      "start": "启动",
+      "stop": "停止",
+      "starting": "正在启动...",
+      "stopping": "正在停止..."
+    },
+    "buttons": {
+      "detail": "详情",
+      "config": "配置",
+      "edit": "编辑"
+    },
+    "sections": {
+      "yourMCPs": "您的 MCP"
+    },
+    "updates": {
+      "available": "个更新可用",
+      "availablePlural": "个更新可用",
+      "allUpToDate": "全部已是最新"
+    },
+    "empty": {
+      "title": "未安装 MCP",
+      "description": "访问市场发现并安装 MCP 包",
+      "browseMarket": "浏览市场"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{minutes}}分钟前",
+      "hoursAgo": "{{hours}}小时前",
+      "daysAgo": "{{days}}天前",
+      "updated": "更新于",
+      "installed": "安装于",
+      "by": "作者"
+    },
+    "toast": {
+      "uninstalled": "MCP 已卸载",
+      "uninstalledDesc": "{{name}} 已成功卸载。",
+      "configuring": "打开配置",
+      "configuringDesc": "正在配置 {{name}}...",
+      "started": "MCP 已启动",
+      "startedDesc": "{{name}} 已成功启动。",
+      "stopped": "MCP 已停止",
+      "stoppedDesc": "{{name}} 已成功停止。",
+      "toggleFailed": "切换 MCP 状态失败",
+      "uninstallFailed": "卸载 MCP 失败"
+    }
+  },
+  "addMCP": {
+    "title": "手动添加 MCP",
+    "description": "选择以下方法之一来配置新的 MCP。",
+    "tabs": {
+      "local": "本地 MCP",
+      "remote": "远程 MCP",
+      "json": "从 JSON 导入"
+    },
+    "fields": {
+      "name": "MCP 名称",
+      "command": "命令",
+      "envVars": "环境变量（可选）",
+      "url": "URL",
+      "jsonConfig": "MCP 配置 (JSON)"
+    },
+    "placeholders": {
+      "name": "输入 MCP 名称",
+      "command": "/path/to/mcp/executable",
+      "url": "https://github.com/user/repo"
+    },
+    "buttons": {
+      "addLocal": "添加本地 MCP",
+      "addRemote": "添加远程 MCP",
+      "importJson": "从 JSON 导入",
+      "updateLocal": "更新本地 MCP",
+      "updateRemote": "更新远程 MCP",
+      "updateJson": "更新 JSON 配置"
+    },
+    "errors": {
+      "nameRequired": "名称是必填项",
+      "commandRequired": "命令是必填项",
+      "urlRequired": "URL 是必填项",
+      "jsonRequired": "JSON 配置是必填项",
+      "duplicateIdentifier": "手动添加的 MCP 已存在名称为 \"{{name}}\" 的 MCP，请更换名称",
+      "singleMcpOnly": "一次只能导入一个 MCP",
+      "invalidJson": "无效的 JSON 格式",
+      "saveFailed": "保存配置失败"
+    },
+    "toast": {
+      "localAdded": "本地 MCP 已添加",
+      "localAddedDesc": "本地 MCP 已成功配置。",
+      "remoteAdded": "远程 MCP 已添加",
+      "remoteAddedDesc": "远程 MCP 已成功配置。",
+      "jsonImported": "MCP 已导入",
+      "jsonImportedDesc": "已从 JSON 成功导入 MCP 配置。",
+      "localUpdated": "本地 MCP 已更新",
+      "localUpdatedDesc": "本地 MCP 配置已成功更新。",
+      "remoteUpdated": "远程 MCP 已更新",
+      "remoteUpdatedDesc": "远程 MCP 配置已成功更新。"
+    }
+  },
+  "editMCP": {
+    "title": "编辑 MCP",
+    "description": "修改现有 MCP 的配置。"
+  }
+}

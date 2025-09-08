@@ -1,0 +1,253 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "navigation": {
+    "market": "Market",
+    "installed": "Installed",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Configure your MCP Client and package management preferences",
+    "quickSetup": {
+      "title": "Quick Setup Assistant",
+      "description": "Let us configure your MCP Client with optimal settings automatically",
+      "detectClient": "Detect Local MCP Client",
+      "exportConfig": "Export Config",
+      "importConfig": "Import Config"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Manage general application preferences",
+      "autoStart": {
+        "label": "Auto Start",
+        "description": "Automatically start the application when the system boots"
+      },
+      "enableTelemetry": {
+        "label": "Enable Telemetry",
+        "description": "Help improve the platform by sharing usage data"
+      },
+      "theme": {
+        "label": "Theme",
+        "description": "Choose the application interface theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "language": {
+        "label": "Language",
+        "description": "Choose the application interface language"
+      },
+      "minimizeOnStartup": {
+        "label": "Minimize on Startup",
+        "description": "Automatically minimize to system tray on startup"
+      },
+      "portNumber": {
+        "label": "Port Number",
+        "description": "MCP Client listening port number"
+      }
+    },
+    "system": {
+      "title": "System Status",
+      "description": "Current system information and diagnostics",
+      "version": "Version",
+      "status": "Status",
+      "uptime": "Uptime",
+      "memoryUsage": "Memory Usage",
+      "healthy": "Healthy",
+      "viewLogs": "View Detailed Logs"
+    },
+    "actions": {
+      "resetAll": "Reset All Settings",
+      "saveAll": "Save All Settings",
+      "saving": "Saving..."
+    },
+    "messages": {
+      "saveSuccess": {
+        "title": "Settings Saved",
+        "description": "Your configuration has been successfully updated."
+      },
+      "saveFailed": {
+        "title": "Save Failed",
+        "description": "An error occurred while saving configuration"
+      },
+      "resetSuccess": {
+        "title": "Configuration Reset",
+        "description": "All settings have been restored to default values."
+      },
+      "resetFailed": {
+        "title": "Reset Failed",
+        "description": "An error occurred while resetting configuration"
+      },
+      "exportSuccess": {
+        "title": "Configuration Exported",
+        "description": "Configuration file has been downloaded."
+      },
+      "exportFailed": {
+        "title": "Export Failed",
+        "description": "An error occurred while exporting configuration"
+      },
+      "importSuccess": {
+        "title": "Configuration Imported",
+        "description": "Configuration file has been successfully imported."
+      },
+      "importFailed": {
+        "title": "Import Failed",
+        "description": "Configuration file format error or import failed"
+      },
+      "detectClient": {
+        "title": "Detect Local MCP Client",
+        "description": "Scanning local MCP Client configuration..."
+      },
+      "openLogsSuccess": {
+        "title": "Logs Directory Opened",
+        "description": "Logs directory has been opened in file manager."
+      },
+      "openLogsFailed": {
+        "title": "Failed to Open Logs Directory",
+        "description": "Unable to open logs directory"
+      },
+      "loadConfigError": "Failed to load configuration"
+    }
+  },
+  "market": {
+    "title": "Market",
+    "description": "Discover and install new MCP packages",
+    "search": "Search packages...",
+    "type": {
+      "local": "Local",
+      "remote": "Remote",
+      "hybrid": "Hybrid"
+    }
+  },
+  "installed": {
+    "title": "Installed",
+    "description": "Manage your installed MCP packages",
+    "source": {
+      "manual": "Manual",
+      "market": "Market"
+    },
+    "stats": {
+      "totalCalls": "Total Calls",
+      "currentlyRunning": "Currently Running",
+      "totalInstalled": "Total Installed"
+    },
+    "actions": {
+      "addMCP": "Add MCP Manually",
+      "startAll": "Start All",
+      "stopAll": "Stop All"
+    },
+    "status": {
+      "running": "running",
+      "stopped": "stopped",
+      "start": "Start",
+      "stop": "Stop",
+      "starting": "Starting...",
+      "stopping": "Stopping..."
+    },
+    "buttons": {
+      "detail": "Detail",
+      "config": "Config",
+      "edit": "Edit"
+    },
+    "sections": {
+      "yourMCPs": "Your MCPs"
+    },
+    "updates": {
+      "available": "update available",
+      "availablePlural": "updates available",
+      "allUpToDate": "All up to date"
+    },
+    "empty": {
+      "title": "No MCPs Installed",
+      "description": "Visit the Market to discover and install MCP packages",
+      "browseMarket": "Browse Market"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{minutes}}m ago",
+      "hoursAgo": "{{hours}}h ago",
+      "daysAgo": "{{days}}d ago",
+      "updated": "Updated",
+      "installed": "Installed",
+      "by": "by"
+    },
+    "toast": {
+      "uninstalled": "MCP Uninstalled",
+      "uninstalledDesc": "{{name}} has been successfully uninstalled.",
+      "configuring": "Opening Configuration",
+      "configuringDesc": "Configuring {{name}}...",
+      "started": "MCP Started",
+      "startedDesc": "{{name}} has been successfully started.",
+      "stopped": "MCP Stopped", 
+      "stoppedDesc": "{{name}} has been successfully stopped.",
+      "toggleFailed": "Failed to toggle MCP status",
+      "uninstallFailed": "Failed to uninstall MCP"
+    }
+  },
+  "addMCP": {
+    "title": "Add MCP Manually",
+    "description": "Configure a new MCP by selecting one of the methods below.",
+    "tabs": {
+      "local": "Local MCP",
+      "remote": "Remote MCP",
+      "json": "Import from JSON"
+    },
+    "fields": {
+      "name": "MCP Name",
+      "command": "Command",
+      "envVars": "Environment Variables (optional)",
+      "url": "URL",
+      "jsonConfig": "MCP Configuration (JSON)"
+    },
+    "placeholders": {
+      "name": "Enter MCP name",
+      "command": "/path/to/mcp/executable",
+      "url": "https://github.com/user/repo"
+    },
+    "buttons": {
+      "addLocal": "Add Local MCP",
+      "addRemote": "Add Remote MCP",
+      "importJson": "Import from JSON",
+      "updateLocal": "Update Local MCP",
+      "updateRemote": "Update Remote MCP",
+      "updateJson": "Update JSON Configuration"
+    },
+    "errors": {
+      "nameRequired": "Name is required",
+      "commandRequired": "Command is required",
+      "urlRequired": "URL is required",
+      "jsonRequired": "JSON configuration is required",
+      "duplicateIdentifier": "MCP with name \"{{name}}\" already exists, please change the name",
+      "singleMcpOnly": "Only one MCP can be imported at a time",
+      "invalidJson": "Invalid JSON format",
+      "saveFailed": "Failed to save configuration"
+    },
+    "toast": {
+      "localAdded": "Local MCP Added",
+      "localAddedDesc": "Local MCP has been successfully configured.",
+      "remoteAdded": "Remote MCP Added",
+      "remoteAddedDesc": "Remote MCP has been successfully configured.",
+      "jsonImported": "MCP Imported",
+      "jsonImportedDesc": "MCP configuration has been imported from JSON.",
+      "localUpdated": "Local MCP Updated",
+      "localUpdatedDesc": "Local MCP configuration has been successfully updated.",
+      "remoteUpdated": "Remote MCP Updated",
+      "remoteUpdatedDesc": "Remote MCP configuration has been successfully updated."
+    }
+  },
+  "editMCP": {
+    "title": "Edit MCP",
+    "description": "Modify the configuration of an existing MCP."
+  }
+}

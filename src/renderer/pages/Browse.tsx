@@ -1,0 +1,294 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import MCPCard from '@/components/mcp/MCPCard';
+import { Filter, Loader2, ArrowLeft } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { useI18n } from '@/hooks/use-i18n';
+import { MarketMcp, MarketCategory, MarketFilter, SortBy } from '../types/market';
+import { 
+  getMarketPackages, 
+  getMarketCategories 
+} from '@/services/marketApi';
+
+export default function Browse() {
+  const navigate = useNavigate();
+  const { t } = useI18n();
+  
+  // 状态管理
+  const [packages, setPackages] = useState<MarketMcp[]>([]);
+  const [categories, setCategories] = useState<MarketCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  
+  // 筛选和搜索状态
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortBy>('popular');
+
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // 初始化数据加载
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  // 搜索和筛选变化时重新加载数据
+  useEffect(() => {
+    loadPackages();
+  }, [searchQuery, selectedCategoryId, sortBy, currentPage]);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      const [packagesRes, categoriesRes] = await Promise.all([
+        getMarketPackages({ page: 1, limit: 20 }),
+        getMarketCategories()
+      ]);
+      
+      setPackages(packagesRes.data);
+      setTotalPages(packagesRes.totalPages);
+      setTotalCount(packagesRes.total);
+      setCategories(categoriesRes.data);
+    } catch (error) {
+      console.error('Failed to load browse data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load browse data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPackages = async () => {
+    try {
+      setSearchLoading(true);
+      
+      const filter: MarketFilter = {
+        query: searchQuery || undefined,
+        categoryId: selectedCategoryId || undefined,
+        sortBy: sortBy
+      };
+      
+      const response = await getMarketPackages({
+        page: currentPage,
+        limit: 20,
+        filter
+      });
+      
+      setPackages(response.data);
+      setTotalPages(response.totalPages);
+      setTotalCount(response.total);
+    } catch (error) {
+      console.error('Failed to load packages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load packages",
+        variant: "destructive"
+      });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleInstall = (id: string) => {
+    const mcp = packages.find(m => m.identifier === id);
+    toast({
+      title: "Installing MCP",
+      description: `${mcp?.name} is being installed...`,
+    });
+  };
+
+  const handleDetail = (id: string) => {
+    navigate(`/mcp/${id}`);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (categoryId: string | null) => {
+    setSelectedCategoryId(categoryId);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (value: SortBy) => {
+    setSortBy(value);
+    setCurrentPage(1);
+  };
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading browse data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={handleBack}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            Browse All Packages
+          </h1>
+          <p className="text-muted-foreground">
+            Discover and install MCP packages for your projects
+          </p>
+        </div>
+      </div>
+
+      {/* Search Filters */}
+      <div className="flex flex-col lg:flex-row gap-4 p-4 bg-gradient-card rounded-lg border border-border/50">
+        <div className="flex-1">
+          <Input
+            placeholder={t('market.search')}
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full"
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="popular">Popular</SelectItem>
+              <SelectItem value="recent">Recent</SelectItem>
+              <SelectItem value="rating">Rating</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button variant="outline" size="icon">
+            <Filter className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Sidebar - Categories */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Categories</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button
+                variant={selectedCategoryId === null ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleCategoryChange(null)}
+              >
+                All Categories
+                <Badge variant="secondary" className="ml-auto">
+                  {totalCount}
+                </Badge>
+              </Button>
+              {categories.map((category) => (
+                <Button
+                  key={category.identifier}
+                  variant={selectedCategoryId === category.identifier ? "default" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => handleCategoryChange(category.identifier)}
+                >
+                  {category.title}
+                  <Badge variant="secondary" className="ml-auto">
+                    {category.count}
+                  </Badge>
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Content - Package List */}
+        <div className="lg:col-span-3 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">
+                {selectedCategoryId 
+                  ? categories.find(c => c.identifier === selectedCategoryId)?.title || 'Category'
+                  : 'All Packages'
+                }
+              </h2>
+              {searchLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+            </div>
+            <Badge variant="secondary">
+              {totalCount} packages
+            </Badge>
+          </div>
+          
+          {packages.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                {searchQuery ? 'No packages found matching your search.' : 'No packages available.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {packages.map((mcp) => (
+                <MCPCard
+                  id={mcp.identifier}
+                  key={mcp.identifier}
+                  {...mcp}
+                  onInstall={handleInstall}
+                  onDetail={handleDetail}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* 分页控制 */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1 || searchLoading}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages || searchLoading}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
