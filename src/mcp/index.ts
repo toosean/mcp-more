@@ -1,6 +1,7 @@
 import log from 'electron-log';
 import { mcpClientManager } from './services/mcpClientManager.js';
 import { mcpServerManager } from './services/mcpServer.js';
+import { configManager } from '../config/ConfigManager.js';
 
 /**
  * 启动 MCP 服务器
@@ -11,8 +12,11 @@ export async function startMCPServer(): Promise<void> {
         // 先启动 MCP 客户端
         await mcpClientManager.initializeClients();
         
+        // 从配置中获取端口号
+        const portNumber = configManager.get('general', 'portNumber');
+        
         // 然后启动 HTTP 服务器
-        await mcpServerManager.start(3000);
+        await mcpServerManager.start(portNumber);
         
         log.info('MCP system started successfully');
     } catch (error) {

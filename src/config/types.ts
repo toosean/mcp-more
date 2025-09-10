@@ -92,7 +92,7 @@ export const defaultConfig: AppConfig = {
     theme: 'system',
     language: 'zh-CN',
     minimizeOnStartup: false,
-    portNumber: 3000,
+    portNumber: 7195,
   },
   mcp: {
     installedMcps: [],

@@ -124,9 +124,9 @@ export class McpServerManager {
 
     /**
      * 启动服务器
-     * @param port 端口号，默认 3000
+     * @param port 端口号
      */
-    async start(port: number = 3000): Promise<void> {
+    async start(port: number = 7195): Promise<void> {
    
         // 初始化 MCP 客户端管理器
         await mcpClientManager.initializeClients();

@@ -463,9 +463,8 @@ export default function Settings() {
               <Input
                 id="port-number"
                 type="number"
-                value={String(localGeneral.portNumber || 3000)}
-                onChange={(e) => setLocalGeneral(prev => ({ ...prev, portNumber: parseInt(e.target.value) || 3000 }))}
-                placeholder="3000"
+                value={String(localGeneral.portNumber)}
+                onChange={(e) => setLocalGeneral(prev => ({ ...prev, portNumber: parseInt(e.target.value)}))}
                 min="1"
                 max="65535"
               />
