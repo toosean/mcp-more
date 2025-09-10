@@ -67,6 +67,9 @@ declare global {
       stopMcp(mcpId: string): Promise<void>;
       getMcpStatus(mcpId: string): Promise<'running' | 'stopped' | 'error'>;
     };
+    shellAPI: {
+      openExternal(url: string): Promise<void>;
+    };
     updaterAPI: {
       // 取消下载
       cancelDownload(): Promise<{ success: boolean; error?: string }>;

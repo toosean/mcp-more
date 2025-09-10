@@ -253,7 +253,20 @@ export default function MCPDetail() {
                     ol: ({children}) => <ol className="list-decimal list-inside text-muted-foreground mb-3 space-y-1">{children}</ol>,
                     li: ({children}) => <li className="text-muted-foreground">{children}</li>,
                     blockquote: ({children}) => <blockquote className="border-l-4 border-muted pl-4 italic text-muted-foreground mb-3">{children}</blockquote>,
-                    a: ({href, children}) => <a href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                    a: ({href, children}) => (
+                      <a 
+                        href="#" 
+                        className="text-primary hover:underline cursor-pointer" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (href && window.shellAPI) {
+                            window.shellAPI.openExternal(href);
+                          }
+                        }}
+                      >
+                        {children}
+                      </a>
+                    ),
                     table: ({children}) => <table className="w-full border-collapse border border-border mb-3">{children}</table>,
                     thead: ({children}) => <thead className="bg-muted">{children}</thead>,
                     tbody: ({children}) => <tbody>{children}</tbody>,
@@ -353,13 +366,13 @@ export default function MCPDetail() {
                   <Badge variant="outline">{mcp.version || 'N/A'}</Badge>
                 </div>
                 
-                <div className="flex items-center justify-between">
+                {mcp.rating && (<div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="text-sm">Rating</span>
                   </div>
                   <span className="text-sm font-medium">{(mcp.rating || 0).toFixed(1)}/5.0</span>
-                </div>
+                </div>)}
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -390,22 +403,36 @@ export default function MCPDetail() {
               
               <div className="space-y-2">
                 {mcp.homepage && (
-                  <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                    <a href={mcp.homepage} target="_blank" rel="noopener noreferrer">
-                      <Globe className="h-4 w-4 mr-2" />
-                      Homepage
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => {
+                      if (window.shellAPI) {
+                        window.shellAPI.openExternal(mcp.homepage!);
+                      }
+                    }}
+                  >
+                    <Globe className="h-4 w-4 mr-2" />
+                    Homepage
+                    <ExternalLink className="h-3 w-3 ml-auto" />
                   </Button>
                 )}
                 
                 {mcp.repository && (
-                  <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                    <a href={mcp.repository} target="_blank" rel="noopener noreferrer">
-                      <Github className="h-4 w-4 mr-2" />
-                      Repository
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </a>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => {
+                      if (window.shellAPI) {
+                        window.shellAPI.openExternal(mcp.repository!);
+                      }
+                    }}
+                  >
+                    <Github className="h-4 w-4 mr-2" />
+                    Repository
+                    <ExternalLink className="h-3 w-3 ml-auto" />
                   </Button>
                 )}
               </div>

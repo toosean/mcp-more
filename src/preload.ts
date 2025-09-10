@@ -177,6 +177,16 @@ const mcpAPI: McpAPI = {
   getMcpStatus: (mcpId: string) => ipcRenderer.invoke('mcp:get-mcp-status', mcpId)
 };
 
+// Shell API 实现
+const shellAPI: ShellAPI = {
+  openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url)
+};
+
+// 定义 Shell API 接口
+interface ShellAPI {
+  openExternal(url: string): Promise<void>;
+}
+
 // 定义更新 API 接口
 interface UpdaterAPI {
   // 开发模式专用：模拟更新
@@ -248,4 +258,5 @@ contextBridge.exposeInMainWorld('logAPI', logAPI);
 contextBridge.exposeInMainWorld('windowControlAPI', windowControlAPI);
 contextBridge.exposeInMainWorld('eventAPI', eventAPI);
 contextBridge.exposeInMainWorld('mcpAPI', mcpAPI);
+contextBridge.exposeInMainWorld('shellAPI', shellAPI);
 contextBridge.exposeInMainWorld('updaterAPI', updaterAPI);

@@ -51,5 +51,15 @@ export function setupAppInfoIpcHandlers(): void {
     return process.platform;
   });
 
+  // 在默认浏览器中打开外部链接
+  ipcMain.handle('shell:open-external', async (_, url: string): Promise<void> => {
+    try {
+      await shell.openExternal(url);
+    } catch (error) {
+      log.error('Failed to open external URL:', url, error);
+      throw error;
+    }
+  });
+
   log.info('App info IPC handlers set up');
 }
