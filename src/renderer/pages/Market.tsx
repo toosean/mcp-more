@@ -8,8 +8,7 @@ import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
 import { MarketMcp } from '../types/market';
 import { 
-  getMarketPackages, 
-  getTrendingPackages 
+  getMarketHome
 } from '@/services/marketApi';
 
 
@@ -30,13 +29,15 @@ export default function Market() {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [packagesRes, trendingRes] = await Promise.all([
-        getMarketPackages({ page: 1, limit: 6 }),
-        getTrendingPackages(3)
-      ]);
+      const response = await getMarketHome();
       
-      setPackages(packagesRes.data);
-      setTrendingPackages(trendingRes);
+      if (response.success) {
+        // 从同一个接口响应中提取 featured 和 trending 数据
+        setPackages(response.result.featured);
+        setTrendingPackages(response.result.trending);
+      } else {
+        throw new Error('Failed to load market data');
+      }
     } catch (error) {
       console.error('Failed to load market data:', error);
       toast({
@@ -47,19 +48,6 @@ export default function Market() {
     } finally {
       setLoading(false);
     }
-  };
-
-
-  const handleInstall = (id: string) => {
-    const mcp = packages.find(m => m.identifier === id);
-    toast({
-      title: "Installing MCP",
-      description: `${mcp?.name} is being installed...`,
-    });
-  };
-
-  const handleDetail = (id: string) => {
-    navigate(`/mcp/${id}`);
   };
 
   const handleBrowseAll = () => {
@@ -102,9 +90,14 @@ export default function Market() {
             <MCPCard
               id={mcp.identifier}
               key={mcp.identifier}
-              {...mcp}
-              onInstall={handleInstall}
-              onDetail={handleDetail}
+              name={mcp.name}
+              description={mcp.description || ''}
+              author={mcp.author || ''}
+              version={mcp.version || ''}
+              downloads={mcp.downloads || 0}
+              rating={mcp.rating || 0}
+              categories={[]} // Categories will be handled separately in the backend
+              type={mcp.type || ''}
             />
           ))}
         </div>
@@ -131,9 +124,14 @@ export default function Market() {
               <MCPCard
                 id={mcp.identifier}
                 key={mcp.identifier}
-                {...mcp}
-                onInstall={handleInstall}
-                onDetail={handleDetail}
+                name={mcp.name}
+                description={mcp.description || ''}
+                author={mcp.author || ''}
+                version={mcp.version || ''}
+                downloads={mcp.downloads || 0}
+                rating={mcp.rating || 0}
+                categories={[]} // Categories will be handled separately in the backend
+                type={mcp.type || ''}
               />
             ))}
           </div>

@@ -9,9 +9,9 @@ import MCPCard from '@/components/mcp/MCPCard';
 import { Filter, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
-import { MarketMcp, MarketCategory, MarketFilter, SortBy } from '../types/market';
+import { MarketMcp, MarketCategory, SortBy } from '../types/market';
 import { 
-  getMarketPackages, 
+  getMarketMcps, 
   getMarketCategories 
 } from '@/services/marketApi';
 
@@ -49,14 +49,20 @@ export default function Browse() {
     try {
       setLoading(true);
       const [packagesRes, categoriesRes] = await Promise.all([
-        getMarketPackages({ page: 1, limit: 20 }),
+        getMarketMcps({ page: 1, pageSize: 20 }),
         getMarketCategories()
       ]);
       
-      setPackages(packagesRes.data);
-      setTotalPages(packagesRes.totalPages);
-      setTotalCount(packagesRes.total);
-      setCategories(categoriesRes.data);
+      if (packagesRes.success) {
+        setPackages(packagesRes.result.list);
+        setTotalCount(packagesRes.result.total);
+        // Calculate total pages based on pageSize
+        setTotalPages(Math.ceil(packagesRes.result.total / 20));
+      }
+      
+      if (categoriesRes.success) {
+        setCategories(categoriesRes.result.list);
+      }
     } catch (error) {
       console.error('Failed to load browse data:', error);
       toast({
@@ -73,21 +79,19 @@ export default function Browse() {
     try {
       setSearchLoading(true);
       
-      const filter: MarketFilter = {
-        query: searchQuery || undefined,
-        categoryId: selectedCategoryId || undefined,
-        sortBy: sortBy
-      };
-      
-      const response = await getMarketPackages({
+      const response = await getMarketMcps({
         page: currentPage,
-        limit: 20,
-        filter
+        pageSize: 20,
+        query: searchQuery || undefined,
+        category: selectedCategoryId || undefined,
+        sortBy: sortBy
       });
       
-      setPackages(response.data);
-      setTotalPages(response.totalPages);
-      setTotalCount(response.total);
+      if (response.success) {
+        setPackages(response.result.list);
+        setTotalCount(response.result.total);
+        setTotalPages(Math.ceil(response.result.total / 20));
+      }
     } catch (error) {
       console.error('Failed to load packages:', error);
       toast({
@@ -100,17 +104,6 @@ export default function Browse() {
     }
   };
 
-  const handleInstall = (id: string) => {
-    const mcp = packages.find(m => m.identifier === id);
-    toast({
-      title: "Installing MCP",
-      description: `${mcp?.name} is being installed...`,
-    });
-  };
-
-  const handleDetail = (id: string) => {
-    navigate(`/mcp/${id}`);
-  };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -189,9 +182,9 @@ export default function Browse() {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Left Sidebar - Categories */}
-        <div className="lg:col-span-1">
+        <div className="w-[380px]">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Categories</CardTitle>
@@ -216,7 +209,7 @@ export default function Browse() {
                 >
                   {category.title}
                   <Badge variant="secondary" className="ml-auto">
-                    {category.count}
+                    {category.count || 0}
                   </Badge>
                 </Button>
               ))}
@@ -225,10 +218,10 @@ export default function Browse() {
         </div>
 
         {/* Right Content - Package List */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="w-full">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-xl font-semibold pb-4">
                 {selectedCategoryId 
                   ? categories.find(c => c.identifier === selectedCategoryId)?.title || 'Category'
                   : 'All Packages'
@@ -253,9 +246,14 @@ export default function Browse() {
                 <MCPCard
                   id={mcp.identifier}
                   key={mcp.identifier}
-                  {...mcp}
-                  onInstall={handleInstall}
-                  onDetail={handleDetail}
+                  name={mcp.name}
+                  description={mcp.description || ''}
+                  author={mcp.author || ''}
+                  version={mcp.version || ''}
+                  downloads={mcp.downloads || 0}
+                  rating={mcp.rating || 0}
+                  categories={[]} // Categories will be handled separately in the backend
+                  type={mcp.type || ''}
                 />
               ))}
             </div>

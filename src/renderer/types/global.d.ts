@@ -88,6 +88,7 @@ declare global {
       onDownloadComplete(callback: () => void): () => void;
       onError(callback: (error: string) => void): () => void;
     };
+    env: ImportMetaEnv;
   }
 }
 

@@ -238,6 +238,9 @@ const updaterAPI: UpdaterAPI = {
   }
 };
 
+// 暴露 Env 给渲染进程
+contextBridge.exposeInMainWorld('env', import.meta.env);
+
 // 暴露 API 给渲染进程
 contextBridge.exposeInMainWorld('configAPI', configAPI);
 contextBridge.exposeInMainWorld('appInfoAPI', appInfoAPI);

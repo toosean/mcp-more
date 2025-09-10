@@ -4,46 +4,41 @@
 
 import { Mcp } from '../../config/types';
 
-// MCP 包类型枚举
-export type McpType = 'local' | 'remote' | 'hybrid';
-
 // 排序方式枚举
-export type SortBy = 'popular' | 'recent' | 'rating';
+export type SortBy = 'popular' | 'latest' | 'rating';
 
-// 市场中的 MCP 包信息
+// 市场中的 MCP 包信息 (对应后端的 McpVo)
 export interface MarketMcp {
   /** 唯一标识符 */
   identifier: string;
   /** 包名称 */
   name: string;
   /** 包描述 */
-  description: string;
+  description: string | null;
+  /** Logo URL */
+  logoUrl: string | null;
   /** 作者信息 */
-  author: string;
+  author: string | null;
   /** 版本号 */
-  version: string;
+  version: string | null;
+  /** 发布时间 */
+  publishedAt: string | null;
+  /** 更新时间 */
+  updatedAt: string | null;
+  /** 许可证 */
+  license: string | null;
   /** 下载次数 */
-  downloads: number;
-  /** 评分 (0-5) */
-  rating: number;
-  /** 分类ID列表 */
-  categories: string[];
+  downloads: number | null;
   /** 包类型 */
-  type: McpType;
+  type: string | null;
+  /** 评分 (0-5) */
+  rating: number | null;
+  /** 传输方式 */
+  transport: string | null;
+  /** 配置 */
+  configuration: string | null;
   /** 是否已安装 */
   isInstalled?: boolean;
-  /** 发布时间 */
-  publishedAt?: string;
-  /** 更新时间 */
-  updatedAt?: string;
-  /** 许可证 */
-  license?: string;
-  /** 主页链接 */
-  homepage?: string;
-  /** 仓库链接 */
-  repository?: string;
-  /** README 内容 */
-  readme?: string;
 }
 
 // 市场分类
@@ -68,40 +63,48 @@ export interface MarketFilter {
   sortBy: SortBy;
 }
 
-// 包详情页面数据
-export interface MarketMcpDetail extends MarketMcp {
-  /** 详细的长描述 */
-  longDescription: string;
-  /** 版本历史 */
-  versions: Array<{
-    version: string;
-    releaseDate: string;
-    changelog: string;
-  }>;
-  /** 作者详细信息 */
-  authorInfo: {
-    name: string;
-    email?: string;
-    website?: string;
-    avatar?: string;
-  };
-  /** 相关包推荐 */
-  relatedPackages: string[];
-  /** 使用统计 */
-  usageStats: {
-    weeklyDownloads: number;
-    monthlyDownloads: number;
-    dependentsCount: number;
-  };
-  /** 评论和评价 */
-  reviews?: Array<{
-    id: string;
-    userId: string;
-    userName: string;
-    rating: number;
-    comment: string;
-    createdAt: string;
-  }>;
+// 包详情页面数据 (对应后端的 McpDetailVo)
+export interface MarketMcpDetail {
+  /** 唯一标识符 */
+  identifier: string;
+  /** 包名称 */
+  name: string;
+  /** 包描述 */
+  description: string | null;
+  /** Logo URL */
+  logoUrl: string | null;
+  /** 作者信息 */
+  author: string | null;
+  /** 作者邮箱 */
+  authorEmail: string | null;
+  /** 作者头像 */
+  authorAvatar: string | null;
+  /** 版本号 */
+  version: string | null;
+  /** 发布时间 */
+  publishedAt: string | null;
+  /** 更新时间 */
+  updatedAt: string | null;
+  /** 许可证 */
+  license: string | null;
+  /** 主页链接 */
+  homepage: string | null;
+  /** 仓库链接 */
+  repository: string | null;
+  /** README 内容 */
+  readme: string | null;
+  /** 下载次数 */
+  downloads: number | null;
+  /** 包类型 */
+  type: string | null;
+  /** 评分 (0-5) */
+  rating: number | null;
+  /** 传输方式 */
+  transport: string | null;
+  /** 配置 */
+  configuration: string | null;
+  /** 是否已安装 */
+  isInstalled?: boolean;
 }
 
 // API 请求参数类型
@@ -109,34 +112,43 @@ export interface MarketApiParams {
   /** 页码 */
   page?: number;
   /** 每页数量 */
-  limit?: number;
-  /** 搜索过滤器 */
-  filter?: MarketFilter;
+  pageSize?: number;
+  /** 搜索查询 */
+  query?: string;
+  /** 分类过滤 */
+  category?: string;
+  /** 排序方式 */
+  sortBy?: SortBy;
 }
 
-// API 响应数据类型
-export interface MarketApiResponse<T> {
-  /** 响应数据 */
-  data: T;
-  /** 总数量 */
+// 后端通用响应结构
+export interface BackendApiResponse<T> {
+  success: boolean;
+  result: T;
+}
+
+// 列表响应结构
+export interface ListResponse<T> {
+  list: T[];
   total: number;
-  /** 当前页码 */
-  page: number;
-  /** 每页数量 */
-  limit: number;
-  /** 总页数 */
-  totalPages: number;
-  /** 是否有下一页 */
-  hasNext: boolean;
-  /** 是否有上一页 */
-  hasPrev: boolean;
 }
 
 // 包列表 API 响应
-export type MarketPackagesResponse = MarketApiResponse<MarketMcp[]>;
+export type MarketPackagesResponse = BackendApiResponse<ListResponse<MarketMcp>>;
 
 // 分类列表 API 响应
-export type MarketCategoriesResponse = MarketApiResponse<MarketCategory[]>;
+export type MarketCategoriesResponse = BackendApiResponse<ListResponse<MarketCategory>>;
+
+// 包详情 API 响应
+export type MarketMcpDetailResponse = BackendApiResponse<MarketMcpDetail>;
+
+// 市场首页数据响应
+export interface MarketHomeResponse {
+  trending: MarketMcp[];
+  featured: MarketMcp[];
+}
+
+export type MarketHomeApiResponse = BackendApiResponse<MarketHomeResponse>;
 
 // 安装操作结果
 export interface InstallResult {

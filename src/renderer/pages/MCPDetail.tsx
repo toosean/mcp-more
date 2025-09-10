@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,269 +15,89 @@ import {
   Shield,
   Globe,
   Github,
-  ExternalLink
+  ExternalLink,
+  Loader2,
+  Settings,
+  Trash2,
+  Copy
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import { toast } from '@/hooks/use-toast';
+import { MarketMcpDetail } from '../types/market';
+import { getMcpDetail } from '@/services/marketApi';
+import { 
+  installPackage, 
+  uninstallPackage, 
+  isPackageInstalled,
+  generateInstallCommand,
+  getPackageStatus
+} from '@/services/mcpManager';
 
-const mockMCPs = [
-  {
-    id: '1',
-    name: 'File Manager Pro',
-    description: 'Advanced file system operations with support for cloud storage providers. Features batch operations, intelligent search, and secure file handling.',
-    author: 'DevTools Inc',
-    version: '2.1.0',
-    downloads: 15420,
-    rating: 4.8,
-    tags: ['file-system', 'cloud', 'productivity', 'automation'],
-    fullDescription: 'File Manager Pro is a comprehensive file management solution that extends your system\'s capabilities with advanced features. It provides seamless integration with popular cloud storage providers including AWS S3, Google Drive, and Dropbox. The package includes intelligent file search, batch operations for handling multiple files simultaneously, and robust security features to protect your data.',
-    features: [
-      'Multi-cloud storage support (AWS S3, Google Drive, Dropbox)',
-      'Batch file operations with progress tracking',
-      'Advanced search with metadata indexing',
-      'File encryption and security scanning',
-      'Automated backup and sync capabilities',
-      'REST API for programmatic access'
-    ],
-    requirements: [
-      'Node.js 16.0 or higher',
-      'At least 100MB free disk space',
-      'Internet connection for cloud features'
-    ],
-    license: 'MIT',
-    homepage: 'https://filemanager-pro.dev',
-    repository: 'https://github.com/devtools/file-manager-pro',
-    lastUpdated: '2024-01-15',
-    changelog: [
-      {
-        version: '2.1.0',
-        date: '2024-01-15',
-        changes: [
-          'Added support for Dropbox integration',
-          'Improved search performance by 40%',
-          'Fixed memory leak in batch operations',
-          'Updated security protocols'
-        ]
-      },
-      {
-        version: '2.0.5',
-        date: '2024-01-01',
-        changes: [
-          'Bug fixes for Google Drive sync',
-          'Enhanced error handling',
-          'UI improvements'
-        ]
-      }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Database Connector',
-    description: 'Universal database connectivity for PostgreSQL, MySQL, MongoDB, and more. Includes query optimization and connection pooling.',
-    author: 'DataFlow',
-    version: '1.5.2',
-    downloads: 12890,
-    rating: 4.6,
-    tags: ['database', 'sql', 'nosql', 'connector'],
-    fullDescription: 'Database Connector provides a unified interface for connecting to multiple database systems. It supports both SQL and NoSQL databases with optimized connection pooling and query caching.',
-    features: [
-      'Support for PostgreSQL, MySQL, MongoDB, Redis',
-      'Connection pooling and management',
-      'Query optimization and caching',
-      'Transaction management',
-      'Database migration tools',
-      'Real-time monitoring and analytics'
-    ],
-    requirements: [
-      'Node.js 14.0 or higher',
-      'Database server access',
-      'Minimum 50MB RAM'
-    ],
-    license: 'Apache 2.0',
-    homepage: 'https://db-connector.io',
-    repository: 'https://github.com/dataflow/db-connector',
-    lastUpdated: '2024-01-10',
-    changelog: [
-      {
-        version: '1.5.2',
-        date: '2024-01-10',
-        changes: [
-          'Added Redis support',
-          'Improved connection pooling',
-          'Fixed timeout issues'
-        ]
-      }
-    ]
-  },
-  {
-    id: '3',
-    name: 'API Gateway',
-    description: 'Seamless REST and GraphQL API integration with authentication, rate limiting, and response caching capabilities.',
-    author: 'NetCore Labs',
-    version: '3.0.1',
-    downloads: 8750,
-    rating: 4.9,
-    tags: ['api', 'rest', 'graphql', 'gateway'],
-    fullDescription: 'API Gateway is a powerful middleware solution for managing API requests and responses. It provides comprehensive features for API security, performance optimization, and developer experience.',
-    features: [
-      'REST and GraphQL support',
-      'JWT authentication and authorization',
-      'Rate limiting and throttling',
-      'Response caching and compression',
-      'API documentation generation',
-      'Request/response transformation'
-    ],
-    requirements: [
-      'Node.js 16.0 or higher',
-      'Redis for caching (optional)',
-      'SSL certificates for HTTPS'
-    ],
-    license: 'MIT',
-    homepage: 'https://api-gateway.dev',
-    repository: 'https://github.com/netcore/api-gateway',
-    lastUpdated: '2024-01-20',
-    changelog: [
-      {
-        version: '3.0.1',
-        date: '2024-01-20',
-        changes: [
-          'Enhanced GraphQL support',
-          'Improved rate limiting algorithms',
-          'Added new authentication methods'
-        ]
-      }
-    ]
-  },
-  {
-    id: '4',
-    name: 'ML Model Hub',
-    description: 'Deploy and manage machine learning models with built-in inference endpoints and model versioning.',
-    author: 'AI Solutions',
-    version: '1.8.0',
-    downloads: 6420,
-    rating: 4.7,
-    tags: ['ml', 'ai', 'inference', 'models'],
-    fullDescription: 'ML Model Hub provides a complete platform for deploying and managing machine learning models in production. It supports multiple ML frameworks and provides scalable inference capabilities.',
-    features: [
-      'Support for TensorFlow, PyTorch, scikit-learn',
-      'Model versioning and rollback',
-      'Auto-scaling inference endpoints',
-      'A/B testing for models',
-      'Performance monitoring',
-      'Batch and real-time predictions'
-    ],
-    requirements: [
-      'Python 3.8 or higher',
-      'Docker for containerization',
-      'Minimum 2GB RAM for inference'
-    ],
-    license: 'BSD 3-Clause',
-    homepage: 'https://ml-hub.ai',
-    repository: 'https://github.com/ai-solutions/ml-hub',
-    lastUpdated: '2024-01-18',
-    changelog: [
-      {
-        version: '1.8.0',
-        date: '2024-01-18',
-        changes: [
-          'Added PyTorch 2.0 support',
-          'Improved model loading performance',
-          'New monitoring dashboard'
-        ]
-      }
-    ]
-  },
-  {
-    id: '5',
-    name: 'Notification Center',
-    description: 'Multi-channel notification system supporting email, SMS, push notifications, and webhooks.',
-    author: 'MessageFlow',
-    version: '2.3.1',
-    downloads: 9830,
-    rating: 4.5,
-    tags: ['notifications', 'email', 'sms', 'webhooks'],
-    fullDescription: 'Notification Center is a comprehensive notification management system that handles multiple communication channels. It provides reliable delivery, template management, and analytics.',
-    features: [
-      'Email, SMS, and push notifications',
-      'Webhook integration',
-      'Template management system',
-      'Delivery tracking and analytics',
-      'Retry logic and failover',
-      'Real-time notification status'
-    ],
-    requirements: [
-      'Node.js 16.0 or higher',
-      'SMTP server for email',
-      'SMS provider API keys'
-    ],
-    license: 'MIT',
-    homepage: 'https://notification-center.com',
-    repository: 'https://github.com/messageflow/notification-center',
-    lastUpdated: '2024-01-12',
-    changelog: [
-      {
-        version: '2.3.1',
-        date: '2024-01-12',
-        changes: [
-          'Improved SMS delivery rates',
-          'Added new email templates',
-          'Fixed webhook retry logic'
-        ]
-      }
-    ]
-  },
-  {
-    id: '6',
-    name: 'Security Scanner',
-    description: 'Automated security vulnerability scanning with real-time threat detection and compliance reporting.',
-    author: 'CyberGuard',
-    version: '1.2.0',
-    downloads: 4590,
-    rating: 4.8,
-    tags: ['security', 'scanning', 'compliance', 'threats'],
-    fullDescription: 'Security Scanner provides comprehensive security assessment capabilities for applications and infrastructure. It includes vulnerability scanning, compliance checking, and real-time threat detection.',
-    features: [
-      'Automated vulnerability scanning',
-      'OWASP compliance checking',
-      'Real-time threat detection',
-      'Security report generation',
-      'Integration with CI/CD pipelines',
-      'Custom security rules and policies'
-    ],
-    requirements: [
-      'Node.js 16.0 or higher',
-      'Docker for containerized scanning',
-      'Network access to target systems'
-    ],
-    license: 'Commercial',
-    homepage: 'https://security-scanner.pro',
-    repository: 'https://github.com/cyberguard/security-scanner',
-    lastUpdated: '2024-01-22',
-    changelog: [
-      {
-        version: '1.2.0',
-        date: '2024-01-22',
-        changes: [
-          'Added new vulnerability signatures',
-          'Improved scanning speed by 30%',
-          'Enhanced compliance reporting'
-        ]
-      }
-    ]
-  }
-];
 
 export default function MCPDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { org, id } = useParams<{ org: string, id: string }>();
   const navigate = useNavigate();
   
-  const mcp = mockMCPs.find(m => m.id === id);
+  const [mcp, setMcp] = useState<MarketMcpDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [packageStatus, setPackageStatus] = useState<'running' | 'stopped' | 'error' | 'unknown'>('unknown');
   
-  if (!mcp) {
+  useEffect(() => {
+    if (org && id) {
+      loadMcpDetail(`${org}/${id}`);
+    }
+  }, [org, id]);
+  
+  const loadMcpDetail = async (identifier: string) => {
+    try {
+      setLoading(true);
+      const detail = await getMcpDetail(identifier);
+      setMcp(detail);
+      
+      // 检查安装状态
+      if (detail) {
+        const installed = isPackageInstalled(detail.identifier);
+        setIsInstalled(installed);
+        
+        if (installed) {
+          const status = getPackageStatus(detail.identifier);
+          setPackageStatus(status);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load MCP detail:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load package details",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="flex-1 p-6 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading package details...</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!mcp && !loading) {
     return (
       <div className="flex-1 p-6 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Package Not Found</h1>
-          <p className="text-muted-foreground">The requested MCP package could not be found.</p>
+          <h1 className="text-2xl font-bold">Package Details Unavailable</h1>
+          <p className="text-muted-foreground">Package ID: {org}/{id}</p>
+          <p className="text-muted-foreground">Unable to load detailed information from the server.</p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Market
@@ -286,15 +107,80 @@ export default function MCPDetail() {
     );
   }
 
-  const handleInstall = () => {
-    toast({
-      title: "Installing MCP",
-      description: `${mcp.name} is being installed...`,
-    });
+  // Action handlers - 内部处理各种操作
+  const handleInstall = async () => {
+    if (!mcp) return;
+    
+    try {
+      toast({
+        title: "Installing MCP",
+        description: `Installing ${mcp.name}...`,
+      });
+      
+      await installPackage(mcp);
+      
+      setIsInstalled(true);
+      setPackageStatus('running');
+      
+      toast({
+        title: "Installation Complete",
+        description: `${mcp.name} has been installed successfully!`,
+      });
+      
+    } catch (error) {
+      console.error('Installation failed:', error);
+      toast({
+        title: "Installation Failed",
+        description: `Failed to install ${mcp.name}. Please try again.`,
+        variant: "destructive"
+      });
+    }
   };
+  
+  const handleUninstall = async () => {
+    if (!mcp) return;
+    
+    try {
+      toast({
+        title: "Uninstalling MCP",
+        description: `Removing ${mcp.name}...`,
+      });
+      
+      await uninstallPackage(mcp.identifier);
+      
+      setIsInstalled(false);
+      setPackageStatus('unknown');
+      
+      toast({
+        title: "Uninstallation Complete",
+        description: `${mcp.name} has been removed successfully!`,
+      });
+      
+    } catch (error) {
+      console.error('Uninstallation failed:', error);
+      toast({
+        title: "Uninstallation Failed",
+        description: `Failed to remove ${mcp.name}. Please try again.`,
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleConfigure = () => {
+    if (!mcp) return;
+    
+    // TODO: 打开配置对话框或导航到配置页面
+    toast({
+      title: "Opening Configuration",
+      description: `Opening configuration for ${mcp.name}...`,
+    });
+    
+  };
+  
+
 
   const handleBackToMarket = () => {
-    navigate('/');
+    navigate(-1); // 返回上一页，更灵活
   };
 
   return (
@@ -314,7 +200,7 @@ export default function MCPDetail() {
             {mcp.name}
           </h1>
           <p className="text-muted-foreground">
-            by {mcp.author} • v{mcp.version}
+            by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'}
           </p>
         </div>
       </div>
@@ -331,78 +217,61 @@ export default function MCPDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground">{mcp.fullDescription}</p>
-              
-              <div className="flex flex-wrap gap-2">
-                {mcp.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))}
+              <p className="text-muted-foreground">{mcp.description || 'No description available'}</p>
+            </CardContent>
+          </Card>
+
+          {/* Documentation */}
+          {mcp.readme && <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Documentation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">              
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                  components={{
+                    h1: ({children}) => <h1 className="text-2xl font-bold text-foreground mb-4">{children}</h1>,
+                    h2: ({children}) => <h2 className="text-xl font-semibold text-foreground mb-3">{children}</h2>,
+                    h3: ({children}) => <h3 className="text-lg font-medium text-foreground mb-2">{children}</h3>,
+                    h4: ({children}) => <h4 className="text-base font-medium text-foreground mb-2">{children}</h4>,
+                    h5: ({children}) => <h5 className="text-sm font-medium text-foreground mb-1">{children}</h5>,
+                    h6: ({children}) => <h6 className="text-xs font-medium text-foreground mb-1">{children}</h6>,
+                    p: ({children}) => <p className="text-muted-foreground mb-3 leading-relaxed">{children}</p>,
+                    code: ({children, ...props}) => {
+                      if (props.className?.includes('language-')) {
+                        return <code className="block bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto" {...props}>{children}</code>
+                      }
+                      return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground" {...props}>{children}</code>
+                    },
+                    pre: ({children}) => <pre className="bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto mb-3">{children}</pre>,
+                    ul: ({children}) => <ul className="list-disc list-inside text-muted-foreground mb-3 space-y-1">{children}</ul>,
+                    ol: ({children}) => <ol className="list-decimal list-inside text-muted-foreground mb-3 space-y-1">{children}</ol>,
+                    li: ({children}) => <li className="text-muted-foreground">{children}</li>,
+                    blockquote: ({children}) => <blockquote className="border-l-4 border-muted pl-4 italic text-muted-foreground mb-3">{children}</blockquote>,
+                    a: ({href, children}) => <a href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                    table: ({children}) => <table className="w-full border-collapse border border-border mb-3">{children}</table>,
+                    thead: ({children}) => <thead className="bg-muted">{children}</thead>,
+                    tbody: ({children}) => <tbody>{children}</tbody>,
+                    tr: ({children}) => <tr className="border-b border-border">{children}</tr>,
+                    th: ({children}) => <th className="border border-border px-3 py-2 text-left font-medium text-foreground">{children}</th>,
+                    td: ({children}) => <td className="border border-border px-3 py-2 text-muted-foreground">{children}</td>,
+                    img: ({src, alt}) => <img src={src} alt={alt} className="max-w-full h-auto rounded-md mb-3" />,
+                    hr: () => <hr className="border-t border-border my-6" />,
+                    strong: ({children}) => <strong className="font-semibold text-foreground">{children}</strong>,
+                    em: ({children}) => <em className="italic text-foreground">{children}</em>,
+                    del: ({children}) => <del className="line-through text-muted-foreground">{children}</del>,
+                  }}
+                >
+                  {mcp.readme}
+                </ReactMarkdown>
               </div>
             </CardContent>
-          </Card>
-
-          {/* Features */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Key Features</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {mcp.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Requirements */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Requirements</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {mcp.requirements.map((requirement, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Shield className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">{requirement}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Changelog */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Changes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mcp.changelog.map((version) => (
-                <div key={version.version}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline">{version.version}</Badge>
-                    <span className="text-sm text-muted-foreground">{version.date}</span>
-                  </div>
-                  <ul className="space-y-1 ml-4">
-                    {version.changes.map((change, index) => (
-                      <li key={index} className="text-sm text-muted-foreground">
-                        • {change}
-                      </li>
-                    ))}
-                  </ul>
-                  {version !== mcp.changelog[mcp.changelog.length - 1] && (
-                    <Separator className="mt-4" />
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          </Card>}
         </div>
 
         {/* Sidebar */}
@@ -410,19 +279,53 @@ export default function MCPDetail() {
           {/* Install Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Install Package</CardTitle>
+              <CardTitle className="text-lg">Package Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
-                onClick={handleInstall}
-                className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Install {mcp.name}
-              </Button>
+              {!isInstalled ? (
+                <>
+                  <Button 
+                    onClick={handleInstall}
+                    className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Install {mcp.name}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 rounded">
+                    <div className={`w-2 h-2 rounded-full ${
+                      packageStatus === 'running' ? 'bg-green-500' :
+                      packageStatus === 'stopped' ? 'bg-yellow-500' :
+                      packageStatus === 'error' ? 'bg-red-500' : 'bg-gray-500'
+                    }`} />
+                    <span className="text-sm font-medium">
+                      Status: {packageStatus.charAt(0).toUpperCase() + packageStatus.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleConfigure}
+                    className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configure
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleUninstall}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Uninstall
+                  </Button>
+                </>
+              )}
               
               <div className="text-center text-sm text-muted-foreground">
-                Version {mcp.version} • {mcp.downloads.toLocaleString()} downloads
+                Version {mcp.version || 'N/A'} • {(mcp.downloads || 0).toLocaleString()} downloads
               </div>
             </CardContent>
           </Card>
@@ -439,7 +342,7 @@ export default function MCPDetail() {
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Author</span>
                   </div>
-                  <span className="text-sm font-medium">{mcp.author}</span>
+                  <span className="text-sm font-medium">{mcp.author || 'Unknown'}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -447,7 +350,7 @@ export default function MCPDetail() {
                     <Package className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Version</span>
                   </div>
-                  <Badge variant="outline">{mcp.version}</Badge>
+                  <Badge variant="outline">{mcp.version || 'N/A'}</Badge>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -455,7 +358,7 @@ export default function MCPDetail() {
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                     <span className="text-sm">Rating</span>
                   </div>
-                  <span className="text-sm font-medium">{mcp.rating}/5.0</span>
+                  <span className="text-sm font-medium">{(mcp.rating || 0).toFixed(1)}/5.0</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -463,7 +366,7 @@ export default function MCPDetail() {
                     <Download className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Downloads</span>
                   </div>
-                  <span className="text-sm font-medium">{mcp.downloads.toLocaleString()}</span>
+                  <span className="text-sm font-medium">{(mcp.downloads || 0).toLocaleString()}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -471,7 +374,7 @@ export default function MCPDetail() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Updated</span>
                   </div>
-                  <span className="text-sm font-medium">{mcp.lastUpdated}</span>
+                  <span className="text-sm font-medium">{mcp.updatedAt ? new Date(mcp.updatedAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -479,28 +382,32 @@ export default function MCPDetail() {
                     <Shield className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">License</span>
                   </div>
-                  <Badge variant="secondary">{mcp.license}</Badge>
+                  <Badge variant="secondary">{mcp.license || 'Unknown'}</Badge>
                 </div>
               </div>
               
               <Separator />
               
               <div className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                  <a href={mcp.homepage} target="_blank" rel="noopener noreferrer">
-                    <Globe className="h-4 w-4 mr-2" />
-                    Homepage
-                    <ExternalLink className="h-3 w-3 ml-auto" />
-                  </a>
-                </Button>
+                {mcp.homepage && (
+                  <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+                    <a href={mcp.homepage} target="_blank" rel="noopener noreferrer">
+                      <Globe className="h-4 w-4 mr-2" />
+                      Homepage
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
                 
-                <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                  <a href={mcp.repository} target="_blank" rel="noopener noreferrer">
-                    <Github className="h-4 w-4 mr-2" />
-                    Repository
-                    <ExternalLink className="h-3 w-3 ml-auto" />
-                  </a>
-                </Button>
+                {mcp.repository && (
+                  <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+                    <a href={mcp.repository} target="_blank" rel="noopener noreferrer">
+                      <Github className="h-4 w-4 mr-2" />
+                      Repository
+                      <ExternalLink className="h-3 w-3 ml-auto" />
+                    </a>
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

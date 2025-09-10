@@ -37,7 +37,7 @@ const App = () => {
               <Route path="/browse" element={<Layout><Browse /></Layout>} />
               <Route path="/installed" element={<Layout><Installed /></Layout>} />
               <Route path="/settings" element={<Layout><Settings /></Layout>} />
-              <Route path="/mcp/:id" element={<Layout><MCPDetail /></Layout>} />
+              <Route path="/mcp/:org/:id" element={<Layout><MCPDetail /></Layout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </HashRouter>
