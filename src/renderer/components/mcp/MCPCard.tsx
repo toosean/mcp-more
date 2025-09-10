@@ -197,10 +197,10 @@ export default function MCPCard({
               by {author || 'Unknown'} • v{version || 'N/A'}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          {rating > 0 && (<div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Star className="h-3 w-3 fill-current text-yellow-500" />
             {rating?.toFixed(1) || '0.0'}
-          </div>
+          </div>)}
         </div>
       </CardHeader>
       
@@ -231,9 +231,9 @@ export default function MCPCard({
           </div>
           {type && (
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">类型:</span>
+              <span className="text-muted-foreground">{t('market.typeLabel')}:</span>
               <Badge variant="outline" className="text-xs px-2 py-0">
-                {type}
+                {t(`market.type.${type.toLowerCase()}`, type)}
               </Badge>
             </div>
           )}

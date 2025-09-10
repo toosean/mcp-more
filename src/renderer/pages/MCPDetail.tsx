@@ -200,7 +200,7 @@ export default function MCPDetail() {
             {mcp.name}
           </h1>
           <p className="text-muted-foreground">
-            by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'}
+            by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'} • {`${mcp.identifier}`}
           </p>
         </div>
       </div>

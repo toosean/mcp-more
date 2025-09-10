@@ -128,7 +128,8 @@
       "local": "Local",
       "remote": "Remote",
       "hybrid": "Hybrid"
-    }
+    },
+    "typeLabel": "Type"
   },
   "installed": {
     "title": "Installed",

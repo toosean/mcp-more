@@ -128,7 +128,8 @@
       "local": "本地",
       "remote": "远程",
       "hybrid": "混合"
-    }
+    },
+    "typeLabel": "类型"
   },
   "installed": {
     "title": "已安装",
