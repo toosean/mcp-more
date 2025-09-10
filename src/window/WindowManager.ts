@@ -297,7 +297,7 @@ export class WindowManager {
     let iconPath: string;
     
     if (isDev) {
-      iconPath = path.join(__dirname, '../../src/assets/icon.png');
+      iconPath = path.join(__dirname, '../../assets/icon.png');
     } else {
       iconPath = process.platform === 'win32' 
         ? path.join(__dirname, '../assets/icon.ico')
