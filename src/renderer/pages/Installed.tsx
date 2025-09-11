@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import MCPCard from '@/components/mcp/MCPCard';
 import AddMCPDialog from '@/components/mcp/AddMCPDialog';
 import { Package, Settings, Trash2, Play, Square, Eye, Activity, Plus, Edit, Folder, Globe, Loader2 } from 'lucide-react';
@@ -33,6 +43,10 @@ export default function Installed() {
   const [editingMCP, setEditingMCP] = useState<Mcp | null>(null);
   const [statistics, setStatistics] = useState<any>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const [confirmDeleteDialog, setConfirmDeleteDialog] = useState<{open: boolean, mcp: DisplayMCP | null}>({
+    open: false,
+    mcp: null
+  });
   const { t } = useI18n();
   const { updateConfig, getConfig } = useConfig();
   const { startMcp } = useMcpManager();
@@ -236,8 +250,18 @@ export default function Installed() {
     loadMcps();
   }, [loadMcps]);
 
-  const handleUninstall = async (id: string) => {
+  const showDeleteConfirmation = (id: string) => {
     const mcp = mcps.find(m => m.identifier === id);
+    if (!mcp) return;
+    
+    setConfirmDeleteDialog({
+      open: true,
+      mcp: mcp
+    });
+  };
+
+  const handleConfirmUninstall = async () => {
+    const mcp = confirmDeleteDialog.mcp;
     if (!mcp) return;
 
     try {
@@ -252,11 +276,9 @@ export default function Installed() {
         window.logAPI.error('Failed to stop MCP:', error);
       }
 
-      const updatedMcps = currentConfig.mcp.installedMcps.filter(mcp => 
-        mcp.identifier !== id
+      const updatedMcps = currentConfig.mcp.installedMcps.filter(installedMcp => 
+        installedMcp.identifier !== mcp.identifier
       );
-
-      console.log('updatedMcps', updatedMcps);
 
       await updateConfig({
         mcp: {
@@ -265,7 +287,8 @@ export default function Installed() {
         }
       });
 
-      // Refresh MCPs
+      // Close dialog and refresh MCPs
+      setConfirmDeleteDialog({ open: false, mcp: null });
       await loadMcps();
 
       toast({
@@ -278,6 +301,8 @@ export default function Installed() {
         description: t('installed.toast.uninstallFailed'),
         variant: 'destructive'
       });
+      // Close dialog even if error occurs
+      setConfirmDeleteDialog({ open: false, mcp: null });
     }
   };
 
@@ -748,7 +773,7 @@ export default function Installed() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleUninstall(mcp.identifier)}
+                        onClick={() => showDeleteConfirmation(mcp.identifier)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -760,6 +785,30 @@ export default function Installed() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog 
+        open={confirmDeleteDialog.open} 
+        onOpenChange={(open) => setConfirmDeleteDialog({ open, mcp: open ? confirmDeleteDialog.mcp : null })}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('installed.deleteDialog.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('installed.deleteDialog.description', { name: confirmDeleteDialog.mcp?.name || '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('installed.deleteDialog.cancel')}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmUninstall}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('installed.deleteDialog.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
