@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MCPCard from '@/components/mcp/MCPCard';
-import { Filter, Loader2, ArrowLeft } from 'lucide-react';
+import { Filter, Loader2, ArrowLeft, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
 import { MarketMcp, MarketCategory, SortBy } from '../types/market';
@@ -28,6 +28,7 @@ export default function Browse() {
   
   // 筛选和搜索状态
   const [searchQuery, setSearchQuery] = useState(searchParams.get('query') || '');
+  const [inputValue, setInputValue] = useState(searchParams.get('query') || '');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>('popular');
 
@@ -40,6 +41,16 @@ export default function Browse() {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // 监听 URL 参数变化，更新搜索状态
+  useEffect(() => {
+    const queryFromUrl = searchParams.get('query') || '';
+    if (queryFromUrl !== searchQuery) {
+      setSearchQuery(queryFromUrl);
+      setInputValue(queryFromUrl);
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   // 搜索和筛选变化时重新加载数据
   useEffect(() => {
@@ -106,17 +117,39 @@ export default function Browse() {
   };
 
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+  };
+
+  const handleSearch = () => {
+    const trimmedValue = inputValue.trim();
+    setSearchQuery(trimmedValue);
     setCurrentPage(1);
     
     // Update URL parameters
     const newSearchParams = new URLSearchParams(searchParams);
-    if (value.trim()) {
-      newSearchParams.set('query', value.trim());
+    if (trimmedValue) {
+      newSearchParams.set('query', trimmedValue);
     } else {
       newSearchParams.delete('query');
     }
+    setSearchParams(newSearchParams);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleClearSearch = () => {
+    setInputValue('');
+    setSearchQuery('');
+    setCurrentPage(1);
+    
+    // Update URL parameters
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('query');
     setSearchParams(newSearchParams);
   };
 
@@ -164,13 +197,26 @@ export default function Browse() {
 
       {/* Search Filters */}
       <div className="flex flex-col lg:flex-row gap-4 p-4 bg-gradient-card rounded-lg border border-border/50">
-        <div className="flex-1">
-          <Input
-            placeholder={t('market.search')}
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full"
-          />
+        <div className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              placeholder={t('market.search')}
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="pr-8"
+            />
+            {inputValue && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
+                onClick={handleClearSearch}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
         
         <div className="flex gap-2">
@@ -185,7 +231,11 @@ export default function Browse() {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" size="icon">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleSearch}
+            disabled={searchLoading}>
             <Filter className="h-4 w-4" />
           </Button>
         </div>

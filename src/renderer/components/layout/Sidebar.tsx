@@ -42,6 +42,7 @@ export default function Sidebar() {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/browse?query=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
     } else {
       navigate('/browse');
     }
