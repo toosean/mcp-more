@@ -339,30 +339,8 @@ export default function MCPDetail() {
                   </Button>
                 </>
               )}
-              {installedStatus === 'installed' && (
+              {installedStatus === 'installed' || installedStatus === 'upgradeable' && (
                 <>
-                  <Button
-                    onClick={handleUninstall}
-                    disabled={installing}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    {installing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Uninstalling...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Uninstall {mcp.name}
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
-              {installedStatus === 'upgradeable' && (
-                <>              
                   <Button
                     onClick={handleUpgrade}
                     disabled={installing}
@@ -381,6 +359,26 @@ export default function MCPDetail() {
                       </>
                     )}
                   </Button>
+
+                  <Button
+                    onClick={handleUninstall}
+                    disabled={installing}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    {installing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Uninstalling...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Uninstall
+                      </>
+                    )}
+                  </Button>
+
                 </>
               )}
 
