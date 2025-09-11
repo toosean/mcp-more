@@ -20,9 +20,10 @@
     "title": "Settings",
     "description": "Configure your MCP Client and package management preferences",
     "quickSetup": {
-      "title": "Quick Setup Assistant",
-      "description": "Let us configure your MCP Client with optimal settings automatically",
+      "title": "Setup MCP Client",
+      "description": "Follow the guide below to easily set up your MCP client",
       "detectClient": "Detect Local MCP Client",
+      "quickGuide": "Setup Guide",
       "exportConfig": "Export Config",
       "importConfig": "Import Config"
     },

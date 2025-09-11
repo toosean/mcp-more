@@ -125,7 +125,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Quick Setup Section */}
-      <div className="p-4 border-t border-border">
+      {/* <div className="p-4 border-t border-border">
         <div className="text-xs font-medium text-muted-foreground mb-2">
           {t('settings.quickSetup.title')}
         </div>
@@ -140,7 +140,7 @@ export default function Sidebar() {
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
 
     </div>
   );

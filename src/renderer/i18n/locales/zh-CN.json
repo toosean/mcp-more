@@ -20,9 +20,10 @@
     "title": "设置",
     "description": "配置您的 MCP Client 和包管理首选项",
     "quickSetup": {
-      "title": "快速设置助手",
-      "description": "让我们自动为您配置 MCP Client 的最佳设置",
+      "title": "配置 MCP 客户端",
+      "description": "跟随以下指引，轻松完成您的 MCP 客户端设置",
       "detectClient": "检测本地 MCP Client",
+      "quickGuide": "设置向导",
       "exportConfig": "导出配置",
       "importConfig": "导入配置"
     },

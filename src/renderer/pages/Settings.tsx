@@ -19,7 +19,8 @@ import {
   Monitor,
   Loader2,
   Languages,
-  Bug
+  Bug,
+  BookOpen
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
@@ -130,6 +131,14 @@ export default function Settings() {
     toast({
       title: t('settings.messages.detectClient.title'),
       description: t('settings.messages.detectClient.description'),
+    });
+  };
+
+  const handleQuickGuide = () => {
+    // TODO: 实现设置向导功能
+    toast({
+      title: t('settings.quickSetup.quickGuide'),
+      description: "设置向导功能即将推出",
     });
   };
 
@@ -303,9 +312,13 @@ export default function Settings() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={handleDetectClient} className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
+            {/* <Button onClick={handleDetectClient} className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
               <Zap className="h-4 w-4 mr-2" />
               {t('settings.quickSetup.detectClient')}
+            </Button> */}
+            <Button onClick={handleQuickGuide} className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
+              <BookOpen className="h-4 w-4 mr-2" />
+              {t('settings.quickSetup.quickGuide')}
             </Button>
             {/* <Button variant="outline" onClick={handleExportConfig} className="flex-1 sm:flex-none">
               <Download className="h-4 w-4 mr-2" />
@@ -346,6 +359,21 @@ export default function Settings() {
               <Switch 
                 checked={localGeneral.autoStart || false} 
                 onCheckedChange={(checked) => setLocalGeneral(prev => ({ ...prev, autoStart: checked }))} 
+              />
+            </div>
+                        
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label>{t('settings.general.minimizeOnStartup.label')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.general.minimizeOnStartup.description')}
+                </p>
+              </div>
+              <Switch 
+                checked={localGeneral.minimizeOnStartup || false} 
+                onCheckedChange={(checked) => setLocalGeneral(prev => ({ ...prev, minimizeOnStartup: checked }))} 
               />
             </div>
             
@@ -439,21 +467,6 @@ export default function Settings() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label>{t('settings.general.minimizeOnStartup.label')}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t('settings.general.minimizeOnStartup.description')}
-                </p>
-              </div>
-              <Switch 
-                checked={localGeneral.minimizeOnStartup || false} 
-                onCheckedChange={(checked) => setLocalGeneral(prev => ({ ...prev, minimizeOnStartup: checked }))} 
-              />
             </div>
             
             <Separator />
