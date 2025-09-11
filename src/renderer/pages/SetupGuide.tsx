@@ -28,6 +28,11 @@ const ClientLogo = ({ client, className = "" }: { client: string; className?: st
         C
       </div>
     ),
+    claudecode: (
+      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-orange-600 to-orange-800 flex items-center justify-center text-white font-bold text-sm ${className}`}>
+        CC
+      </div>
+    ),
     cursor: (
       <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm ${className}`}>
         ⟫
@@ -36,6 +41,11 @@ const ClientLogo = ({ client, className = "" }: { client: string; className?: st
     vscode: (
       <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm ${className}`}>
         VS
+      </div>
+    ),
+    augment: (
+      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-sm ${className}`}>
+        A
       </div>
     ),
     others: (
@@ -99,8 +109,10 @@ export default function SetupGuide() {
       subtitle: '选择您的 MCP 客户端，按照指引完成配置',
       tabs: {
         claude: 'Claude Desktop',
+        claudecode: 'Claude Code',
         cursor: 'Cursor',
         vscode: 'VS Code',
+        augment: 'Augment Code',
         others: '其他客户端'
       },
       claude: {
@@ -128,6 +140,40 @@ export default function SetupGuide() {
           {
             title: '4. 验证配置',
             content: '在 Claude 中输入消息，如果配置成功，您将看到 MCP 工具可用的提示。'
+          }
+        ]
+      },
+      claudecode: {
+        title: 'Claude Code 配置',
+        description: '为 Claude Code CLI 工具配置 MCP 服务器连接',
+        steps: [
+          {
+            title: '1. 使用命令行添加 MCP 服务器',
+            content: '使用 Claude Code CLI 添加 MCP More 服务器：',
+            config: `claude mcp add-json ${mcpMoreAlias} '${JSON.stringify({
+              "url": `http://localhost:${portNumber}/mcp`
+            })}'`
+          },
+          {
+            title: '2. 验证服务器配置',
+            content: '列出所有已配置的 MCP 服务器：',
+            config: 'claude mcp list'
+          },
+          {
+            title: '3. 测试服务器连接',
+            content: '测试 MCP More 服务器连接：',
+            config: `claude mcp test ${mcpMoreAlias}`
+          },
+          {
+            title: '4. 项目级配置（可选）',
+            content: '在项目目录中创建 .claude/settings.local.json 文件进行项目级配置：',
+            config: `{
+  "mcpServers": {
+    "${mcpMoreAlias}": {
+      "url": "http://localhost:${portNumber}/mcp"
+    }
+  }
+}`
           }
         ]
       },
@@ -180,6 +226,29 @@ export default function SetupGuide() {
           }
         ]
       },
+      augment: {
+        title: 'Augment Code 配置',
+        description: '为 Augment Code AI 编程助手配置 MCP 服务器连接',
+        steps: [
+          {
+            title: '1. 打开 Augment 设置面板',
+            content: '在 Augment 面板右上角打开选项菜单，点击 Settings 选项。'
+          },
+          {
+            title: '2. 选择配置方式',
+            content: 'Augment Code 提供三种配置 MCP 服务器的方式：Easy MCP（推荐）、设置面板手动配置、JSON 导入配置。'
+          },
+          {
+            title: '3. 使用 JSON 导入配置',
+            content: '在设置面板中选择 "Import from JSON"，粘贴以下配置：',
+            config: mcpConfigJsonString
+          },
+          {
+            title: '4. 验证配置',
+            content: '配置完成后，您可以在设置面板中编辑或删除服务器，确认 MCP More 服务器连接正常。'
+          }
+        ]
+      },
       others: {
         title: '其他 MCP 客户端',
         description: '适用于其他支持 MCP 协议的客户端和工具',
@@ -218,15 +287,11 @@ export default function SetupGuide() {
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const transport = new StreamableHTTPClientTransport(
-  new URL("http://localhost:${portNumber}/mcp")
-);
+const transport = new StreamableHTTPClientTransport("http://localhost:${portNumber}/mcp");
 
 const client = new Client({
   name: "my-client",
   version: "1.0.0"
-}, {
-  capabilities: {}
 });
 
 await client.connect(transport);`
@@ -239,8 +304,10 @@ await client.connect(transport);`
       subtitle: 'Choose your MCP client and follow the guide to complete the configuration',
       tabs: {
         claude: 'Claude Desktop',
+        claudecode: 'Claude Code',
         cursor: 'Cursor',
         vscode: 'VS Code',
+        augment: 'Augment Code',
         others: 'Other Clients'
       },
       claude: {
@@ -268,6 +335,40 @@ await client.connect(transport);`
           {
             title: '4. Verify Configuration',
             content: 'Type a message in Claude. If configured successfully, you should see prompts indicating MCP tools are available.'
+          }
+        ]
+      },
+      claudecode: {
+        title: 'Claude Code Configuration',
+        description: 'Configure MCP server connections for Claude Code CLI tool',
+        steps: [
+          {
+            title: '1. Add MCP Server via Command Line',
+            content: 'Use Claude Code CLI to add MCP More server:',
+            config: `claude mcp add-json ${mcpMoreAlias} '${JSON.stringify({
+              "url": `http://localhost:${portNumber}/mcp`
+            })}'`
+          },
+          {
+            title: '2. Verify Server Configuration',
+            content: 'List all configured MCP servers:',
+            config: 'claude mcp list'
+          },
+          {
+            title: '3. Test Server Connection',
+            content: 'Test MCP More server connection:',
+            config: `claude mcp test ${mcpMoreAlias}`
+          },
+          {
+            title: '4. Project-level Configuration (Optional)',
+            content: 'Create .claude/settings.local.json file in project directory for project-level configuration:',
+            config: `{
+  "mcpServers": {
+    "${mcpMoreAlias}": {
+      "url": "http://localhost:${portNumber}/mcp"
+    }
+  }
+}`
           }
         ]
       },
@@ -320,6 +421,29 @@ await client.connect(transport);`
           }
         ]
       },
+      augment: {
+        title: 'Augment Code Configuration',
+        description: 'Configure MCP server connections for Augment Code AI programming assistant',
+        steps: [
+          {
+            title: '1. Open Augment Settings Panel',
+            content: 'Open the options menu in the upper right of the Augment panel and click the Settings option.'
+          },
+          {
+            title: '2. Choose Configuration Method',
+            content: 'Augment Code provides three ways to configure MCP servers: Easy MCP (recommended), Settings Panel manual configuration, and JSON import configuration.'
+          },
+          {
+            title: '3. Use JSON Import Configuration',
+            content: 'In the settings panel, select "Import from JSON" and paste the following configuration:',
+            config: mcpConfigJsonString
+          },
+          {
+            title: '4. Verify Configuration',
+            content: 'After configuration, you can edit or remove servers in the settings panel to confirm that the MCP More server connection is working properly.'
+          }
+        ]
+      },
       others: {
         title: 'Other MCP Clients',
         description: 'For other clients and tools that support MCP protocol',
@@ -358,15 +482,11 @@ await client.connect(transport);`
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const transport = new StreamableHTTPClientTransport(
-  new URL("http://localhost:${portNumber}/mcp")
-);
+const transport = new StreamableHTTPClientTransport("http://localhost:${portNumber}/mcp");
 
 const client = new Client({
   name: "my-client",
   version: "1.0.0"
-}, {
-  capabilities: {}
 });
 
 await client.connect(transport);`
@@ -399,10 +519,14 @@ await client.connect(transport);`
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <Tabs defaultValue="claude" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-6 h-auto">
             <TabsTrigger value="claude" className="flex flex-col items-center gap-2 p-4 h-auto">
               <ClientLogo client="claude" />
               <span className="text-xs">{data.tabs.claude}</span>
+            </TabsTrigger>
+            <TabsTrigger value="claudecode" className="flex flex-col items-center gap-2 p-4 h-auto">
+              <ClientLogo client="claudecode" />
+              <span className="text-xs">{data.tabs.claudecode}</span>
             </TabsTrigger>
             <TabsTrigger value="cursor" className="flex flex-col items-center gap-2 p-4 h-auto">
               <ClientLogo client="cursor" />
@@ -411,6 +535,10 @@ await client.connect(transport);`
             <TabsTrigger value="vscode" className="flex flex-col items-center gap-2 p-4 h-auto">
               <ClientLogo client="vscode" />
               <span className="text-xs">{data.tabs.vscode}</span>
+            </TabsTrigger>
+            <TabsTrigger value="augment" className="flex flex-col items-center gap-2 p-4 h-auto">
+              <ClientLogo client="augment" />
+              <span className="text-xs">{data.tabs.augment}</span>
             </TabsTrigger>
             <TabsTrigger value="others" className="flex flex-col items-center gap-2 p-4 h-auto">
               <ClientLogo client="others" />
@@ -456,6 +584,49 @@ await client.connect(transport);`
                           onClick={() => copyToClipboard(step.config!, `claude-${index}`)}
                         >
                           {copiedConfig === `claude-${index}` ? (
+                            <CheckCircle className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="claudecode" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <ClientLogo client="claudecode" className="w-6 h-6" />
+                  {data.claudecode.title}
+                </CardTitle>
+                <CardDescription>{data.claudecode.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {data.claudecode.steps.map((step, index) => (
+                  <div key={index} className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Badge variant="outline">{index + 1}</Badge>
+                      {step.title}
+                    </h3>
+                    <p className="text-muted-foreground">{step.content}</p>
+                    
+                    {step.config && (
+                      <div className="relative">
+                        <pre className="bg-muted p-4 rounded-lg text-sm font-mono overflow-x-auto">
+                          <code>{step.config}</code>
+                        </pre>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="absolute top-2 right-2"
+                          onClick={() => copyToClipboard(step.config!, `claudecode-${index}`)}
+                        >
+                          {copiedConfig === `claudecode-${index}` ? (
                             <CheckCircle className="h-4 w-4" />
                           ) : (
                             <Copy className="h-4 w-4" />
@@ -542,6 +713,49 @@ await client.connect(transport);`
                           onClick={() => copyToClipboard(step.config!, `vscode-${index}`)}
                         >
                           {copiedConfig === `vscode-${index}` ? (
+                            <CheckCircle className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="augment" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <ClientLogo client="augment" className="w-6 h-6" />
+                  {data.augment.title}
+                </CardTitle>
+                <CardDescription>{data.augment.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {data.augment.steps.map((step, index) => (
+                  <div key={index} className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Badge variant="outline">{index + 1}</Badge>
+                      {step.title}
+                    </h3>
+                    <p className="text-muted-foreground">{step.content}</p>
+                    
+                    {step.config && (
+                      <div className="relative">
+                        <pre className="bg-muted p-4 rounded-lg text-sm font-mono overflow-x-auto">
+                          <code>{step.config}</code>
+                        </pre>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="absolute top-2 right-2"
+                          onClick={() => copyToClipboard(step.config!, `augment-${index}`)}
+                        >
+                          {copiedConfig === `augment-${index}` ? (
                             <CheckCircle className="h-4 w-4" />
                           ) : (
                             <Copy className="h-4 w-4" />
