@@ -1,162 +1,313 @@
-/**
- * MCP 包管理服务
- * 处理安装、卸载、配置等操作
- */
-
 import { MarketMcp, MarketMcpDetail } from '../types/market';
+import { useConfig } from '@/hooks/use-config';
+import { Mcp } from '../../config/types';
+import { toast } from '@/hooks/use-toast';
 
-// 本地存储键名
-const INSTALLED_MCPS_KEY = 'installed-mcps';
+export function useMcpManager() {
 
-// 已安装的包列表接口
-export interface InstalledMcp {
-  identifier: string;
-  name: string;
-  version: string;
-  installedAt: string;
-  isEnabled: boolean;
-}
+  const { getConfig, updateConfig } = useConfig();
 
-/**
- * 获取已安装的包列表
- */
-export function getInstalledMcps(): InstalledMcp[] {
-  try {
-    const stored = localStorage.getItem(INSTALLED_MCPS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('Failed to load installed MCPs:', error);
-    return [];
-  }
-}
+  const installMcpManually = async (mcpData: {
+    name: string;
+    command?: string;
+    url?: string;
+    json?: string;
+    environment?: Record<string, string>;
+    editingMCP?: Mcp | null;
+  }): Promise<{ success: boolean; mcpId: string; error?: string }> => {
+    try {
+      const { name, command, url, json, environment, editingMCP } = mcpData;
+      const config = await getConfig();
+      const existingMcps = config?.mcp?.installedMcps || [];
+      
+      // Generate MCP ID
+      const generateMCPId = (name: string): string => {
+        return `TOOL/${name.toLowerCase().replace(/\s+/g, '_')}`;
+      };
+      
+      const mcpId = editingMCP?.identifier || generateMCPId(name);
+      const isEditing = !!editingMCP;
+      
+      // Check for duplicates (skip if editing the same MCP)
+      if (!isEditing || editingMCP?.identifier !== mcpId) {
+        const duplicateExists = existingMcps.some(mcp => 
+          mcp.identifier === mcpId || 
+          (mcp.name.toLowerCase() === name.toLowerCase())
+        );
+        
+        if (duplicateExists) {
+          return { 
+            success: false, 
+            mcpId,
+            error: `MCP with name "${name}" already exists`
+          };
+        }
+      }
+      
+      let updatedMCP: Mcp;
+      
+      if (json) {
+        // Handle JSON import
+        const jsonConfig = JSON.parse(json);
+        let mcpsToImport: Record<string, any> = {};
+        
+        if (jsonConfig.mcpServers) {
+          mcpsToImport = jsonConfig.mcpServers;
+        } else if (jsonConfig.name && (jsonConfig.command || jsonConfig.url)) {
+          const mcpKey = generateMCPId(jsonConfig.name);
+          mcpsToImport[mcpKey] = jsonConfig;
+        } else {
+          mcpsToImport = jsonConfig;
+        }
+        
+        const mcpEntries = Object.entries(mcpsToImport);
+        if (mcpEntries.length > 1) {
+          return {
+            success: false,
+            mcpId,
+            error: 'Only one MCP can be imported at a time'
+          };
+        }
+        
+        const [key, mcpJsonData] = mcpEntries[0];
+        const finalCommand = mergeCommandAndArgs(mcpJsonData.command, mcpJsonData.args);
+        
+        if (isEditing && editingMCP) {
+          updatedMCP = {
+            ...editingMCP,
+            name: mcpJsonData.name || editingMCP.name,
+            description: mcpJsonData.description || editingMCP.description,
+            author: mcpJsonData.author || editingMCP.author,
+            version: mcpJsonData.version || editingMCP.version,
+            license: mcpJsonData.license || editingMCP.license,
+            updated: new Date().toISOString(),
+            enabled: mcpJsonData.enabled !== false,
+            config: {
+              url: mcpJsonData.url || null,
+              command: finalCommand,
+              environment: mcpJsonData.env || mcpJsonData.environment || {},
+              json: json
+            }
+          };
+        } else {
+          updatedMCP = {
+            source: 'json',
+            identifier: mcpJsonData.identifier || mcpId,
+            name: mcpJsonData.name || key,
+            description: mcpJsonData.description || null,
+            author: mcpJsonData.author || null,
+            version: mcpJsonData.version || null,
+            updated: mcpJsonData.updated || null,
+            license: mcpJsonData.license || null,
+            installed: new Date().toISOString(),
+            enabled: mcpJsonData.enabled !== false,
+            config: {
+              url: mcpJsonData.url || null,
+              command: finalCommand,
+              environment: mcpJsonData.env || mcpJsonData.environment || {},
+              json: json
+            }
+          };
+        }
+      } else {
+        // Handle local or remote MCP
+        if (isEditing && editingMCP) {
+          updatedMCP = {
+            ...editingMCP,
+            name,
+            updated: new Date().toISOString(),
+            config: {
+              ...editingMCP.config,
+              command: command || null,
+              url: url || null,
+              environment: environment || null
+            }
+          };
+        } else {
+          updatedMCP = {
+            source: 'manual',
+            identifier: mcpId,
+            name,
+            description: null,
+            author: null,
+            version: null,
+            updated: null,
+            license: null,
+            installed: new Date().toISOString(),
+            enabled: true,
+            config: {
+              url: url || null,
+              command: command || null,
+              environment: environment || null,
+              json: null
+            }
+          };
+        }
+      }
+      
+      // Update config
+      let updatedMcps: Mcp[];
+      if (isEditing && editingMCP) {
+        updatedMcps = existingMcps.map(mcp => 
+          mcp.identifier === mcpId ? updatedMCP : mcp
+        );
+      } else {
+        updatedMcps = [...existingMcps, updatedMCP];
+      }
+      
+      await updateConfig({
+        mcp: {
+          ...config?.mcp,
+          installedMcps: updatedMcps
+        }
+      });
 
-/**
- * 检查包是否已安装
- */
-export function isPackageInstalled(identifier: string): boolean {
-  const installed = getInstalledMcps();
-  return installed.some(mcp => mcp.identifier === identifier);
-}
-
-/**
- * 获取已安装包的详细信息
- */
-export function getInstalledPackageInfo(identifier: string): InstalledMcp | null {
-  const installed = getInstalledMcps();
-  return installed.find(mcp => mcp.identifier === identifier) || null;
-}
-
-/**
- * 模拟安装包
- * TODO: 替换为实际的安装逻辑
- */
-export async function installPackage(mcp: MarketMcp | MarketMcpDetail): Promise<void> {
-  // 模拟安装时间
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  const installed = getInstalledMcps();
-  const newInstallation: InstalledMcp = {
-    identifier: mcp.identifier,
-    name: mcp.name,
-    version: mcp.version || '1.0.0',
-    installedAt: new Date().toISOString(),
-    isEnabled: true
+      try{
+        await window.mcpAPI.startMcp(updatedMCP.identifier);
+      } catch (error) {
+        window.logAPI.error(`Failed to start MCP ${updatedMCP.name}:`, error);
+        toast({
+          title: `Failed to start MCP ${updatedMCP.name}`,
+          description: error instanceof Error ? error.message : 'Unknown error occurred',
+          variant: 'destructive'
+        });
+      }
+      
+      return { success: true, mcpId: updatedMCP.identifier };
+    } catch (error) {
+      return {
+        success: false,
+        mcpId: '',
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
   };
-  
-  // 检查是否已安装，如果已安装则更新
-  const existingIndex = installed.findIndex(pkg => pkg.identifier === mcp.identifier);
-  if (existingIndex >= 0) {
-    installed[existingIndex] = newInstallation;
-  } else {
-    installed.push(newInstallation);
+
+  /**
+   * 检查包是否已安装
+   * @param identifier 包标识符
+   * @returns 包版本号，如果未安装则返回 null
+   */
+  const isMcpInstalledVersion = async (identifier: string): Promise<string | null> => {
+    const config = await getConfig();
+    const installedMcps = config.mcp.installedMcps;
+    const installedMcp = installedMcps.find(mcp => mcp.identifier === identifier);
+    return installedMcp ? installedMcp.version : null;
   }
-  
-  localStorage.setItem(INSTALLED_MCPS_KEY, JSON.stringify(installed));
-  
-  // 这里可以调用实际的安装 API
-  // await window.electronAPI?.installMcp(mcp.identifier);
-}
 
-/**
- * 模拟卸载包
- * TODO: 替换为实际的卸载逻辑
- */
-export async function uninstallPackage(identifier: string): Promise<void> {
-  // 模拟卸载时间
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  const installed = getInstalledMcps();
-  const filtered = installed.filter(mcp => mcp.identifier !== identifier);
-  
-  localStorage.setItem(INSTALLED_MCPS_KEY, JSON.stringify(filtered));
-  
-  // 这里可以调用实际的卸载 API
-  // await window.electronAPI?.uninstallMcp(identifier);
-}
+  const mergeCommandAndArgs = (command: string | null, args: string[] | null): string | null => {
+    if (!command) return null;
+    if (args && Array.isArray(args) && args.length > 0) {
+      return `${command} ${args.join(' ')}`;
+    }
+    return command;
+  };
 
-/**
- * 切换包的启用/禁用状态
- */
-export async function togglePackageEnabled(identifier: string): Promise<boolean> {
-  const installed = getInstalledMcps();
-  const packageIndex = installed.findIndex(mcp => mcp.identifier === identifier);
-  
-  if (packageIndex === -1) {
-    throw new Error('Package not found');
+  const parseMcpJson = async (mcpConfiguration: string) => {
+    
+    const json = JSON.parse(mcpConfiguration);
+    const mcpServer = json.mcpServers[0];
+
+    let finalCommand = null;
+    if(mcpServer.command) {
+      finalCommand = mergeCommandAndArgs(mcpServer.command, mcpServer.args);
+    }
+
+    return {
+      url: mcpServer.url || mcpServer.serverUrl,
+      command: finalCommand,
+      environment: mcpServer.env,
+      json: mcpConfiguration
+    };
   }
-  
-  installed[packageIndex].isEnabled = !installed[packageIndex].isEnabled;
-  localStorage.setItem(INSTALLED_MCPS_KEY, JSON.stringify(installed));
-  
-  return installed[packageIndex].isEnabled;
-}
 
-/**
- * 生成安装命令
- */
-export function generateInstallCommand(identifier: string, method: 'cli' | 'npm' | 'yarn' = 'cli'): string {
-  switch (method) {
-    case 'npm':
-      return `npm install @mcp/${identifier}`;
-    case 'yarn':
-      return `yarn add @mcp/${identifier}`;
-    case 'cli':
-    default:
-      return `mcp install ${identifier}`;
+  /**
+   * 模拟安装包
+   * TODO: 替换为实际的安装逻辑
+   */
+  const installPackage = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
+
+    const { getConfig, updateConfig } = useConfig();
+    const config = await getConfig();
+
+    const installedMcps = config.mcp.installedMcps;
+    const installedMcp = installedMcps.find(mcp => mcp.identifier === mcp.identifier);
+
+    if (installedMcp) {
+      throw new Error('MCP already installed');
+    }
+
+    const mcpConfig = await parseMcpJson(mcp.configuration);
+
+    installedMcps.push({
+      source: 'market',
+      identifier: mcp.identifier,
+      name: mcp.name,
+      description: mcp.description,
+      author: mcp.author,
+      version: mcp.version,
+      updated: mcp.updatedAt,
+      license: mcp.license,
+      installed: new Date().toISOString(),
+      enabled: true,
+      config: {
+        url: mcpConfig.url,
+        command: mcpConfig.command,
+        environment: mcpConfig.environment,
+        json: mcpConfig.json,
+      },
+    });
+    
+    updateConfig({
+      mcp: {
+        installedMcps: installedMcps,
+      },
+    });
+
+    window.mcpAPI.startMcp(mcp.identifier);
+
   }
-}
 
-/**
- * 获取包的配置文件路径
- */
-export function getPackageConfigPath(identifier: string): string {
-  // TODO: 根据实际的配置文件结构调整
-  return `~/.mcp/packages/${identifier}/config.json`;
-}
+  const upgradePackage = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
 
-/**
- * 检查包的依赖关系
- * TODO: 实现依赖检查逻辑
- */
-export async function checkDependencies(identifier: string): Promise<{
-  satisfied: boolean;
-  missing: string[];
-}> {
-  // 模拟依赖检查
+    await uninstallPackage(mcp.identifier);
+    await installPackage(mcp);
+    
+  }
+
+  /**
+   * 模拟卸载包
+   * TODO: 替换为实际的卸载逻辑
+   */
+  const uninstallPackage = async (identifier: string): Promise<void> => {
+
+    const { getConfig, updateConfig } = useConfig();
+    const config = await getConfig();
+    
+    let installedMcps = config.mcp.installedMcps;
+    const installedMcp = installedMcps.find(mcp => mcp.identifier === mcp.identifier);
+
+    if (!installedMcp) {
+      throw new Error('MCP not installed');
+    }
+
+    await window.mcpAPI.stopMcp(identifier);
+
+    installedMcps = installedMcps.filter(mcp => mcp.identifier !== identifier);
+
+    updateConfig({
+      mcp: {
+        installedMcps: installedMcps,
+      },
+    });
+  }
+
   return {
-    satisfied: true,
-    missing: []
-  };
-}
-
-/**
- * 获取包的运行状态
- * TODO: 实现实际的状态检查
- */
-export function getPackageStatus(identifier: string): 'running' | 'stopped' | 'error' | 'unknown' {
-  const installed = getInstalledPackageInfo(identifier);
-  if (!installed) return 'unknown';
-  
-  // 这里应该调用实际的状态检查 API
-  return installed.isEnabled ? 'running' : 'stopped';
+    isMcpInstalledVersion,
+    parseMcpJson,
+    installPackage,
+    upgradePackage,
+    uninstallPackage,
+    installMcpManually,
+  }
 }

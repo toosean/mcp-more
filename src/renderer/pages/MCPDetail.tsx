@@ -28,14 +28,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import { toast } from '@/hooks/use-toast';
 import { MarketMcpDetail } from '../types/market';
 import { getMcpDetail } from '@/services/marketApi';
-import { 
-  installPackage, 
-  uninstallPackage, 
-  isPackageInstalled,
-  generateInstallCommand,
-  getPackageStatus
-} from '@/services/mcpManager';
-
+import { useMcpManager } from '@/services/mcpManager';
 
 export default function MCPDetail() {
   const { org, id } = useParams<{ org: string, id: string }>();
@@ -43,8 +36,8 @@ export default function MCPDetail() {
   
   const [mcp, setMcp] = useState<MarketMcpDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [packageStatus, setPackageStatus] = useState<'running' | 'stopped' | 'error' | 'unknown'>('unknown');
+  const [installedVersion, setInstalledVersion] = useState<string | null>(null);
+  const { isMcpInstalledVersion, installPackage, uninstallPackage } = useMcpManager();
   
   useEffect(() => {
     if (org && id) {
@@ -60,13 +53,9 @@ export default function MCPDetail() {
       
       // 检查安装状态
       if (detail) {
-        const installed = isPackageInstalled(detail.identifier);
-        setIsInstalled(installed);
+        const installedVersion = await isMcpInstalledVersion(detail.identifier);
+        setInstalledVersion(installedVersion);
         
-        if (installed) {
-          const status = getPackageStatus(detail.identifier);
-          setPackageStatus(status);
-        }
       }
     } catch (error) {
       console.error('Failed to load MCP detail:', error);
@@ -119,9 +108,6 @@ export default function MCPDetail() {
       
       await installPackage(mcp);
       
-      setIsInstalled(true);
-      setPackageStatus('running');
-      
       toast({
         title: "Installation Complete",
         description: `${mcp.name} has been installed successfully!`,
@@ -147,10 +133,7 @@ export default function MCPDetail() {
       });
       
       await uninstallPackage(mcp.identifier);
-      
-      setIsInstalled(false);
-      setPackageStatus('unknown');
-      
+
       toast({
         title: "Uninstallation Complete",
         description: `${mcp.name} has been removed successfully!`,
@@ -295,7 +278,7 @@ export default function MCPDetail() {
               <CardTitle className="text-lg">Package Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!isInstalled ? (
+              {!installedVersion ? (
                 <>
                   <Button 
                     onClick={handleInstall}
@@ -307,16 +290,15 @@ export default function MCPDetail() {
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-2 p-2 bg-muted/50 rounded">
-                    <div className={`w-2 h-2 rounded-full ${
-                      packageStatus === 'running' ? 'bg-green-500' :
-                      packageStatus === 'stopped' ? 'bg-yellow-500' :
-                      packageStatus === 'error' ? 'bg-red-500' : 'bg-gray-500'
-                    }`} />
-                    <span className="text-sm font-medium">
-                      Status: {packageStatus.charAt(0).toUpperCase() + packageStatus.slice(1)}
-                    </span>
-                  </div>
+                  <>
+                    <Button 
+                      onClick={handleInstall}
+                      className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Install {mcp.name}
+                    </Button>
+                  </>
                   
                   <Button 
                     onClick={handleConfigure}

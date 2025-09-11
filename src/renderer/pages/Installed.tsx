@@ -20,7 +20,6 @@ interface DisplayMCP {
   version: string | null;
   downloads: number | null;
   rating: number | null;
-  tags: string[];
   status: 'running' | 'stopped';
   lastUpdated: string | null;
   installed: string | null;
@@ -196,7 +195,6 @@ export default function Installed() {
             version: mcp.version,
             downloads: null as number | null, // Not tracked for manual MCPs
             rating: null as number | null, // Not tracked for manual MCPs
-            tags: mcp.category || [],
             status: mcp.enabled ? 'running' : 'stopped' as 'running' | 'stopped',
             lastUpdated: validateDate(updatedDate),
             installed: validateDate(installedDate),
@@ -393,10 +391,6 @@ export default function Installed() {
     // 重新加载MCPs
     await loadMcps();
     setEditingMCP(null);
-
-    // Start client with the newly added MCP name
-    await window.mcpAPI.startMcp(mcpIdentifier);
-
   }, [loadMcps]);
 
   const handleStartAll = async () => {
@@ -691,13 +685,13 @@ export default function Installed() {
                         )}
                       </div>
                       
-                      <div className="flex flex-wrap gap-1">
+                      {/* <div className="flex flex-wrap gap-1">
                         {mcp.tags.map((tag) => (
                           <Badge key={tag} variant="secondary" className="text-xs">
                             {tag}
                           </Badge>
                         ))}
-                      </div>
+                      </div> */}
                     </div>
                     
                     <div className="flex gap-2 ml-4">

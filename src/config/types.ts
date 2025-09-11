@@ -28,12 +28,9 @@ export interface Mcp {
   name: string;
   description: string | null;
   author: string | null;
-  category: string[] | null;
   version: string | null;
   updated: string | null;
   license: string | null;
-  homepage: string | null;
-  repository: string | null;
   installed: string | null;
   enabled: boolean;
   config: {

@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Folder, Globe, FileText } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
-import { useConfig } from '@/hooks/use-config';
 import { Mcp } from '../../../config/types';
+import { useMcpManager } from '../../services/mcpManager';
 
 interface AddMCPDialogProps {
   open: boolean;
@@ -20,7 +20,7 @@ interface AddMCPDialogProps {
 
 export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, editingMCP }: AddMCPDialogProps) {
   const { t } = useI18n();
-  const { updateConfig, getConfig } = useConfig();
+  const { installMcpManually } = useMcpManager();
   
   const isEditing = !!editingMCP;
   const isLocalMCP = editingMCP?.config?.command && editingMCP?.source !== 'json';
@@ -61,45 +61,13 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     return { generateMCPId, parseEnvironmentVariables, serializeEnvironmentVariables };
   }, []);
 
-  // Validation helper
-  const validateMCPIdentifier = useCallback(async (name: string, mcpId?: string): Promise<{ isValid: boolean; error?: string }> => {
-    try {
-      const config = await getConfig();
-      const existingMcps = config?.mcp?.installedMcps || [];
-      
-      const generatedId = mcpId || mcpHelpers.generateMCPId(name);
-      
-      // Skip validation if editing the same MCP
-      if (isEditing && editingMCP?.identifier === generatedId) {
-        return { isValid: true };
-      }
-      
-      const duplicateExists = existingMcps.some(mcp => 
-        mcp.identifier === generatedId || 
-        (mcp.name.toLowerCase() === name.toLowerCase())
-      );
-      
-      if (duplicateExists) {
-        return { 
-          isValid: false, 
-          error: t('addMCP.errors.duplicateIdentifier', { name })
-        };
-      }
-      
-      return { isValid: true };
-    } catch (error) {
-      return { isValid: false, error: 'Failed to validate MCP identifier' };
-    }
-  }, [getConfig, mcpHelpers.generateMCPId, isEditing, editingMCP, t]);
-
   // Common form validation
-  const validateForm = useCallback(async (formData: { name: string; [key: string]: any }): Promise<{ isValid: boolean; error?: string }> => {
+  const validateForm = useCallback((formData: { name: string; [key: string]: any }): { isValid: boolean; error?: string } => {
     if (!formData.name?.trim()) {
       return { isValid: false, error: t('addMCP.errors.nameRequired') || 'Name is required' };
     }
-    
-    return await validateMCPIdentifier(formData.name);
-  }, [validateMCPIdentifier, t]);
+    return { isValid: true };
+  }, [t]);
 
 
   const handleLocalMCPSubmit = async (e: React.FormEvent) => {
@@ -110,7 +78,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     const envText = formData.get('local-env') as string || '';
 
     // Validate form
-    const validation = await validateForm({ name, command });
+    const validation = validateForm({ name, command });
     if (!validation.isValid) {
       toast({
         title: t('common.error'),
@@ -130,45 +98,27 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     }
 
     try {
-      const mcpId = editingMCP?.identifier || mcpHelpers.generateMCPId(name);
-      const updatedMCP: Mcp = isEditing && editingMCP ? {
-        ...editingMCP,
+      const result = await installMcpManually({
         name,
-        updated: new Date().toISOString(),
-        config: {
-          ...editingMCP.config,
-          command,
-          environment: mcpHelpers.parseEnvironmentVariables(envText),
-        }
-      } : {
-        source: 'manual',
-        identifier: mcpId,
-        name,
-        description: null,
-        author: null,
-        category: null,
-        version: null,
-        updated: null,
-        license: null,
-        homepage: null,
-        repository: null,
-        installed: new Date().toISOString(),
-        enabled: true,
-        config: {
-          url: null,
-          command,
-          environment: mcpHelpers.parseEnvironmentVariables(envText),
-          json: null
-        }
-      };
+        command,
+        environment: mcpHelpers.parseEnvironmentVariables(envText),
+        editingMCP
+      });
 
-      await updateMCPConfig(updatedMCP, mcpId);
+      if (!result.success) {
+        toast({
+          title: t('common.error'),
+          description: result.error || 'Failed to save MCP configuration',
+          variant: 'destructive'
+        });
+        return;
+      }
       
       toast({
         title: isEditing ? t('addMCP.toast.localUpdated') : t('addMCP.toast.localAdded'),
         description: isEditing ? t('addMCP.toast.localUpdatedDesc') : t('addMCP.toast.localAddedDesc'),
       });
-      onMcpAddedOrUpdated?.(name);
+      onMcpAddedOrUpdated?.(result.mcpId);
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -186,7 +136,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     const url = formData.get('remote-url') as string;
 
     // Validate form
-    const validation = await validateForm({ name, url });
+    const validation = validateForm({ name, url });
     if (!validation.isValid) {
       toast({
         title: t('common.error'),
@@ -206,46 +156,26 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     }
 
     try {
-      const mcpId = editingMCP?.identifier || mcpHelpers.generateMCPId(name);
-      const updatedMCP: Mcp = isEditing && editingMCP ? {
-        ...editingMCP,
+      const result = await installMcpManually({
         name,
-        homepage: url,
-        repository: url,
-        updated: new Date().toISOString(),
-        config: {
-          ...editingMCP.config,
-          url,
-        }
-      } : {
-        source: 'manual',
-        identifier: mcpId,
-        name,
-        description: null,
-        author: null,
-        category: null,
-        version: null,
-        updated: null,
-        license: null,
-        homepage: url,
-        repository: url,
-        installed: new Date().toISOString(),
-        enabled: true,
-        config: {
-          url,
-          command: null,
-          environment: null,
-          json: null
-        }
-      };
+        url,
+        editingMCP
+      });
 
-      await updateMCPConfig(updatedMCP, mcpId);
+      if (!result.success) {
+        toast({
+          title: t('common.error'),
+          description: result.error || 'Failed to save MCP configuration',
+          variant: 'destructive'
+        });
+        return;
+      }
 
       toast({
         title: isEditing ? t('addMCP.toast.remoteUpdated') : t('addMCP.toast.remoteAdded'),
         description: isEditing ? t('addMCP.toast.remoteUpdatedDesc') : t('addMCP.toast.remoteAddedDesc'),
       });
-      onMcpAddedOrUpdated?.(mcpId);
+      onMcpAddedOrUpdated?.(result.mcpId);
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -256,140 +186,6 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     }
   };
 
-  // Common MCP config update helper
-  const updateMCPConfig = useCallback(async (updatedMCP: Mcp, mcpId: string) => {
-    const config = await getConfig();
-    let updatedMcps: Mcp[];
-
-    if (isEditing && editingMCP) {
-      updatedMcps = config?.mcp?.installedMcps?.map(mcp => 
-        mcp.identifier === mcpId ? updatedMCP : mcp
-      ) || [updatedMCP];
-    } else {
-      updatedMcps = [...(config?.mcp?.installedMcps || []), updatedMCP];
-    }
-
-    await updateConfig({
-      mcp: {
-        ...config?.mcp,
-        installedMcps: updatedMcps
-      }
-    });
-  }, [getConfig, updateConfig, isEditing, editingMCP]);
-
-  // Helper function to merge command and args
-  const mergeCommandAndArgs = (command: string | null, args: string[] | null): string | null => {
-    if (!command) return null;
-    if (args && Array.isArray(args) && args.length > 0) {
-      return `${command} ${args.join(' ')}`;
-    }
-    return command;
-  };
-
-  // Helper function to create MCP package from JSON data
-  const createMCPFromJsonData = (
-    mcpData: any, 
-    key: string, 
-    jsonToSave: string, 
-    isUpdate: boolean = false, 
-    existingMCP?: Mcp
-  ): Mcp => {
-    const mcpId = existingMCP?.identifier || mcpHelpers.generateMCPId(mcpData.name || key);
-    const finalCommand = mergeCommandAndArgs(mcpData.command, mcpData.args);
-    
-    if (isUpdate && existingMCP) {
-      return {
-        ...existingMCP,
-        name: mcpData.name || existingMCP.name,
-        description: mcpData.description || existingMCP.description,
-        author: mcpData.author || existingMCP.author,
-        category: mcpData.category || existingMCP.category,
-        version: mcpData.version || existingMCP.version,
-        license: mcpData.license || existingMCP.license,
-        homepage: mcpData.homepage || mcpData.url || existingMCP.homepage,
-        repository: mcpData.repository || mcpData.url || existingMCP.repository,
-        updated: new Date().toISOString(),
-        enabled: mcpData.enabled !== false,
-        config: {
-          url: mcpData.url || null,
-          command: finalCommand,
-          environment: mcpData.env || mcpData.environment || {},
-          json: jsonToSave
-        }
-      };
-    } else {
-      return {
-        source: 'json',
-        identifier: mcpData.identifier || mcpId,
-        name: mcpData.name || key,
-        description: mcpData.description || null,
-        author: mcpData.author || null,
-        category: mcpData.category || null,
-        version: mcpData.version || null,
-        updated: mcpData.updated || null,
-        license: mcpData.license || null,
-        homepage: mcpData.homepage || mcpData.url || null,
-        repository: mcpData.repository || mcpData.url || null,
-        installed: new Date().toISOString(),
-        enabled: mcpData.enabled !== false,
-        config: {
-          url: mcpData.url || null,
-          command: finalCommand,
-          environment: mcpData.env || mcpData.environment || {},
-          json: jsonToSave
-        }
-      };
-    }
-  };
-
-  // Helper function to parse JSON and determine import format
-  const parseJsonForImport = (jsonConfig: any, jsonText: string) => {
-    let mcpsToImport: Record<string, any> = {};
-    
-    if (jsonConfig.mcpServers) {
-      // Claude config format
-      mcpsToImport = jsonConfig.mcpServers;
-    } else if (jsonConfig.name && (jsonConfig.command || jsonConfig.url)) {
-      // Single MCP format
-      const mcpId = mcpHelpers.generateMCPId(jsonConfig.name);
-      mcpsToImport[mcpId] = jsonConfig;
-    } else {
-      // Assume it's already in the right format
-      mcpsToImport = jsonConfig;
-    }
-
-    const isSingleMCP = Object.keys(mcpsToImport).length === 1 && 
-      (jsonConfig.name || !jsonConfig.mcpServers);
-
-    return { mcpsToImport, isSingleMCP };
-  };
-
-  // Helper function to generate JSON to save for each MCP
-  const generateJsonToSave = (
-    key: string, 
-    mcpData: any, 
-    isSingleMCP: boolean, 
-    jsonText: string, 
-    jsonConfig: any
-  ): string => {
-    if (isSingleMCP) {
-      // 单个 MCP 导入：保存完整的原始 JSON
-      return jsonText;
-    } else {
-      // 多个 MCP 导入：为每个 MCP 保存其对应的 JSON 片段，包装在合适的结构中
-      if (jsonConfig.mcpServers) {
-        // Claude 配置格式：保存单个 MCP 的配置，包装在 mcpServers 结构中
-        return JSON.stringify({
-          mcpServers: {
-            [key]: mcpData
-          }
-        }, null, 2);
-      } else {
-        // 其他格式：直接保存 MCP 数据
-        return JSON.stringify(mcpData, null, 2);
-      }
-    }
-  };
 
   const handleJSONImport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -406,26 +202,13 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     }
 
     try {
+      // Parse JSON to get the name for validation
       const jsonConfig = JSON.parse(jsonText);
-      const config = await getConfig();
-      let firstMcpId: string | undefined;
-      let updatedMcps = [...(config?.mcp?.installedMcps || [])];
-
-      if (isEditing && editingMCP) {
-        // 编辑现有的 JSON MCP
-        const mcpId = editingMCP.identifier || mcpHelpers.generateMCPId(editingMCP.identifier || 'json-mcp');
-        const updatedMCP = createMCPFromJsonData(jsonConfig, 'edit', jsonText, true, editingMCP);
-        updatedMcps = updatedMcps.map(mcp => 
-          mcp.identifier === mcpId ? updatedMCP : mcp
-        );
-        firstMcpId = updatedMCP.identifier;
-      } else {
-        // 导入新的 JSON MCP
-        const { mcpsToImport, isSingleMCP } = parseJsonForImport(jsonConfig, jsonText);
-
-        // 检查是否超过一个 MCP
-        const mcpEntries = Object.entries(mcpsToImport);
-        if(mcpEntries.length > 1) {
+      let mcpName = '';
+      
+      if (jsonConfig.mcpServers) {
+        const servers = Object.entries(jsonConfig.mcpServers);
+        if (servers.length > 1) {
           toast({
             title: t('common.error'),
             description: t('addMCP.errors.singleMcpOnly') || 'Only one MCP can be imported at a time',
@@ -433,41 +216,35 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
           });
           return;
         }
-        
-        for (const [key, mcpData] of mcpEntries) {
-          // Validate for duplicate identifier
-          const mcpName = mcpData.name || key;
-          const validation = await validateMCPIdentifier(mcpName);
-          if (!validation.isValid) {
-            toast({
-              title: t('common.error'),
-              description: validation.error,
-              variant: 'destructive'
-            });
-            return;
-          }
-          
-          const mcpId = mcpHelpers.generateMCPId(mcpName);
-          const jsonToSave = generateJsonToSave(key, mcpData, isSingleMCP, jsonText, jsonConfig);
-          const newMCP = createMCPFromJsonData(mcpData, key, jsonToSave, false);
-          updatedMcps.push(newMCP);
-          firstMcpId = newMCP.identifier;
-        }
+        const [key, serverData] = servers[0] as [string, any];
+        mcpName = serverData.name || key;
+      } else if (jsonConfig.name) {
+        mcpName = jsonConfig.name;
+      } else {
+        mcpName = Object.keys(jsonConfig)[0] || 'imported-mcp';
       }
 
-      await updateConfig({
-        mcp: {
-          ...config?.mcp,
-          installedMcps: updatedMcps
-        }
+      const result = await installMcpManually({
+        name: mcpName,
+        json: jsonText,
+        editingMCP
       });
+
+      if (!result.success) {
+        toast({
+          title: t('common.error'),
+          description: result.error || 'Failed to import JSON configuration',
+          variant: 'destructive'
+        });
+        return;
+      }
 
       toast({
         title: t('addMCP.toast.jsonImported'),
         description: t('addMCP.toast.jsonImportedDesc'),
       });
 
-      onMcpAddedOrUpdated?.(firstMcpId);
+      onMcpAddedOrUpdated?.(result.mcpId);
       onOpenChange(false);
     } catch (error) {
       const errorMessage = error instanceof SyntaxError 

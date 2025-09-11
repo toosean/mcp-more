@@ -6,13 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Download, Star, Settings, Eye, Loader2 } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
 import { toast } from '@/hooks/use-toast';
-import { 
-  installPackage, 
-  uninstallPackage, 
-  isPackageInstalled,
-  getPackageStatus,
-  togglePackageEnabled
-} from '@/services/mcpManager';
+import { useMcpManager } from '@/services/mcpManager';
 import { MarketMcp } from '../../types/market';
 
 interface MCPCardProps {
@@ -43,20 +37,16 @@ export default function MCPCard({
   const navigate = useNavigate();
   
   // 内部状态管理
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [packageStatus, setPackageStatus] = useState<'running' | 'stopped' | 'error' | 'unknown'>('unknown');
+  const [installedVersion, setInstalledVersion] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { isMcpInstalledVersion, installPackage, uninstallPackage } = useMcpManager();
   
   // 初始化时检查安装状态
   useEffect(() => {
-    const checkInstallStatus = () => {
-      const installed = isPackageInstalled(id);
-      setIsInstalled(installed);
+    const checkInstallStatus = async () => {
+      const installedVersion = await isMcpInstalledVersion(id);
+      setInstalledVersion(installedVersion);
       
-      if (installed) {
-        const status = getPackageStatus(id);
-        setPackageStatus(status);
-      }
     };
     
     checkInstallStatus();
@@ -92,9 +82,6 @@ export default function MCPCard({
       
       await installPackage(packageData);
       
-      setIsInstalled(true);
-      setPackageStatus('running');
-      
       toast({
         title: "Installation Complete",
         description: `${name} has been installed successfully!`,
@@ -124,10 +111,7 @@ export default function MCPCard({
       });
       
       await uninstallPackage(id);
-      
-      setIsInstalled(false);
-      setPackageStatus('unknown');
-      
+
       toast({
         title: "Uninstallation Complete",
         description: `${name} has been removed successfully!`,
@@ -159,32 +143,6 @@ export default function MCPCard({
   const handleDetail = () => {
     console.log('Navigating to detail page for:', id); // 调试日志
     navigate(`/mcp/${id}`);
-  };
-  
-  const handleToggleEnabled = async () => {
-    if (isLoading || !isInstalled) return;
-    
-    try {
-      setIsLoading(true);
-      
-      const newStatus = await togglePackageEnabled(id);
-      setPackageStatus(newStatus ? 'running' : 'stopped');
-      
-      toast({
-        title: newStatus ? "Package Enabled" : "Package Disabled",
-        description: `${name} is now ${newStatus ? 'running' : 'stopped'}.`,
-      });
-      
-    } catch (error) {
-      console.error('Failed to toggle package status:', error);
-      toast({
-        title: "Operation Failed",
-        description: `Failed to ${packageStatus === 'running' ? 'stop' : 'start'} ${name}.`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -242,20 +200,10 @@ export default function MCPCard({
       
       <CardFooter className="pt-0">
         <div className="flex gap-2 w-full">
-          {isInstalled ? (
+          {installedVersion ? (
             <>
               {/* 显示运行状态 */}
-              <div className="flex items-center gap-2 px-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  packageStatus === 'running' ? 'bg-green-500' :
-                  packageStatus === 'stopped' ? 'bg-yellow-500' :
-                  packageStatus === 'error' ? 'bg-red-500' : 'bg-gray-500'
-                }`} />
-                <span className="text-xs text-muted-foreground">
-                  {packageStatus.charAt(0).toUpperCase() + packageStatus.slice(1)}
-                </span>
-              </div>
-              
+
               <Button
                 variant="outline"
                 size="sm"
