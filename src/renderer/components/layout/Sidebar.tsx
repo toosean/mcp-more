@@ -99,7 +99,8 @@ export default function Sidebar() {
         {navigation.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href === '/' && location.pathname === '/browse') ||
-            (item.href === "/" && location.pathname.startsWith('/mcp/'));
+            (item.href === "/" && location.pathname.startsWith('/mcp/')) ||
+            (item.href === "/settings" && location.pathname === "/setup-guide");
           return (
             <Link
               key={item.name}
