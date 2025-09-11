@@ -97,7 +97,8 @@ export default function Sidebar() {
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href || 
-            (item.href === '/' && location.pathname === '/browse');
+            (item.href === '/' && location.pathname === '/browse') ||
+            (item.href === "/" && location.pathname.startsWith('/mcp/'));
           return (
             <Link
               key={item.name}
