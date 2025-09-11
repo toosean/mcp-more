@@ -26,6 +26,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import { toast } from '@/hooks/use-toast';
+import { useI18n } from '@/hooks/use-i18n';
 import { MarketMcpDetail } from '../types/market';
 import { getMcpDetail } from '@/services/marketApi';
 import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
@@ -33,6 +34,7 @@ import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
 export default function MCPDetail() {
   const { org, id } = useParams<{ org: string, id: string }>();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const [mcp, setMcp] = useState<MarketMcpDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,8 +63,8 @@ export default function MCPDetail() {
     } catch (error) {
       window.logAPI.error('Failed to load MCP detail:', error);
       toast({
-        title: "Error",
-        description: "Failed to load package details",
+        title: t('common.error'),
+        description: t('mcpDetail.error.loadFailed'),
         variant: "destructive"
       });
     } finally {
@@ -75,7 +77,7 @@ export default function MCPDetail() {
       <div className="flex-1 p-6 flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading package details...</span>
+          <span>{t('mcpDetail.loading')}</span>
         </div>
       </div>
     );
@@ -85,12 +87,12 @@ export default function MCPDetail() {
     return (
       <div className="flex-1 p-6 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Package Details Unavailable</h1>
-          <p className="text-muted-foreground">Package ID: {org}/{id}</p>
-          <p className="text-muted-foreground">Unable to load detailed information from the server.</p>
+          <h1 className="text-2xl font-bold">{t('mcpDetail.error.title')}</h1>
+          <p className="text-muted-foreground">{t('mcpDetail.error.packageId')}: {org}/{id}</p>
+          <p className="text-muted-foreground">{t('mcpDetail.error.description')}</p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Market
+            {t('mcpDetail.actions.backToMarket')}
           </Button>
         </div>
       </div>
@@ -103,8 +105,8 @@ export default function MCPDetail() {
     try {
       setInstalling(true);
       toast({
-        title: "Upgrading MCP",
-        description: `Upgrading ${mcp.name}...`,
+        title: t('mcpDetail.toast.upgrading'),
+        description: t('mcpDetail.toast.upgradingDesc', { name: mcp.name }),
       });
 
       await upgradeMcp(mcp);
@@ -114,15 +116,15 @@ export default function MCPDetail() {
       setInstalledStatus(newInstalledStatus);
 
       toast({
-        title: "Upgrade Complete",
-        description: `${mcp.name} has been upgraded successfully!`,
+        title: t('mcpDetail.toast.upgradeComplete'),
+        description: t('mcpDetail.toast.upgradeCompleteDesc', { name: mcp.name }),
       });
 
     } catch (error) {
       window.logAPI.error('Upgrade failed:', error);
       toast({
-        title: "Upgrade Failed",
-        description: `Failed to upgrade ${mcp.name}. Please try again.`,
+        title: t('mcpDetail.toast.upgradeFailed'),
+        description: t('mcpDetail.toast.upgradeFailedDesc', { name: mcp.name }),
         variant: "destructive"
       });
     } finally {
@@ -137,8 +139,8 @@ export default function MCPDetail() {
     try {
       setInstalling(true);
       toast({
-        title: "Installing MCP",
-        description: `Installing ${mcp.name}...`,
+        title: t('mcpDetail.toast.installing'),
+        description: t('mcpDetail.toast.installingDesc', { name: mcp.name }),
       });
 
       await installMcp(mcp);
@@ -148,15 +150,15 @@ export default function MCPDetail() {
       setInstalledStatus(newInstalledStatus);
 
       toast({
-        title: "Installation Complete",
-        description: `${mcp.name} has been installed successfully!`,
+        title: t('mcpDetail.toast.installComplete'),
+        description: t('mcpDetail.toast.installCompleteDesc', { name: mcp.name }),
       });
 
     } catch (error) {
       window.logAPI.error('Installation failed:', error);
       toast({
-        title: "Installation Failed",
-        description: `Failed to install ${mcp.name}. Please try again.`,
+        title: t('mcpDetail.toast.installFailed'),
+        description: t('mcpDetail.toast.installFailedDesc', { name: mcp.name }),
         variant: "destructive"
       });
     } finally {

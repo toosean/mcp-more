@@ -193,7 +193,23 @@
       "stopped": "MCP 已停止",
       "stoppedDesc": "{{name}} 已成功停止。",
       "toggleFailed": "切换 MCP 状态失败",
-      "uninstallFailed": "卸载 MCP 失败"
+      "uninstallFailed": "卸载 MCP 失败",
+      "startAllFailed": "启动全部 MCP 失败",
+      "stopAllFailed": "停止全部 MCP 失败",
+      "startedAll": "全部 MCP 已启动",
+      "startedAllDesc": "已成功启动 {{count}} 个 MCP。",
+      "stoppedAll": "全部 MCP 已停止",
+      "stoppedAllDesc": "已成功停止 {{count}} 个 MCP。",
+      "allRunning": "全部 MCP 已运行",
+      "allRunningDesc": "所有 MCP 都已在运行中。",
+      "allStopped": "全部 MCP 已停止",
+      "allStoppedDesc": "所有 MCP 都已停止。"
+    },
+    "deleteDialog": {
+      "title": "确认删除",
+      "description": "确定要删除 {{name}} 吗？此操作不可撤销。",
+      "cancel": "取消",
+      "confirm": "删除"
     }
   },
   "addMCP": {
@@ -250,5 +266,92 @@
   "editMCP": {
     "title": "编辑 MCP",
     "description": "修改现有 MCP 的配置。"
+  },
+  "mcpCard": {
+    "actions": {
+      "install": "安装",
+      "uninstall": "卸载",
+      "upgrade": "升级",
+      "installing": "正在安装...",
+      "uninstalling": "正在卸载...",
+      "upgrading": "正在升级...",
+      "detail": "详情",
+      "configure": "配置"
+    },
+    "info": {
+      "by": "作者",
+      "version": "版本",
+      "unknown": "未知",
+      "noDescription": "暂无描述"
+    },
+    "toast": {
+      "upgradeFailed": "升级失败",
+      "upgradeFailedDesc": "升级 {{name}} 失败，请重试。",
+      "installFailed": "安装失败",
+      "installFailedDesc": "安装 {{name}} 失败，请重试。",
+      "uninstalling": "正在卸载 MCP",
+      "uninstallingDesc": "正在移除 {{name}}...",
+      "uninstallComplete": "卸载完成",
+      "uninstallCompleteDesc": "{{name}} 已成功移除！",
+      "uninstallFailed": "卸载失败",
+      "uninstallFailedDesc": "移除 {{name}} 失败，请重试。",
+      "openingConfig": "打开配置",
+      "openingConfigDesc": "正在打开 {{name}} 的配置..."
+    }
+  },
+  "mcpDetail": {
+    "loading": "正在加载包详情...",
+    "error": {
+      "title": "包详情不可用",
+      "packageId": "包ID",
+      "description": "无法从服务器加载详细信息。",
+      "loadFailed": "加载包详情失败"
+    },
+    "actions": {
+      "backToMarket": "返回市场",
+      "install": "安装 {{name}}",
+      "uninstall": "卸载",
+      "upgrade": "升级",
+      "configure": "配置"
+    },
+    "sections": {
+      "overview": "概览",
+      "documentation": "文档",
+      "packageActions": "包操作",
+      "packageInfo": "包信息"
+    },
+    "info": {
+      "author": "作者",
+      "version": "版本",
+      "rating": "评分",
+      "downloads": "下载量",
+      "updated": "更新时间",
+      "license": "许可证",
+      "homepage": "主页",
+      "repository": "代码仓库",
+      "unknown": "未知",
+      "na": "不可用",
+      "noDescription": "暂无描述"
+    },
+    "toast": {
+      "upgrading": "正在升级 MCP",
+      "upgradingDesc": "正在升级 {{name}}...",
+      "upgradeComplete": "升级完成",
+      "upgradeCompleteDesc": "{{name}} 已成功升级！",
+      "upgradeFailed": "升级失败",
+      "upgradeFailedDesc": "升级 {{name}} 失败，请重试。",
+      "installing": "正在安装 MCP",
+      "installingDesc": "正在安装 {{name}}...",
+      "installComplete": "安装完成",
+      "installCompleteDesc": "{{name}} 已成功安装！",
+      "installFailed": "安装失败",
+      "installFailedDesc": "安装 {{name}} 失败，请重试。",
+      "uninstalling": "正在卸载 MCP",
+      "uninstallingDesc": "正在移除 {{name}}...",
+      "uninstallComplete": "卸载完成",
+      "uninstallCompleteDesc": "{{name}} 已成功移除！",
+      "uninstallFailed": "卸载失败",
+      "uninstallFailedDesc": "移除 {{name}} 失败，请重试。"
+    }
   }
 }

@@ -193,7 +193,23 @@
       "stopped": "MCP Stopped", 
       "stoppedDesc": "{{name}} has been successfully stopped.",
       "toggleFailed": "Failed to toggle MCP status",
-      "uninstallFailed": "Failed to uninstall MCP"
+      "uninstallFailed": "Failed to uninstall MCP",
+      "startAllFailed": "Failed to start all MCPs",
+      "stopAllFailed": "Failed to stop all MCPs",
+      "startedAll": "All MCPs Started",
+      "startedAllDesc": "Successfully started {{count}} MCPs.",
+      "stoppedAll": "All MCPs Stopped",
+      "stoppedAllDesc": "Successfully stopped {{count}} MCPs.",
+      "allRunning": "All MCPs Running",
+      "allRunningDesc": "All MCPs are already running.",
+      "allStopped": "All MCPs Stopped",
+      "allStoppedDesc": "All MCPs are already stopped."
+    },
+    "deleteDialog": {
+      "title": "Confirm Delete",
+      "description": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
     }
   },
   "addMCP": {
@@ -250,5 +266,92 @@
   "editMCP": {
     "title": "Edit MCP",
     "description": "Modify the configuration of an existing MCP."
+  },
+  "mcpCard": {
+    "actions": {
+      "install": "Install",
+      "uninstall": "Uninstall",
+      "upgrade": "Upgrade",
+      "installing": "Installing...",
+      "uninstalling": "Uninstalling...",
+      "upgrading": "Upgrading...",
+      "detail": "Detail",
+      "configure": "Configure"
+    },
+    "info": {
+      "by": "by",
+      "version": "v",
+      "unknown": "Unknown",
+      "noDescription": "No description available"
+    },
+    "toast": {
+      "upgradeFailed": "Upgrade Failed",
+      "upgradeFailedDesc": "Failed to upgrade {{name}}. Please try again.",
+      "installFailed": "Installation Failed",
+      "installFailedDesc": "Failed to install {{name}}. Please try again.",
+      "uninstalling": "Uninstalling MCP",
+      "uninstallingDesc": "Removing {{name}}...",
+      "uninstallComplete": "Uninstallation Complete",
+      "uninstallCompleteDesc": "{{name}} has been removed successfully!",
+      "uninstallFailed": "Uninstallation Failed",
+      "uninstallFailedDesc": "Failed to remove {{name}}. Please try again.",
+      "openingConfig": "Opening Configuration",
+      "openingConfigDesc": "Opening configuration for {{name}}..."
+    }
+  },
+  "mcpDetail": {
+    "loading": "Loading package details...",
+    "error": {
+      "title": "Package Details Unavailable",
+      "packageId": "Package ID",
+      "description": "Unable to load detailed information from the server.",
+      "loadFailed": "Failed to load package details"
+    },
+    "actions": {
+      "backToMarket": "Back to Market",
+      "install": "Install {{name}}",
+      "uninstall": "Uninstall",
+      "upgrade": "Upgrade",
+      "configure": "Configure"
+    },
+    "sections": {
+      "overview": "Overview",
+      "documentation": "Documentation",
+      "packageActions": "Package Actions",
+      "packageInfo": "Package Information"
+    },
+    "info": {
+      "author": "Author",
+      "version": "Version",
+      "rating": "Rating",
+      "downloads": "Downloads",
+      "updated": "Updated",
+      "license": "License",
+      "homepage": "Homepage",
+      "repository": "Repository",
+      "unknown": "Unknown",
+      "na": "N/A",
+      "noDescription": "No description available"
+    },
+    "toast": {
+      "upgrading": "Upgrading MCP",
+      "upgradingDesc": "Upgrading {{name}}...",
+      "upgradeComplete": "Upgrade Complete",
+      "upgradeCompleteDesc": "{{name}} has been upgraded successfully!",
+      "upgradeFailed": "Upgrade Failed",
+      "upgradeFailedDesc": "Failed to upgrade {{name}}. Please try again.",
+      "installing": "Installing MCP",
+      "installingDesc": "Installing {{name}}...",
+      "installComplete": "Installation Complete",
+      "installCompleteDesc": "{{name}} has been installed successfully!",
+      "installFailed": "Installation Failed",
+      "installFailedDesc": "Failed to install {{name}}. Please try again.",
+      "uninstalling": "Uninstalling MCP",
+      "uninstallingDesc": "Removing {{name}}...",
+      "uninstallComplete": "Uninstallation Complete",
+      "uninstallCompleteDesc": "{{name}} has been removed successfully!",
+      "uninstallFailed": "Uninstallation Failed",
+      "uninstallFailedDesc": "Failed to remove {{name}}. Please try again."
+    }
   }
 }

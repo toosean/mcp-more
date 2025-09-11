@@ -49,8 +49,8 @@ export default function MCPCard({
     } catch (error) {
       window.logAPI.error('Upgrade failed:', error);
       toast({
-        title: "Upgrade Failed",
-        description: `Failed to upgrade ${mcp.name}. Please try again.`,
+        title: t('mcpCard.toast.upgradeFailed'),
+        description: t('mcpCard.toast.upgradeFailedDesc', { name: mcp.name }),
         variant: "destructive"
       });
     } finally {
@@ -70,8 +70,8 @@ export default function MCPCard({
     } catch (error) {
       window.logAPI.error('Installation failed:', error);
       toast({
-        title: "Installation Failed",
-        description: `Failed to install ${mcp.name}. Please try again.`,
+        title: t('mcpCard.toast.installFailed'),
+        description: t('mcpCard.toast.installFailedDesc', { name: mcp.name }),
         variant: "destructive"
       });
     } finally {
@@ -86,23 +86,23 @@ export default function MCPCard({
       setIsLoading(true);
 
       toast({
-        title: "Uninstalling MCP",
-        description: `Removing ${mcp.name}...`,
+        title: t('mcpCard.toast.uninstalling'),
+        description: t('mcpCard.toast.uninstallingDesc', { name: mcp.name }),
       });
 
       await uninstallMcp(mcp.identifier);
       checkInstallStatus();
 
       toast({
-        title: "Uninstallation Complete",
-        description: `${name} has been removed successfully!`,
+        title: t('mcpCard.toast.uninstallComplete'),
+        description: t('mcpCard.toast.uninstallCompleteDesc', { name: mcp.name }),
       });
 
     } catch (error) {
       window.logAPI.error('Uninstallation failed:', error);
       toast({
-        title: "Uninstallation Failed",
-        description: `Failed to remove ${name}. Please try again.`,
+        title: t('mcpCard.toast.uninstallFailed'),
+        description: t('mcpCard.toast.uninstallFailedDesc', { name: mcp.name }),
         variant: "destructive"
       });
     } finally {
@@ -113,8 +113,8 @@ export default function MCPCard({
   const handleConfigure = () => {
     // 导航到配置页面或打开配置对话框
     toast({
-      title: "Opening Configuration",
-      description: `Opening configuration for ${name}...`,
+      title: t('mcpCard.toast.openingConfig'),
+      description: t('mcpCard.toast.openingConfigDesc', { name: mcp.name }),
     });
 
     // TODO: 实现实际的配置页面导航
@@ -132,7 +132,7 @@ export default function MCPCard({
           <div className="space-y-1">
             <CardTitle className="text-lg leading-tight">{mcp.name}</CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
-              by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'}
+              {t('mcpCard.info.by')} {mcp.author || t('mcpCard.info.unknown')} • {t('mcpCard.info.version')}{mcp.version || t('mcpDetail.info.na')}
             </CardDescription>
           </div>
           {mcp.rating > 0 && (<div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -144,7 +144,7 @@ export default function MCPCard({
 
       <CardContent className="pb-3">
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-          {mcp.description || 'No description available'}
+          {mcp.description || t('mcpCard.info.noDescription')}
         </p>
 
         {/* {mcp.categories && mcp.categories.length > 0 && (
@@ -195,7 +195,7 @@ export default function MCPCard({
                 ) : (
                   <Trash className="h-3 w-3 mr-1" />
                 )}
-                {isLoading ? '正在卸载...' : '卸载'}
+                {isLoading ? t('mcpCard.actions.uninstalling') : t('mcpCard.actions.uninstall')}
               </Button>
             </>
           )}
@@ -213,7 +213,7 @@ export default function MCPCard({
                 ) : (
                   <Download className="h-3 w-3 mr-1" />
                 )}
-                {isLoading ? '正在安装...' : '安装'}
+                {isLoading ? t('mcpCard.actions.installing') : t('mcpCard.actions.install')}
               </Button>
             </>
           )}
@@ -231,7 +231,7 @@ export default function MCPCard({
                 ) : (
                   <ArrowUp className="h-3 w-3 mr-1" />
                 )}
-                {isLoading ? '正在升级...' : '升级'}
+                {isLoading ? t('mcpCard.actions.upgrading') : t('mcpCard.actions.upgrade')}
               </Button>
             </>
           )}
@@ -245,7 +245,7 @@ export default function MCPCard({
             className="px-3"
           >
             <Eye className="h-3 w-3 mr-1" />
-            详情
+            {t('mcpCard.actions.detail')}
           </Button>
         </div>
       </CardFooter>
