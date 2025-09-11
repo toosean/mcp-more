@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { Minus, Square, Copy, X } from 'lucide-react';
 import { Button } from '../ui/button';
 
-import icon from '@/assets/icon.png';
+import iconProd from '@/assets/icon.png';
+import iconDev from '@/assets/icon-dev.png';
+
+const icon = process.env.NODE_ENV === 'development' ? iconDev : iconProd; 
 
 export default function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);

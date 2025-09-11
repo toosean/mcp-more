@@ -13,7 +13,10 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
-import logo from '@/assets/logo.png';
+import logoProd from '@/assets/logo.png';
+import logoDev from '@/assets/logo-dev.png';
+
+const logo = process.env.NODE_ENV === 'development' ? logoDev : logoProd;
 
 const getNavigation = (t: any) => [
   { name: t('navigation.market'), href: '/', icon: Store },

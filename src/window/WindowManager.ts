@@ -3,7 +3,9 @@ import path from 'node:path';
 import log from 'electron-log';
 import { configManager } from '../config';
 
-import iconPng from '/assets/icon.png';
+import iconPngProd from '/assets/icon.png';
+import iconPngDev from '/assets/icon-dev.png';
+const iconPng = process.env.NODE_ENV === 'development' ? iconPngDev : iconPngProd;
 
 /**
  * 窗口管理器类
@@ -297,7 +299,7 @@ export class WindowManager {
     let iconPath: string;
     
     if (isDev) {
-      iconPath = path.join(__dirname, '../../assets/icon.png');
+      iconPath = path.join(__dirname, '../../assets/icon-dev.png');
     } else {
       iconPath = process.platform === 'win32' 
         ? path.join(__dirname, '../assets/icon.ico')
@@ -327,7 +329,7 @@ export class WindowManager {
     
     if (isDev) {
       // 开发环境使用同一个图标
-      iconPath = path.join(__dirname, '/assets/icon.png');
+      iconPath = path.join(__dirname, '/assets/icon-dev.png');
     } else {
       const assetsPath = path.join(__dirname, '../../../assets/');
       log.debug('assetsPath', path.join(__dirname, '../../../assets/'));
