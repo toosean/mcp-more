@@ -64,7 +64,7 @@ const SingleDigit: React.FC<SingleDigitProps> = ({
       <div
         className={`absolute inset-0 flex items-center justify-center font-mono font-bold will-change-transform ${
           isFlipping 
-            ? 'transition-all duration-[400ms] ease-in-out -translate-y-full opacity-0' 
+            ? 'transition-all duration-400 ease-in-out -translate-y-full opacity-0' 
             : 'translate-y-0 opacity-100'
         }`}
         style={{ 
