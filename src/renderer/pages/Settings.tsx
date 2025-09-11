@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTheme } from 'next-themes';
-import { useConfig, useConfigSection } from '@/hooks/use-config';
+import { useConfig } from '@/hooks/use-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { AppConfig, Theme } from '../../config/types';
 
