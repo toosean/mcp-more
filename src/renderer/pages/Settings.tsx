@@ -27,11 +27,13 @@ import { useTheme } from 'next-themes';
 import { useConfig } from '@/hooks/use-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { AppConfig, Theme } from '../../config/types';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const { setTheme } = useTheme();
   const { getConfig, loading, error, updateConfig, resetConfig } = useConfig();
   const { t, changeLanguage } = useI18n();
+  const navigate = useNavigate();
   
   // 本地状态用于临时编辑
   const [localGeneral, setLocalGeneral] = useState<Partial<AppConfig['general']>>({});
@@ -135,11 +137,7 @@ export default function Settings() {
   };
 
   const handleQuickGuide = () => {
-    // TODO: 实现设置向导功能
-    toast({
-      title: t('settings.quickSetup.quickGuide'),
-      description: "设置向导功能即将推出",
-    });
+    navigate('/setup-guide');
   };
 
   const handleExportConfig = async () => {
@@ -376,7 +374,7 @@ export default function Settings() {
                 onCheckedChange={(checked) => setLocalGeneral(prev => ({ ...prev, minimizeOnStartup: checked }))} 
               />
             </div>
-            
+
             <Separator />
 
             <div className="flex items-center justify-between">
