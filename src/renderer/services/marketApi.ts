@@ -12,6 +12,8 @@ import {
   MarketMcpDetail,
   MarketMcpDetailResponse,
   MarketHomeApiResponse,
+  McpInstallConfiguration,
+  McpInstallConfigurationResponse,
   SortBy
 } from '../types/market';
 
@@ -138,5 +140,18 @@ export async function getLatestPackages(limit: number = 10): Promise<MarketMcp[]
   } catch (error) {
     console.error('Failed to fetch latest packages:', error);
     return [];
+  }
+}
+
+/**
+ * 获取MCP安装配置
+ */
+export async function getMcpInstallConfiguration(identifier: string): Promise<McpInstallConfiguration | null> {
+  try {
+    const response = await apiRequest<McpInstallConfigurationResponse>(`/api/mcps/${encodeURIComponent(identifier)}/install-configuration`);
+    return response.success ? response.result : null;
+  } catch (error) {
+    console.error(`Failed to fetch install configuration for ${identifier}:`, error);
+    return null;
   }
 }

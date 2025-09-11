@@ -19,7 +19,8 @@ import {
   Loader2,
   Settings,
   Trash2,
-  Copy
+  Copy,
+  ArrowUp
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -339,9 +340,9 @@ export default function MCPDetail() {
                   </Button>
                 </>
               )}
-              {installedStatus === 'installed' || installedStatus === 'upgradeable' && (
+              {(installedStatus === 'installed' || installedStatus === 'upgradeable') && (
                 <>
-                  <Button
+                  {installedStatus === 'upgradeable' && (<Button
                     onClick={handleUpgrade}
                     disabled={installing}
                     variant="destructive"
@@ -354,11 +355,11 @@ export default function MCPDetail() {
                       </>
                     ) : (
                       <>
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <ArrowUp className="h-4 w-4 mr-2" />
                         Upgrade {mcp.name}
                       </>
                     )}
-                  </Button>
+                  </Button>)}
 
                   <Button
                     onClick={handleUninstall}

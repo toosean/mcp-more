@@ -160,3 +160,16 @@ export interface InstallResult {
   installedPackage?: Mcp;
 }
 
+// MCP安装配置
+export interface McpInstallConfiguration {
+  /** 包标识符 */
+  identifier: string;
+  /** 传输方式 */
+  transport: string | null;
+  /** 配置 */
+  configuration: string | null;
+}
+
+// MCP安装配置API响应
+export type McpInstallConfigurationResponse = BackendApiResponse<McpInstallConfiguration>;
+

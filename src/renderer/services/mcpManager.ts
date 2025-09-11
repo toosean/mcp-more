@@ -2,6 +2,7 @@ import { MarketMcp, MarketMcpDetail } from '../types/market';
 import { useConfig } from '@/hooks/use-config';
 import { Mcp } from '../../config/types';
 import { toast } from '@/hooks/use-toast';
+import { getMcpInstallConfiguration } from './marketApi';
 
 export type McpInstallStatus = 'installed' | 'upgradeable' | 'not_installed';
 
@@ -253,13 +254,19 @@ export function useMcpManager() {
     const config = await getConfig();
 
     const installedMcps = config.mcp.installedMcps;
-    const installedMcp = installedMcps.find(mcp => mcp.identifier === mcp.identifier);
+    const installedMcp = installedMcps.find(existingMcp => existingMcp.identifier === mcp.identifier);
 
     if (installedMcp) {
       throw new Error('MCP already installed');
     }
 
-    const mcpConfig = await parseMcpJson(mcp.configuration);
+    // 获取安装配置
+    const installConfig = await getMcpInstallConfiguration(mcp.identifier);
+    if (!installConfig || !installConfig.configuration) {
+      throw new Error('Failed to fetch install configuration');
+    }
+
+    const mcpConfig = await parseMcpJson(installConfig.configuration);
     const newMcp = {
       source: 'market' as const,
       identifier: mcp.identifier,
