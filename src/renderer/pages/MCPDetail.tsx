@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { 
-  ArrowLeft, 
-  Download, 
-  Star, 
-  Calendar, 
-  User, 
-  Package, 
+import {
+  ArrowLeft,
+  Download,
+  Star,
+  Calendar,
+  User,
+  Package,
   FileText,
   Shield,
   Globe,
@@ -28,37 +28,38 @@ import rehypeSanitize from 'rehype-sanitize';
 import { toast } from '@/hooks/use-toast';
 import { MarketMcpDetail } from '../types/market';
 import { getMcpDetail } from '@/services/marketApi';
-import { useMcpManager } from '@/services/mcpManager';
+import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
 
 export default function MCPDetail() {
   const { org, id } = useParams<{ org: string, id: string }>();
   const navigate = useNavigate();
-  
+
   const [mcp, setMcp] = useState<MarketMcpDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [installedVersion, setInstalledVersion] = useState<string | null>(null);
-  const { isMcpInstalledVersion, installPackage, uninstallPackage } = useMcpManager();
-  
+  const [installedStatus, setInstalledStatus] = useState<McpInstallStatus | null>(null);
+  const [installing, setInstalling] = useState(false);
+  const { getMcpInstallStatus, installMcp, uninstallMcp, upgradeMcp } = useMcpManager();
+
   useEffect(() => {
     if (org && id) {
       loadMcpDetail(`${org}/${id}`);
     }
   }, [org, id]);
-  
+
   const loadMcpDetail = async (identifier: string) => {
     try {
       setLoading(true);
       const detail = await getMcpDetail(identifier);
       setMcp(detail);
-      
+
       // 检查安装状态
       if (detail) {
-        const installedVersion = await isMcpInstalledVersion(detail.identifier);
-        setInstalledVersion(installedVersion);
-        
+        const installedStatus = await getMcpInstallStatus(detail.identifier);
+        setInstalledStatus(installedStatus);
+
       }
     } catch (error) {
-      console.error('Failed to load MCP detail:', error);
+      window.logAPI.error('Failed to load MCP detail:', error);
       toast({
         title: "Error",
         description: "Failed to load package details",
@@ -68,7 +69,7 @@ export default function MCPDetail() {
       setLoading(false);
     }
   };
-  
+
   if (loading) {
     return (
       <div className="flex-1 p-6 flex items-center justify-center">
@@ -79,7 +80,7 @@ export default function MCPDetail() {
       </div>
     );
   }
-  
+
   if (!mcp && !loading) {
     return (
       <div className="flex-1 p-6 flex items-center justify-center">
@@ -96,71 +97,105 @@ export default function MCPDetail() {
     );
   }
 
+  const handleUpgrade = async () => {
+    if (!mcp || installing) return;
+
+    try {
+      setInstalling(true);
+      toast({
+        title: "Upgrading MCP",
+        description: `Upgrading ${mcp.name}...`,
+      });
+
+      await upgradeMcp(mcp);
+
+      // 重新检查安装状态
+      const newInstalledStatus = await getMcpInstallStatus(mcp.identifier);
+      setInstalledStatus(newInstalledStatus);
+
+      toast({
+        title: "Upgrade Complete",
+        description: `${mcp.name} has been upgraded successfully!`,
+      });
+
+    } catch (error) {
+      window.logAPI.error('Upgrade failed:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: `Failed to upgrade ${mcp.name}. Please try again.`,
+        variant: "destructive"
+      });
+    } finally {
+      setInstalling(false);
+    }
+  };
+
   // Action handlers - 内部处理各种操作
   const handleInstall = async () => {
-    if (!mcp) return;
-    
+    if (!mcp || installing) return;
+
     try {
+      setInstalling(true);
       toast({
         title: "Installing MCP",
         description: `Installing ${mcp.name}...`,
       });
-      
-      await installPackage(mcp);
-      
+
+      await installMcp(mcp);
+
+      // 重新检查安装状态
+      const newInstalledStatus = await getMcpInstallStatus(mcp.identifier);
+      setInstalledStatus(newInstalledStatus);
+
       toast({
         title: "Installation Complete",
         description: `${mcp.name} has been installed successfully!`,
       });
-      
+
     } catch (error) {
-      console.error('Installation failed:', error);
+      window.logAPI.error('Installation failed:', error);
       toast({
         title: "Installation Failed",
         description: `Failed to install ${mcp.name}. Please try again.`,
         variant: "destructive"
       });
+    } finally {
+      setInstalling(false);
     }
   };
-  
+
   const handleUninstall = async () => {
-    if (!mcp) return;
-    
+    if (!mcp || installing) return;
+
     try {
+      setInstalling(true);
       toast({
         title: "Uninstalling MCP",
         description: `Removing ${mcp.name}...`,
       });
-      
-      await uninstallPackage(mcp.identifier);
+
+      await uninstallMcp(mcp.identifier);
+
+      // 重新检查安装状态
+      const newInstalledStatus = await getMcpInstallStatus(mcp.identifier);
+      setInstalledStatus(newInstalledStatus);
 
       toast({
         title: "Uninstallation Complete",
         description: `${mcp.name} has been removed successfully!`,
       });
-      
+
     } catch (error) {
-      console.error('Uninstallation failed:', error);
+      window.logAPI.error('Uninstallation failed:', error);
       toast({
         title: "Uninstallation Failed",
         description: `Failed to remove ${mcp.name}. Please try again.`,
         variant: "destructive"
       });
+    } finally {
+      setInstalling(false);
     }
   };
-  
-  const handleConfigure = () => {
-    if (!mcp) return;
-    
-    // TODO: 打开配置对话框或导航到配置页面
-    toast({
-      title: "Opening Configuration",
-      description: `Opening configuration for ${mcp.name}...`,
-    });
-    
-  };
-  
-
 
   const handleBackToMarket = () => {
     navigate(-1); // 返回上一页，更灵活
@@ -170,9 +205,9 @@ export default function MCPDetail() {
     <div className="flex-1 p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleBackToMarket}
           className="p-2"
         >
@@ -212,34 +247,34 @@ export default function MCPDetail() {
                 Documentation
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">              
+            <CardContent className="space-y-4">
               <div className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown 
+                <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeRaw, rehypeSanitize]}
                   components={{
-                    h1: ({children}) => <h1 className="text-2xl font-bold text-foreground mb-4">{children}</h1>,
-                    h2: ({children}) => <h2 className="text-xl font-semibold text-foreground mb-3">{children}</h2>,
-                    h3: ({children}) => <h3 className="text-lg font-medium text-foreground mb-2">{children}</h3>,
-                    h4: ({children}) => <h4 className="text-base font-medium text-foreground mb-2">{children}</h4>,
-                    h5: ({children}) => <h5 className="text-sm font-medium text-foreground mb-1">{children}</h5>,
-                    h6: ({children}) => <h6 className="text-xs font-medium text-foreground mb-1">{children}</h6>,
-                    p: ({children}) => <p className="text-muted-foreground mb-3 leading-relaxed">{children}</p>,
-                    code: ({children, ...props}) => {
+                    h1: ({ children }) => <h1 className="text-2xl font-bold text-foreground mb-4">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-semibold text-foreground mb-3">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-medium text-foreground mb-2">{children}</h3>,
+                    h4: ({ children }) => <h4 className="text-base font-medium text-foreground mb-2">{children}</h4>,
+                    h5: ({ children }) => <h5 className="text-sm font-medium text-foreground mb-1">{children}</h5>,
+                    h6: ({ children }) => <h6 className="text-xs font-medium text-foreground mb-1">{children}</h6>,
+                    p: ({ children }) => <p className="text-muted-foreground mb-3 leading-relaxed">{children}</p>,
+                    code: ({ children, ...props }) => {
                       if (props.className?.includes('language-')) {
                         return <code className="block bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto" {...props}>{children}</code>
                       }
                       return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground" {...props}>{children}</code>
                     },
-                    pre: ({children}) => <pre className="bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto mb-3">{children}</pre>,
-                    ul: ({children}) => <ul className="list-disc list-inside text-muted-foreground mb-3 space-y-1">{children}</ul>,
-                    ol: ({children}) => <ol className="list-decimal list-inside text-muted-foreground mb-3 space-y-1">{children}</ol>,
-                    li: ({children}) => <li className="text-muted-foreground">{children}</li>,
-                    blockquote: ({children}) => <blockquote className="border-l-4 border-muted pl-4 italic text-muted-foreground mb-3">{children}</blockquote>,
-                    a: ({href, children}) => (
-                      <a 
-                        href="#" 
-                        className="text-primary hover:underline cursor-pointer" 
+                    pre: ({ children }) => <pre className="bg-muted p-3 rounded-md text-sm font-mono overflow-x-auto mb-3">{children}</pre>,
+                    ul: ({ children }) => <ul className="list-disc list-inside text-muted-foreground mb-3 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside text-muted-foreground mb-3 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="text-muted-foreground">{children}</li>,
+                    blockquote: ({ children }) => <blockquote className="border-l-4 border-muted pl-4 italic text-muted-foreground mb-3">{children}</blockquote>,
+                    a: ({ href, children }) => (
+                      <a
+                        href="#"
+                        className="text-primary hover:underline cursor-pointer"
                         onClick={(e) => {
                           e.preventDefault();
                           if (href && window.shellAPI) {
@@ -250,17 +285,17 @@ export default function MCPDetail() {
                         {children}
                       </a>
                     ),
-                    table: ({children}) => <table className="w-full border-collapse border border-border mb-3">{children}</table>,
-                    thead: ({children}) => <thead className="bg-muted">{children}</thead>,
-                    tbody: ({children}) => <tbody>{children}</tbody>,
-                    tr: ({children}) => <tr className="border-b border-border">{children}</tr>,
-                    th: ({children}) => <th className="border border-border px-3 py-2 text-left font-medium text-foreground">{children}</th>,
-                    td: ({children}) => <td className="border border-border px-3 py-2 text-muted-foreground">{children}</td>,
-                    img: ({src, alt}) => <img src={src} alt={alt} className="max-w-full h-auto rounded-md mb-3" />,
+                    table: ({ children }) => <table className="w-full border-collapse border border-border mb-3">{children}</table>,
+                    thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
+                    tbody: ({ children }) => <tbody>{children}</tbody>,
+                    tr: ({ children }) => <tr className="border-b border-border">{children}</tr>,
+                    th: ({ children }) => <th className="border border-border px-3 py-2 text-left font-medium text-foreground">{children}</th>,
+                    td: ({ children }) => <td className="border border-border px-3 py-2 text-muted-foreground">{children}</td>,
+                    img: ({ src, alt }) => <img src={src} alt={alt} className="max-w-full h-auto rounded-md mb-3" />,
                     hr: () => <hr className="border-t border-border my-6" />,
-                    strong: ({children}) => <strong className="font-semibold text-foreground">{children}</strong>,
-                    em: ({children}) => <em className="italic text-foreground">{children}</em>,
-                    del: ({children}) => <del className="line-through text-muted-foreground">{children}</del>,
+                    strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                    em: ({ children }) => <em className="italic text-foreground">{children}</em>,
+                    del: ({ children }) => <del className="line-through text-muted-foreground">{children}</del>,
                   }}
                 >
                   {mcp.readme}
@@ -278,47 +313,74 @@ export default function MCPDetail() {
               <CardTitle className="text-lg">Package Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!installedVersion ? (
+
+
+              {installedStatus === 'installed' && (
                 <>
-                  <Button 
+                  <Button
                     onClick={handleInstall}
+                    disabled={installing}
                     className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    Install {mcp.name}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <>
-                    <Button 
-                      onClick={handleInstall}
-                      className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Install {mcp.name}
-                    </Button>
-                  </>
-                  
-                  <Button 
-                    onClick={handleConfigure}
-                    className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configure
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleUninstall}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Uninstall
+                    {installing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Installing...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4 mr-2" />
+                        Install {mcp.name}
+                      </>
+                    )}
                   </Button>
                 </>
               )}
-              
+              {installedStatus === 'not_installed' && (
+                <>
+                  <Button
+                    onClick={handleUninstall}
+                    disabled={installing}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    {installing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Uninstalling...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Uninstall
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+              {installedStatus === 'upgradeable' && (
+                <>
+                  <Button
+                    onClick={handleUpgrade}
+                    disabled={installing}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    {installing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Upgrading...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Upgrade
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+
               <div className="text-center text-sm text-muted-foreground">
                 Version {mcp.version || 'N/A'} • {(mcp.downloads || 0).toLocaleString()} downloads
               </div>
@@ -339,7 +401,7 @@ export default function MCPDetail() {
                   </div>
                   <span className="text-sm font-medium">{mcp.author || 'Unknown'}</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-muted-foreground" />
@@ -347,7 +409,7 @@ export default function MCPDetail() {
                   </div>
                   <Badge variant="outline">{mcp.version || 'N/A'}</Badge>
                 </div>
-                
+
                 {mcp.rating && (<div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
@@ -355,7 +417,7 @@ export default function MCPDetail() {
                   </div>
                   <span className="text-sm font-medium">{(mcp.rating || 0).toFixed(1)}/5.0</span>
                 </div>)}
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Download className="h-4 w-4 text-muted-foreground" />
@@ -363,7 +425,7 @@ export default function MCPDetail() {
                   </div>
                   <span className="text-sm font-medium">{(mcp.downloads || 0).toLocaleString()}</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -371,7 +433,7 @@ export default function MCPDetail() {
                   </div>
                   <span className="text-sm font-medium">{mcp.updatedAt ? new Date(mcp.updatedAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-muted-foreground" />
@@ -380,15 +442,15 @@ export default function MCPDetail() {
                   <Badge variant="secondary">{mcp.license || 'Unknown'}</Badge>
                 </div>
               </div>
-              
+
               <Separator />
-              
+
               <div className="space-y-2">
                 {mcp.homepage && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full justify-start" 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
                     onClick={() => {
                       if (window.shellAPI) {
                         window.shellAPI.openExternal(mcp.homepage!);
@@ -400,12 +462,12 @@ export default function MCPDetail() {
                     <ExternalLink className="h-3 w-3 ml-auto" />
                   </Button>
                 )}
-                
+
                 {mcp.repository && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full justify-start" 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
                     onClick={() => {
                       if (window.shellAPI) {
                         window.shellAPI.openExternal(mcp.repository!);

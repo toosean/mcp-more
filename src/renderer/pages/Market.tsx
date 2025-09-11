@@ -88,16 +88,7 @@ export default function Market() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {trendingPackages.map((mcp) => (
             <MCPCard
-              id={mcp.identifier}
-              key={mcp.identifier}
-              name={mcp.name}
-              description={mcp.description || ''}
-              author={mcp.author || ''}
-              version={mcp.version || ''}
-              downloads={mcp.downloads || 0}
-              rating={mcp.rating || 0}
-              categories={[]} // Categories will be handled separately in the backend
-              type={mcp.type || ''}
+              mcp={mcp}
             />
           ))}
         </div>
@@ -122,16 +113,7 @@ export default function Market() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {packages.map((mcp) => (
               <MCPCard
-                id={mcp.identifier}
-                key={mcp.identifier}
-                name={mcp.name}
-                description={mcp.description || ''}
-                author={mcp.author || ''}
-                version={mcp.version || ''}
-                downloads={mcp.downloads || 0}
-                rating={mcp.rating || 0}
-                categories={[]} // Categories will be handled separately in the backend
-                type={mcp.type || ''}
+                mcp={mcp}
               />
             ))}
           </div>

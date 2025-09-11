@@ -11,7 +11,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { Odometer } from '@/components/ui/odometer';
 import { Mcp } from '../../config/types';
-
+import { useMcpManager } from '@/services/mcpManager';
 interface DisplayMCP {
   identifier: string;
   name: string;
@@ -35,6 +35,7 @@ export default function Installed() {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const { t } = useI18n();
   const { updateConfig, getConfig } = useConfig();
+  const { startMcp } = useMcpManager();
 
   // Get source type display info
   const getSourceInfo = (source: 'manual' | 'json' | 'market' | null) => {
@@ -304,11 +305,7 @@ export default function Installed() {
         });
       } else {
         // 启动客户端
-        await window.mcpAPI.startMcp(mcp.identifier);
-        toast({
-          title: t('installed.toast.started'),
-          description: t('installed.toast.startedDesc', { name: mcp.name }),
-        });
+        startMcp(mcp.identifier, mcp.name);
       }
 
       // 更新配置中的enabled状态

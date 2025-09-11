@@ -3,122 +3,103 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Star, Settings, Eye, Loader2 } from 'lucide-react';
+import { Download, Star, Settings, Eye, Loader2, Trash, ArrowUp } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
 import { toast } from '@/hooks/use-toast';
-import { useMcpManager } from '@/services/mcpManager';
+import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
 import { MarketMcp } from '../../types/market';
 
 interface MCPCardProps {
-  id: string;
-  name: string;
-  description: string | null;
-  author: string | null;
-  version: string | null;
-  downloads: number | null;
-  rating: number | null;
-  categories?: string[];
-  type: string | null;
-  // 移除所有回调函数，改为内部处理
+  mcp: MarketMcp;
 }
 
 export default function MCPCard({
-  id,
-  name,
-  description,
-  author,
-  version,
-  downloads,
-  rating,
-  categories,
-  type
+  mcp
 }: MCPCardProps) {
   const { t } = useI18n();
   const navigate = useNavigate();
-  
+
   // 内部状态管理
-  const [installedVersion, setInstalledVersion] = useState<string | null>(null);
+  const [installedStatus, setInstalledStatus] = useState<McpInstallStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { isMcpInstalledVersion, installPackage, uninstallPackage } = useMcpManager();
-  
+  const { getMcpInstallStatus, installMcp, uninstallMcp, upgradeMcp } = useMcpManager();
+
+
+  const checkInstallStatus = async () => {
+    const installedStatus = await getMcpInstallStatus(mcp.identifier, mcp.publishedAt);
+    setInstalledStatus(installedStatus);
+
+  };
   // 初始化时检查安装状态
   useEffect(() => {
-    const checkInstallStatus = async () => {
-      const installedVersion = await isMcpInstalledVersion(id);
-      setInstalledVersion(installedVersion);
-      
-    };
-    
     checkInstallStatus();
-  }, [id]);
+  }, [mcp.identifier]);
   // 内部操作处理函数
-  const handleInstall = async () => {
+
+  const handleUpgrade = async () => {
+
     if (isLoading) return;
-    
+
     try {
       setIsLoading(true);
       
-      const packageData: MarketMcp = {
-        identifier: id,
-        name,
-        description,
-        logoUrl: null,
-        author,
-        version,
-        publishedAt: null,
-        updatedAt: null,
-        license: null,
-        downloads,
-        type,
-        rating,
-        transport: null,
-        configuration: null
-      };
-      
-      toast({
-        title: "Installing MCP",
-        description: `Installing ${name}...`,
-      });
-      
-      await installPackage(packageData);
-      
-      toast({
-        title: "Installation Complete",
-        description: `${name} has been installed successfully!`,
-      });
+      await upgradeMcp(mcp);
+      checkInstallStatus();
       
     } catch (error) {
-      console.error('Installation failed:', error);
+      window.logAPI.error('Upgrade failed:', error);
+      toast({
+        title: "Upgrade Failed",
+        description: `Failed to upgrade ${mcp.name}. Please try again.`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+
+  };
+  const handleInstall = async () => {
+    if (isLoading) return;
+
+    try {
+      setIsLoading(true);
+
+      await installMcp(mcp);
+      checkInstallStatus();
+
+    } catch (error) {
+      window.logAPI.error('Installation failed:', error);
       toast({
         title: "Installation Failed",
-        description: `Failed to install ${name}. Please try again.`,
+        description: `Failed to install ${mcp.name}. Please try again.`,
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const handleUninstall = async () => {
     if (isLoading) return;
-    
+
     try {
       setIsLoading(true);
-      
+
       toast({
         title: "Uninstalling MCP",
-        description: `Removing ${name}...`,
+        description: `Removing ${mcp.name}...`,
       });
-      
-      await uninstallPackage(id);
+
+      await uninstallMcp(mcp.identifier);
+      checkInstallStatus();
 
       toast({
         title: "Uninstallation Complete",
         description: `${name} has been removed successfully!`,
       });
-      
+
     } catch (error) {
-      console.error('Uninstallation failed:', error);
+      window.logAPI.error('Uninstallation failed:', error);
       toast({
         title: "Uninstallation Failed",
         description: `Failed to remove ${name}. Please try again.`,
@@ -128,21 +109,20 @@ export default function MCPCard({
       setIsLoading(false);
     }
   };
-  
+
   const handleConfigure = () => {
     // 导航到配置页面或打开配置对话框
     toast({
       title: "Opening Configuration",
       description: `Opening configuration for ${name}...`,
     });
-    
+
     // TODO: 实现实际的配置页面导航
     // navigate(`/configure/${id}`);
   };
-  
+
   const handleDetail = () => {
-    console.log('Navigating to detail page for:', id); // 调试日志
-    navigate(`/mcp/${id}`);
+    navigate(`/mcp/${mcp.identifier}`);
   };
 
   return (
@@ -150,26 +130,26 @@ export default function MCPCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-lg leading-tight">{name}</CardTitle>
+            <CardTitle className="text-lg leading-tight">{mcp.name}</CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
-              by {author || 'Unknown'} • v{version || 'N/A'}
+              by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'}
             </CardDescription>
           </div>
-          {rating > 0 && (<div className="flex items-center gap-1 text-xs text-muted-foreground">
+          {mcp.rating > 0 && (<div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Star className="h-3 w-3 fill-current text-yellow-500" />
-            {rating?.toFixed(1) || '0.0'}
+            {mcp.rating?.toFixed(1) || '0.0'}
           </div>)}
         </div>
       </CardHeader>
-      
+
       <CardContent className="pb-3">
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-          {description || 'No description available'}
+          {mcp.description || 'No description available'}
         </p>
-        
-        {categories && categories.length > 0 && (
+
+        {/* {mcp.categories && mcp.categories.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {categories.slice(0, 3).map((category) => (
+            {mcp.categories.slice(0, 3).map((category) => (
               <Badge key={category} variant="secondary" className="text-xs px-2 py-0">
                 {category}
               </Badge>
@@ -180,45 +160,29 @@ export default function MCPCard({
               </Badge>
             )}
           </div>
-        )}
-        
+        )} */}
+
         <div className="flex items-center justify-between text-xs mb-2">
           <div className="flex items-center gap-1 text-muted-foreground">
             <Download className="h-3 w-3" />
-            {downloads?.toLocaleString() || '0'}
+            {mcp.downloads?.toLocaleString() || '0'}
           </div>
-          {type && (
+          {mcp.type && (
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">{t('market.typeLabel')}:</span>
               <Badge variant="outline" className="text-xs px-2 py-0">
-                {t(`market.type.${type.toLowerCase()}`, type)}
+                {t(`market.type.${mcp.type.toLowerCase()}`, mcp.type)}
               </Badge>
             </div>
           )}
         </div>
       </CardContent>
-      
+
       <CardFooter className="pt-0">
         <div className="flex gap-2 w-full">
-          {installedVersion ? (
+          {installedStatus === 'installed' && (
             <>
               {/* 显示运行状态 */}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleConfigure}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : (
-                  <Settings className="h-3 w-3 mr-1" />
-                )}
-                Configure
-              </Button>
-              
               <Button
                 variant="destructive"
                 size="sm"
@@ -229,11 +193,14 @@ export default function MCPCard({
                 {isLoading ? (
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                 ) : (
-                  'Uninstall'
+                  <Trash className="h-3 w-3 mr-1" />
                 )}
+                {isLoading ? '正在卸载...' : '卸载'}
               </Button>
             </>
-          ) : (
+          )}
+
+          {installedStatus === 'not_installed' && (
             <>
               <Button
                 onClick={handleInstall}
@@ -246,21 +213,40 @@ export default function MCPCard({
                 ) : (
                   <Download className="h-3 w-3 mr-1" />
                 )}
-                {isLoading ? 'Installing...' : 'Install'}
-              </Button>
-              
-              <Button
-                onClick={handleDetail}
-                variant="outline"
-                size="sm"
-                disabled={isLoading}
-                className="px-3"
-              >
-                <Eye className="h-3 w-3 mr-1" />
-                Detail
+                {isLoading ? '正在安装...' : '安装'}
               </Button>
             </>
           )}
+
+          {installedStatus === 'upgradeable' && (
+            <>
+              <Button
+                onClick={handleUpgrade}
+                size="sm"
+                disabled={isLoading}
+                className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <ArrowUp className="h-3 w-3 mr-1" />
+                )}
+                {isLoading ? '正在升级...' : '升级'}
+              </Button>
+            </>
+          )}
+
+          {/* Detail 按钮统一分离出来 */}
+          <Button
+            onClick={handleDetail}
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+            className="px-3"
+          >
+            <Eye className="h-3 w-3 mr-1" />
+            详情
+          </Button>
         </div>
       </CardFooter>
     </Card>

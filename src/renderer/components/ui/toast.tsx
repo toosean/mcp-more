@@ -41,14 +41,28 @@ const toastVariants = cva(
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
+    VariantProps<typeof toastVariants> & {
+      progress?: boolean
+    }
+>(({ className, variant, progress, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
       ref={ref}
-      className={cn(toastVariants({ variant }), className)}
+      className={cn(toastVariants({ variant }), progress && "relative", className)}
       {...props}
-    />
+    >
+      {progress && (
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-muted overflow-hidden rounded-b-md">
+          <div 
+            className="h-full w-1/3 bg-primary rounded-full"
+            style={{
+              animation: 'toast-progress-line 2s ease-in-out infinite'
+            }}
+          />
+        </div>
+      )}
+      {props.children}
+    </ToastPrimitives.Root>
   )
 })
 Toast.displayName = ToastPrimitives.Root.displayName

@@ -3,6 +3,8 @@ import { useConfig } from '@/hooks/use-config';
 import { Mcp } from '../../config/types';
 import { toast } from '@/hooks/use-toast';
 
+export type McpInstallStatus = 'installed' | 'upgradeable' | 'not_installed';
+
 export function useMcpManager() {
 
   const { getConfig, updateConfig } = useConfig();
@@ -188,11 +190,32 @@ export function useMcpManager() {
    * @param identifier 包标识符
    * @returns 包版本号，如果未安装则返回 null
    */
-  const isMcpInstalledVersion = async (identifier: string): Promise<string | null> => {
+  const getMcpInstallStatus = async (identifier: string, publishTime?: string): Promise<McpInstallStatus> => {
     const config = await getConfig();
     const installedMcps = config.mcp.installedMcps;
     const installedMcp = installedMcps.find(mcp => mcp.identifier === identifier);
-    return installedMcp ? installedMcp.version : null;
+
+    if(!installedMcp) {
+      return 'not_installed';
+    }
+
+    if(installedMcp.updated  && publishTime)
+    {
+      const installedPublishAt = new Date(installedMcp.updated);
+      const publishAt = new Date(publishTime);
+      if(installedPublishAt < publishAt) {
+        return 'upgradeable';
+      }else{
+        return 'installed';
+      }
+
+    }else{
+      return 'installed';
+    }
+
+
+    
+
   }
 
   const mergeCommandAndArgs = (command: string | null, args: string[] | null): string | null => {
@@ -206,7 +229,7 @@ export function useMcpManager() {
   const parseMcpJson = async (mcpConfiguration: string) => {
     
     const json = JSON.parse(mcpConfiguration);
-    const mcpServer = json.mcpServers[0];
+    const mcpServer = json.mcpServers[Object.keys(json.mcpServers)[0]];
 
     let finalCommand = null;
     if(mcpServer.command) {
@@ -225,9 +248,8 @@ export function useMcpManager() {
    * 模拟安装包
    * TODO: 替换为实际的安装逻辑
    */
-  const installPackage = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
+  const installMcp = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
 
-    const { getConfig, updateConfig } = useConfig();
     const config = await getConfig();
 
     const installedMcps = config.mcp.installedMcps;
@@ -238,9 +260,8 @@ export function useMcpManager() {
     }
 
     const mcpConfig = await parseMcpJson(mcp.configuration);
-
-    installedMcps.push({
-      source: 'market',
+    const newMcp = {
+      source: 'market' as const,
       identifier: mcp.identifier,
       name: mcp.name,
       description: mcp.description,
@@ -256,22 +277,46 @@ export function useMcpManager() {
         environment: mcpConfig.environment,
         json: mcpConfig.json,
       },
-    });
+    };
+    installedMcps.push(newMcp);
     
     updateConfig({
       mcp: {
         installedMcps: installedMcps,
       },
     });
+    
+    // here we don't await it, let it work in the background
+    startMcp(newMcp.identifier, newMcp.name);
 
-    window.mcpAPI.startMcp(mcp.identifier);
-
+    // everything is happen too fast, let's wait for 2 seconds
+    // make user feel the progress
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
-  const upgradePackage = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
+  const startMcp = async (identifier: string, name?: string): Promise<void> => {
+    const toastId = toast({
+      title: `Running MCP ${name ?? identifier}`,
+      description: `We're working hard to get MCP ${name ?? identifier} up and running...`,
+      progress: true,
+    });
 
-    await uninstallPackage(mcp.identifier);
-    await installPackage(mcp);
+    window.mcpAPI.startMcp(identifier).then(() => {
+      toastId.dismiss();
+      toast({
+        title: `MCP ${name ?? identifier} started`,
+        description: `MCP ${name ?? identifier} has been started successfully!`,
+      });
+    }).catch((error) => {
+      window.logAPI.error(`Failed to start MCP ${name ?? identifier}:`, error);
+      toastId.dismiss();
+    });
+  }
+
+  const upgradeMcp = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
+
+    await uninstallMcp(mcp.identifier);
+    await installMcp(mcp);
     
   }
 
@@ -279,9 +324,8 @@ export function useMcpManager() {
    * 模拟卸载包
    * TODO: 替换为实际的卸载逻辑
    */
-  const uninstallPackage = async (identifier: string): Promise<void> => {
+  const uninstallMcp = async (identifier: string): Promise<void> => {
 
-    const { getConfig, updateConfig } = useConfig();
     const config = await getConfig();
     
     let installedMcps = config.mcp.installedMcps;
@@ -303,11 +347,12 @@ export function useMcpManager() {
   }
 
   return {
-    isMcpInstalledVersion,
+    startMcp,
+    getMcpInstallStatus,
     parseMcpJson,
-    installPackage,
-    upgradePackage,
-    uninstallPackage,
+    installMcp,
+    upgradeMcp,
+    uninstallMcp,
     installMcpManually,
   }
 }

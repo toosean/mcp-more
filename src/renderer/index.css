@@ -163,4 +163,17 @@ All colors MUST be HSL.
   .scrollbar-hover:hover::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--primary) / 0.6);
   }
+
+  /* Toast底部进度条动画 */
+  @keyframes toast-progress-line {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
 }
