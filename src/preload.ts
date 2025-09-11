@@ -7,7 +7,7 @@ import { AppConfig, PartialAppConfig } from './config/types';
 
 // 配置渲染进程的 electron-log
 log.transports.console.level = 'debug';
-log.transports.ipc.level = 'info';
+log.transports.ipc.level = 'silly';
 
 // 定义应用信息 API 接口
 interface AppInfoAPI {

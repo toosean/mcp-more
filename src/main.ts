@@ -17,6 +17,8 @@ log.transports.console.level = 'debug';
 log.transports.file.level = 'silly';
 log.transports.file.maxSize = 1002430; // 10M
 
+log.initialize({ preload: true });
+
 // 在开发模式下，确保日志也输出到控制台
 if (process.env.NODE_ENV === 'development') {
   log.transports.console.level = 'debug';
