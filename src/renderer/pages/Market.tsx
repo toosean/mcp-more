@@ -36,13 +36,13 @@ export default function Market() {
         setPackages(response.result.featured);
         setTrendingPackages(response.result.trending);
       } else {
-        throw new Error('Failed to load market data');
+        throw new Error(t('market.errors.loadFailed'));
       }
     } catch (error) {
       console.error('Failed to load market data:', error);
       toast({
-        title: "Error",
-        description: "Failed to load market data",
+        title: t('common.error'),
+        description: t('market.errors.loadFailed'),
         variant: "destructive"
       });
     } finally {
@@ -59,7 +59,7 @@ export default function Market() {
       <div className="flex-1 p-6 flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading market data...</span>
+          <span>{t('market.loading')}</span>
         </div>
       </div>
     );
@@ -82,7 +82,7 @@ export default function Market() {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">Trending This Week</h2>
+          <h2 className="text-xl font-semibold">{t('market.trending.title')}</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -100,14 +100,14 @@ export default function Market() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold">Featured Packages</h2>
+            <h2 className="text-xl font-semibold">{t('market.featured.title')}</h2>
           </div>
         </div>
         
         {packages.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              No packages available.
+              {t('market.noPackages')}
             </p>
           </div>
         ) : (
@@ -129,12 +129,9 @@ export default function Market() {
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10"></div>
             <div className="relative z-10 flex items-center gap-3">
               <Search className="h-5 w-5" />
-              Browse All Packages
+              {t('market.browseAll')}
             </div>
           </button>
-          <p className="text-sm text-muted-foreground text-center">
-            Discover and install new MCP packages with advanced search and filtering
-          </p>
         </div>
       </div>
     </div>

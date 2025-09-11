@@ -24,10 +24,10 @@ const getNavigation = (t: any) => [
   { name: t('navigation.settings'), href: '/settings', icon: Settings },
 ];
 
-const quickSetupItems = [
-  { name: 'Claude Code', icon: Code },
-  { name: 'Cursor', icon: Terminal },
-  { name: 'Other', icon: Wrench },
+const getQuickSetupItems = (t: any) => [
+  { name: t('sidebar.quickSetup.claudeCode'), icon: Code },
+  { name: t('sidebar.quickSetup.cursor'), icon: Terminal },
+  { name: t('sidebar.quickSetup.other'), icon: Wrench },
 ];
 
 export default function Sidebar() {
@@ -37,6 +37,7 @@ export default function Sidebar() {
   const { t } = useI18n();
   
   const navigation = getNavigation(t);
+  const quickSetupItems = getQuickSetupItems(t);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,13 +67,13 @@ export default function Sidebar() {
           <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
             <img 
               src={logo} 
-              alt="MCP More Logo" 
+              alt={t('sidebar.logoAlt')} 
               className="w-8 h-8 object-contain"
             />
           </div>
           <div>
-            <h1 className="text-lg font-bold">MCP More</h1>
-            <p className="text-xs text-muted-foreground">Use More MCPs Better</p>
+            <h1 className="text-lg font-bold">{t('sidebar.appName')}</h1>
+            <p className="text-xs text-muted-foreground">{t('sidebar.tagline')}</p>
           </div>
         </div>
       </div>

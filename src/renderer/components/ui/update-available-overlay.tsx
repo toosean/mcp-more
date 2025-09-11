@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from './button';
 import { ScrollArea } from './scroll-area';
 import { Download, Calendar, FileText, X } from 'lucide-react';
+import { useI18n } from '@/hooks/use-i18n';
 
 interface UpdateAvailableOverlayProps {
   isVisible: boolean;
@@ -20,10 +21,12 @@ export const UpdateAvailableOverlay: React.FC<UpdateAvailableOverlayProps> = ({
   onDownload,
   onLater
 }) => {
+  const { t } = useI18n();
+  
   if (!isVisible || !updateInfo) return null;
 
   const formatReleaseNotes = (notes?: string) => {
-    if (!notes) return '暂无更新说明';
+    if (!notes) return t('updateAvailable.noReleaseNotes');
     
     // 将换行符转换为JSX元素
     return notes.split('\n').map((line, index) => (
@@ -59,9 +62,9 @@ export const UpdateAvailableOverlay: React.FC<UpdateAvailableOverlayProps> = ({
               <Download className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">发现新版本</h3>
+              <h3 className="text-lg font-semibold">{t('updateAvailable.newVersionFound')}</h3>
               <p className="text-sm text-muted-foreground">
-                版本 {updateInfo.version} 现已可用
+                {t('updateAvailable.versionAvailable', { version: updateInfo.version })}
               </p>
             </div>
           </div>
@@ -80,7 +83,7 @@ export const UpdateAvailableOverlay: React.FC<UpdateAvailableOverlayProps> = ({
           {updateInfo.releaseDate && (
             <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>发布日期: {formatDate(updateInfo.releaseDate)}</span>
+              <span>{t('updateAvailable.releaseDate', { date: formatDate(updateInfo.releaseDate) })}</span>
             </div>
           )}
 
@@ -88,7 +91,7 @@ export const UpdateAvailableOverlay: React.FC<UpdateAvailableOverlayProps> = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <h4 className="font-medium">更新内容</h4>
+              <h4 className="font-medium">{t('updateAvailable.updateContent')}</h4>
             </div>
             
             <ScrollArea className="h-48 rounded-md border p-4">
@@ -102,11 +105,11 @@ export const UpdateAvailableOverlay: React.FC<UpdateAvailableOverlayProps> = ({
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t">
           <Button variant="outline" onClick={onLater}>
-            稍后提醒
+            {t('updateAvailable.remindLater')}
           </Button>
           <Button onClick={onDownload} className="bg-gradient-primary hover:opacity-90">
             <Download className="h-4 w-4 mr-2" />
-            下载并安装
+            {t('updateAvailable.downloadAndInstall')}
           </Button>
         </div>
       </div>

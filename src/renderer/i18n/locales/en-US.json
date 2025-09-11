@@ -118,18 +118,39 @@
         "description": "Unable to open logs directory"
       },
       "loadConfigError": "Failed to load configuration"
+    },
+    "devMode": {
+      "title": "🔧 Dev Mode",
+      "simulateUpdateStart": "Starting update download simulation...",
+      "simulateStartFailed": "Simulation start failed",
+      "simulateFailed": "Simulation failed",
+      "simulateError": "Error occurred during update simulation",
+      "simulatingUpdate": "Simulating update...",
+      "simulateUpdateDownload": "Simulate update download"
     }
   },
   "market": {
     "title": "Market",
     "description": "Discover and install new MCP packages",
     "search": "Search packages...",
+    "loading": "Loading market data...",
+    "trending": {
+      "title": "Trending This Week"
+    },
+    "featured": {
+      "title": "Featured Packages"
+    },
+    "noPackages": "No packages available.",
+    "browseAll": "Browse All Packages",
     "type": {
       "local": "Local",
       "remote": "Remote",
       "hybrid": "Hybrid"
     },
-    "typeLabel": "Type"
+    "typeLabel": "Type",
+    "errors": {
+      "loadFailed": "Failed to load market data"
+    }
   },
   "installed": {
     "title": "Installed",
@@ -299,6 +320,75 @@
       "openingConfigDesc": "Opening configuration for {{name}}..."
     }
   },
+  "browse": {
+    "title": "Browse All Packages",
+    "description": "Discover and install MCP packages for your projects",
+    "loading": "Loading browse data...",
+    "sortBy": "Sort by",
+    "sort": {
+      "popular": "Popular",
+      "recent": "Recent",
+      "rating": "Rating"
+    },
+    "categories": "Categories",
+    "allCategories": "All Categories",
+    "category": "Category",
+    "allPackages": "All Packages",
+    "packages": "packages",
+    "noPackages": "No packages available.",
+    "noSearchResults": "No packages found matching your search.",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageInfo": "Page {{current}} of {{total}}"
+    },
+    "errors": {
+      "loadData": "Failed to load browse data",
+      "loadPackages": "Failed to load packages"
+    }
+  },
+  "notFound": {
+    "code": "404",
+    "message": "Oops! Page not found",
+    "returnHome": "Return to Home"
+  },
+  "sidebar": {
+    "logoAlt": "MCP More Logo",
+    "appName": "MCP More",
+    "tagline": "Use More MCPs Better",
+    "quickSetup": {
+      "claudeCode": "Claude Code",
+      "cursor": "Cursor",
+      "other": "Other"
+    }
+  },
+  "titleBar": {
+    "minimize": "Minimize",
+    "restore": "Restore",
+    "maximize": "Maximize",
+    "close": "Close",
+    "devMode": {
+      "customMinimize": "Custom minimize (dev mode)",
+      "customMaximizeRestore": "Custom maximize/restore (dev mode)",
+      "customClose": "Custom close (dev mode)",
+      "customTitleBar": "Custom title bar (dev mode)"
+    }
+  },
+  "updateOverlay": {
+    "downloading": "Downloading update",
+    "downloadingVersion": "Downloading version {{version}}",
+    "downloadProgress": "Download progress",
+    "cancelDownload": "Cancel download"
+  },
+  "updateAvailable": {
+    "noReleaseNotes": "No release notes available",
+    "newVersionFound": "New version found",
+    "versionAvailable": "Version {{version}} is now available",
+    "releaseDate": "Release date: {{date}}",
+    "updateContent": "Update content",
+    "remindLater": "Remind later",
+    "downloadAndInstall": "Download and install"
+  },
   "mcpDetail": {
     "loading": "Loading package details...",
     "error": {
@@ -352,6 +442,23 @@
       "uninstallCompleteDesc": "{{name}} has been removed successfully!",
       "uninstallFailed": "Uninstallation Failed",
       "uninstallFailedDesc": "Failed to remove {{name}}. Please try again."
+    }
+  },
+  "mcpManager": {
+    "errors": {
+      "duplicateName": "MCP with name \"{{name}}\" already exists",
+      "singleMcpOnly": "Only one MCP can be imported at a time",
+      "alreadyInstalled": "MCP already installed",
+      "fetchConfigFailed": "Failed to fetch install configuration",
+      "notInstalled": "MCP not installed",
+      "unknownError": "Unknown error occurred",
+      "failedToStart": "Failed to start MCP {{name}}"
+    },
+    "messages": {
+      "running": "Running MCP {{name}}",
+      "startingUp": "We're working hard to get MCP {{name}} up and running...",
+      "started": "MCP {{name}} started",
+      "startedSuccess": "MCP {{name}} has been started successfully!"
     }
   }
 }

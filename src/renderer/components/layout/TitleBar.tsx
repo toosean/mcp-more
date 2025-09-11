@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Minus, Square, Copy, X } from 'lucide-react';
 import { Button } from '../ui/button';
+import { useI18n } from '@/hooks/use-i18n';
 
 import iconProd from '@/assets/icon.png';
 import iconDev from '@/assets/icon-dev.png';
@@ -11,6 +12,7 @@ export default function TitleBar() {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isMac, setIsMac] = useState(false);
   const isDevelopment = process.env.NODE_ENV === 'development';
+  const { t } = useI18n();
 
   useEffect(() => {
     // 检查初始最大化状态和平台信息
@@ -56,7 +58,7 @@ export default function TitleBar() {
       <button
         className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex items-center justify-center group"
         onClick={handleClose}
-        title="关闭"
+        title={t('titleBar.close')}
       >
         <X className="w-2 h-2 text-red-800 opacity-0 group-hover:opacity-100 transition-opacity" />
       </button>
@@ -64,7 +66,7 @@ export default function TitleBar() {
       <button
         className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors flex items-center justify-center group"
         onClick={handleMinimize}
-        title="最小化"
+        title={t('titleBar.minimize')}
       >
         <Minus className="w-2 h-2 text-yellow-800 opacity-0 group-hover:opacity-100 transition-opacity" />
       </button>
@@ -72,7 +74,7 @@ export default function TitleBar() {
       <button
         className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors flex items-center justify-center group"
         onClick={handleMaximize}
-        title={isMaximized ? "还原" : "最大化"}
+        title={isMaximized ? t('titleBar.restore') : t('titleBar.maximize')}
       >
         {isMaximized ? 
           <Copy className="w-2 h-2 text-green-800 opacity-0 group-hover:opacity-100 transition-opacity" /> :
@@ -92,7 +94,7 @@ export default function TitleBar() {
           isDevelopment ? 'bg-orange-100 dark:bg-orange-900/50 hover:bg-orange-200 dark:hover:bg-orange-800/50' : ''
         }`}
         onClick={handleMinimize}
-        title={isDevelopment ? "自定义最小化 (开发模式)" : "最小化"}
+        title={isDevelopment ? t('titleBar.devMode.customMinimize') : t('titleBar.minimize')}
       >
         <Minus className="h-4 w-4" />
       </Button>
@@ -103,7 +105,7 @@ export default function TitleBar() {
           isDevelopment ? 'bg-orange-100 dark:bg-orange-900/50 hover:bg-orange-200 dark:hover:bg-orange-800/50' : ''
         }`}
         onClick={handleMaximize}
-        title={isDevelopment ? "自定义最大化/还原 (开发模式)" : "最大化/还原"}
+        title={isDevelopment ? t('titleBar.devMode.customMaximizeRestore') : (isMaximized ? t('titleBar.restore') : t('titleBar.maximize'))}
       >
         {isMaximized ? <Copy className="h-3 w-3" /> : <Square className="h-3 w-3" />}
       </Button>
@@ -116,7 +118,7 @@ export default function TitleBar() {
             : 'hover:bg-destructive hover:text-destructive-foreground'
         }`}
         onClick={handleClose}
-        title={isDevelopment ? "自定义关闭 (开发模式)" : "关闭"}
+        title={isDevelopment ? t('titleBar.devMode.customClose') : t('titleBar.close')}
       >
         <X className="h-4 w-4" />
       </Button>
@@ -149,7 +151,7 @@ export default function TitleBar() {
               MCP More
               {isDevelopment && (
                 <span className="ml-2 text-xs px-2 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 rounded">
-                  自定义标题栏 (开发模式)
+                  {t('titleBar.devMode.customTitleBar')}
                 </span>
               )}
             </span>
@@ -171,7 +173,7 @@ export default function TitleBar() {
               MCP More
               {isDevelopment && (
                 <span className="ml-2 text-xs px-2 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 rounded">
-                  自定义标题栏 (开发模式)
+                  {t('titleBar.devMode.customTitleBar')}
                 </span>
               )}
             </span>

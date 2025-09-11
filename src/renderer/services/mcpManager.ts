@@ -3,6 +3,7 @@ import { useConfig } from '@/hooks/use-config';
 import { Mcp } from '../../config/types';
 import { toast } from '@/hooks/use-toast';
 import { getMcpInstallConfiguration } from './marketApi';
+import i18n from '@/i18n';
 
 export type McpInstallStatus = 'installed' | 'upgradeable' | 'not_installed';
 
@@ -42,7 +43,7 @@ export function useMcpManager() {
           return { 
             success: false, 
             mcpId,
-            error: `MCP with name "${name}" already exists`
+            error: i18n.t('mcpManager.errors.duplicateName', { name })
           };
         }
       }
@@ -68,7 +69,7 @@ export function useMcpManager() {
           return {
             success: false,
             mcpId,
-            error: 'Only one MCP can be imported at a time'
+            error: i18n.t('mcpManager.errors.singleMcpOnly')
           };
         }
         
@@ -170,8 +171,8 @@ export function useMcpManager() {
       } catch (error) {
         window.logAPI.error(`Failed to start MCP ${updatedMCP.name}:`, error);
         toast({
-          title: `Failed to start MCP ${updatedMCP.name}`,
-          description: error instanceof Error ? error.message : 'Unknown error occurred',
+          title: i18n.t('mcpManager.errors.failedToStart', { name: updatedMCP.name }),
+          description: error instanceof Error ? error.message : i18n.t('mcpManager.errors.unknownError'),
           variant: 'destructive'
         });
       }
@@ -181,7 +182,7 @@ export function useMcpManager() {
       return {
         success: false,
         mcpId: '',
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: error instanceof Error ? error.message : i18n.t('mcpManager.errors.unknownError')
       };
     }
   };
@@ -257,13 +258,13 @@ export function useMcpManager() {
     const installedMcp = installedMcps.find(existingMcp => existingMcp.identifier === mcp.identifier);
 
     if (installedMcp) {
-      throw new Error('MCP already installed');
+      throw new Error(i18n.t('mcpManager.errors.alreadyInstalled'));
     }
 
     // 获取安装配置
     const installConfig = await getMcpInstallConfiguration(mcp.identifier);
     if (!installConfig || !installConfig.configuration) {
-      throw new Error('Failed to fetch install configuration');
+      throw new Error(i18n.t('mcpManager.errors.fetchConfigFailed'));
     }
 
     const mcpConfig = await parseMcpJson(installConfig.configuration);
@@ -303,16 +304,16 @@ export function useMcpManager() {
 
   const startMcp = async (identifier: string, name?: string): Promise<void> => {
     const toastId = toast({
-      title: `Running MCP ${name ?? identifier}`,
-      description: `We're working hard to get MCP ${name ?? identifier} up and running...`,
+      title: i18n.t('mcpManager.messages.running', { name: name ?? identifier }),
+      description: i18n.t('mcpManager.messages.startingUp', { name: name ?? identifier }),
       progress: true,
     });
 
     window.mcpAPI.startMcp(identifier).then(() => {
       toastId.dismiss();
       toast({
-        title: `MCP ${name ?? identifier} started`,
-        description: `MCP ${name ?? identifier} has been started successfully!`,
+        title: i18n.t('mcpManager.messages.started', { name: name ?? identifier }),
+        description: i18n.t('mcpManager.messages.startedSuccess', { name: name ?? identifier }),
       });
     }).catch((error) => {
       window.logAPI.error(`Failed to start MCP ${name ?? identifier}:`, error);
@@ -339,7 +340,7 @@ export function useMcpManager() {
     const installedMcp = installedMcps.find(mcp => mcp.identifier === mcp.identifier);
 
     if (!installedMcp) {
-      throw new Error('MCP not installed');
+      throw new Error(i18n.t('mcpManager.errors.notInstalled'));
     }
 
     await window.mcpAPI.stopMcp(identifier);

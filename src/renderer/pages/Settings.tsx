@@ -231,8 +231,8 @@ export default function Settings() {
     
     try {
       toast({
-        title: "🔧 开发模式",
-        description: "开始模拟更新下载过程...",
+        title: t('devMode.title'),
+        description: t('devMode.simulateUpdateStart'),
       });
 
       // 通过IPC触发模拟更新
@@ -241,13 +241,13 @@ export default function Settings() {
       if (result.success) {
         window.logAPI.info('Mock update simulation started:', result.message);
       } else {
-        throw new Error(result.error || '模拟更新启动失败');
+        throw new Error(result.error || t('devMode.simulateStartFailed'));
       }
       
     } catch (err) {
       toast({
-        title: "模拟失败",
-        description: err instanceof Error ? err.message : "模拟更新过程时发生错误",
+        title: t('devMode.simulateFailed'),
+        description: err instanceof Error ? err.message : t('devMode.simulateError'),
         variant: "destructive",
       });
       setSimulatingUpdate(false);
@@ -425,16 +425,16 @@ export default function Settings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="zh-CN">
-                    <div className="flex items-center gap-2">
-                      <Languages className="h-3 w-3" />
-                      简体中文
-                    </div>
-                  </SelectItem>
                   <SelectItem value="en-US">
                     <div className="flex items-center gap-2">
                       <Languages className="h-3 w-3" />
                       English
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="zh-CN">
+                    <div className="flex items-center gap-2">
+                      <Languages className="h-3 w-3" />
+                      简体中文
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -526,12 +526,12 @@ export default function Settings() {
                   {simulatingUpdate ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      模拟更新中...
+                      {t('devMode.simulatingUpdate')}
                     </>
                   ) : (
                     <>
                       <Bug className="h-4 w-4 mr-2" />
-                      模拟更新下载
+                      {t('devMode.simulateUpdateDownload')}
                     </>
                   )}
                 </Button>

@@ -78,8 +78,8 @@ export default function Browse() {
     } catch (error) {
       console.error('Failed to load browse data:', error);
       toast({
-        title: "Error",
-        description: "Failed to load browse data",
+        title: t('common.error'),
+        description: t('browse.errors.loadData'),
         variant: "destructive"
       });
     } finally {
@@ -107,8 +107,8 @@ export default function Browse() {
     } catch (error) {
       console.error('Failed to load packages:', error);
       toast({
-        title: "Error",
-        description: "Failed to load packages",
+        title: t('common.error'),
+        description: t('browse.errors.loadPackages'),
         variant: "destructive"
       });
     } finally {
@@ -172,7 +172,7 @@ export default function Browse() {
       <div className="flex-1 p-6 flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading browse data...</span>
+          <span>{t('browse.loading')}</span>
         </div>
       </div>
     );
@@ -187,10 +187,10 @@ export default function Browse() {
         </Button>
         <div className="space-y-2">
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Browse All Packages
+            {t('browse.title')}
           </h1>
           <p className="text-muted-foreground">
-            Discover and install MCP packages for your projects
+            {t('browse.description')}
           </p>
         </div>
       </div>
@@ -222,12 +222,12 @@ export default function Browse() {
         <div className="flex gap-2">
           <Select value={sortBy} onValueChange={handleSortChange}>
             <SelectTrigger className="w-32">
-              <SelectValue placeholder="Sort by" />
+              <SelectValue placeholder={t('browse.sortBy')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="popular">Popular</SelectItem>
-              <SelectItem value="recent">Recent</SelectItem>
-              <SelectItem value="rating">Rating</SelectItem>
+              <SelectItem value="popular">{t('browse.sort.popular')}</SelectItem>
+              <SelectItem value="recent">{t('browse.sort.recent')}</SelectItem>
+              <SelectItem value="rating">{t('browse.sort.rating')}</SelectItem>
             </SelectContent>
           </Select>
           
@@ -247,7 +247,7 @@ export default function Browse() {
         <div className="w-[380px]">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Categories</CardTitle>
+              <CardTitle className="text-lg">{t('browse.categories')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button
@@ -255,7 +255,7 @@ export default function Browse() {
                 className="w-full justify-start"
                 onClick={() => handleCategoryChange(null)}
               >
-                All Categories
+                {t('browse.allCategories')}
                 <Badge variant="secondary" className="ml-auto">
                   {totalCount}
                 </Badge>
@@ -283,21 +283,21 @@ export default function Browse() {
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold pb-4">
                 {selectedCategoryId 
-                  ? categories.find(c => c.identifier === selectedCategoryId)?.title || 'Category'
-                  : 'All Packages'
+                  ? categories.find(c => c.identifier === selectedCategoryId)?.title || t('browse.category')
+                  : t('browse.allPackages')
                 }
               </h2>
               {searchLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             </div>
             <Badge variant="secondary">
-              {totalCount} packages
+              {totalCount} {t('browse.packages')}
             </Badge>
           </div>
           
           {packages.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                {searchQuery ? 'No packages found matching your search.' : 'No packages available.'}
+                {searchQuery ? t('browse.noSearchResults') : t('browse.noPackages')}
               </p>
             </div>
           ) : (
@@ -320,10 +320,10 @@ export default function Browse() {
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1 || searchLoading}
                 >
-                  Previous
+                  {t('browse.pagination.previous')}
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages}
+                  {t('browse.pagination.pageInfo', { current: currentPage, total: totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -331,7 +331,7 @@ export default function Browse() {
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages || searchLoading}
                 >
-                  Next
+                  {t('browse.pagination.next')}
                 </Button>
               </div>
             </div>

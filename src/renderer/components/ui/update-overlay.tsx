@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from './button';
 import { Progress } from './progress';
 import { X, Download } from 'lucide-react';
+import { useI18n } from '@/hooks/use-i18n';
 
 interface UpdateOverlayProps {
   isVisible: boolean;
@@ -16,6 +17,8 @@ export const UpdateOverlay: React.FC<UpdateOverlayProps> = ({
   version,
   onCancel
 }) => {
+  const { t } = useI18n();
+  
   if (!isVisible) return null;
 
   return (
@@ -24,19 +27,19 @@ export const UpdateOverlay: React.FC<UpdateOverlayProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Download className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-medium">正在下载更新</h3>
+            <h3 className="text-lg font-medium">{t('updateOverlay.downloading')}</h3>
           </div>
         </div>
         
         {version && (
           <p className="text-sm text-muted-foreground mb-4">
-            正在下载版本 {version}
+            {t('updateOverlay.downloadingVersion', { version })}
           </p>
         )}
         
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span>下载进度</span>
+            <span>{t('updateOverlay.downloadProgress')}</span>
             <span>{progress.toFixed(1)}%</span>
           </div>
           
@@ -44,7 +47,7 @@ export const UpdateOverlay: React.FC<UpdateOverlayProps> = ({
           
           <div className="flex justify-center pt-2">
             <Button variant="outline" onClick={onCancel}>
-              取消下载
+              {t('updateOverlay.cancelDownload')}
             </Button>
           </div>
         </div>

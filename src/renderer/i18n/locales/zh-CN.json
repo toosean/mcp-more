@@ -118,18 +118,39 @@
         "description": "无法打开日志目录"
       },
       "loadConfigError": "加载配置失败"
+    },
+    "devMode": {
+      "title": "🔧 开发模式",
+      "simulateUpdateStart": "开始模拟更新下载过程...",
+      "simulateStartFailed": "模拟更新启动失败",
+      "simulateFailed": "模拟失败",
+      "simulateError": "模拟更新过程时发生错误",
+      "simulatingUpdate": "模拟更新中...",
+      "simulateUpdateDownload": "模拟更新下载"
     }
   },
   "market": {
     "title": "市场",
     "description": "发现并安装新的 MCP 包",
     "search": "搜索包...",
+    "loading": "正在加载市场数据...",
+    "trending": {
+      "title": "本周热门"
+    },
+    "featured": {
+      "title": "推荐包"
+    },
+    "noPackages": "暂无可用的包。",
+    "browseAll": "浏览所有 MCP",
     "type": {
       "local": "本地",
       "remote": "远程",
       "hybrid": "混合"
     },
-    "typeLabel": "类型"
+    "typeLabel": "类型",
+    "errors": {
+      "loadFailed": "加载市场数据失败"
+    }
   },
   "installed": {
     "title": "已安装",
@@ -299,6 +320,75 @@
       "openingConfigDesc": "正在打开 {{name}} 的配置..."
     }
   },
+  "browse": {
+    "title": "浏览所有 MCP",
+    "description": "发现并安装适合您项目的 MCP 包",
+    "loading": "正在加载浏览数据...",
+    "sortBy": "排序方式",
+    "sort": {
+      "popular": "热门",
+      "recent": "最新",
+      "rating": "评分"
+    },
+    "categories": "分类",
+    "allCategories": "所有分类",
+    "category": "分类",
+    "allPackages": "所有包",
+    "packages": "个包",
+    "noPackages": "暂无可用的包。",
+    "noSearchResults": "没有找到匹配您搜索的包。",
+    "pagination": {
+      "previous": "上一页",
+      "next": "下一页",
+      "pageInfo": "第 {{current}} 页，共 {{total}} 页"
+    },
+    "errors": {
+      "loadData": "加载浏览数据失败",
+      "loadPackages": "加载包失败"
+    }
+  },
+  "notFound": {
+    "code": "404",
+    "message": "哎呀！页面未找到",
+    "returnHome": "返回首页"
+  },
+  "sidebar": {
+    "logoAlt": "MCP More 图标",
+    "appName": "MCP More",
+    "tagline": "更好地使用更多 MCP",
+    "quickSetup": {
+      "claudeCode": "Claude Code",
+      "cursor": "Cursor",
+      "other": "其他"
+    }
+  },
+  "titleBar": {
+    "minimize": "最小化",
+    "restore": "还原",
+    "maximize": "最大化",
+    "close": "关闭",
+    "devMode": {
+      "customMinimize": "自定义最小化 (开发模式)",
+      "customMaximizeRestore": "自定义最大化/还原 (开发模式)",
+      "customClose": "自定义关闭 (开发模式)",
+      "customTitleBar": "自定义标题栏 (开发模式)"
+    }
+  },
+  "updateOverlay": {
+    "downloading": "正在下载更新",
+    "downloadingVersion": "正在下载版本 {{version}}",
+    "downloadProgress": "下载进度",
+    "cancelDownload": "取消下载"
+  },
+  "updateAvailable": {
+    "noReleaseNotes": "暂无更新说明",
+    "newVersionFound": "发现新版本",
+    "versionAvailable": "版本 {{version}} 现已可用",
+    "releaseDate": "发布日期: {{date}}",
+    "updateContent": "更新内容",
+    "remindLater": "稍后提醒",
+    "downloadAndInstall": "下载并安装"
+  },
   "mcpDetail": {
     "loading": "正在加载包详情...",
     "error": {
@@ -352,6 +442,23 @@
       "uninstallCompleteDesc": "{{name}} 已成功移除！",
       "uninstallFailed": "卸载失败",
       "uninstallFailedDesc": "移除 {{name}} 失败，请重试。"
+    }
+  },
+  "mcpManager": {
+    "errors": {
+      "duplicateName": "名称为 \"{{name}}\" 的 MCP 已存在",
+      "singleMcpOnly": "一次只能导入一个 MCP",
+      "alreadyInstalled": "MCP 已经安装",
+      "fetchConfigFailed": "获取安装配置失败",
+      "notInstalled": "MCP 未安装",
+      "unknownError": "发生未知错误",
+      "failedToStart": "启动 MCP {{name}} 失败"
+    },
+    "messages": {
+      "running": "运行 MCP {{name}}",
+      "startingUp": "正在努力启动 MCP {{name}}...",
+      "started": "MCP {{name}} 已启动",
+      "startedSuccess": "MCP {{name}} 已成功启动！"
     }
   }
 }
