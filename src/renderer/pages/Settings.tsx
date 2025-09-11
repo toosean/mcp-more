@@ -307,14 +307,14 @@ export default function Settings() {
               <Zap className="h-4 w-4 mr-2" />
               {t('settings.quickSetup.detectClient')}
             </Button>
-            <Button variant="outline" onClick={handleExportConfig} className="flex-1 sm:flex-none">
+            {/* <Button variant="outline" onClick={handleExportConfig} className="flex-1 sm:flex-none">
               <Download className="h-4 w-4 mr-2" />
               {t('settings.quickSetup.exportConfig')}
             </Button>
             <Button variant="outline" onClick={handleImportConfig} className="flex-1 sm:flex-none">
               <Upload className="h-4 w-4 mr-2" />
               {t('settings.quickSetup.importConfig')}
-            </Button>
+            </Button> */}
           </div>
         </CardContent>
       </Card>
