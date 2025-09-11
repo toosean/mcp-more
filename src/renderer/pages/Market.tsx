@@ -88,6 +88,7 @@ export default function Market() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {trendingPackages.map((mcp) => (
             <MCPCard
+              key={mcp.identifier}
               mcp={mcp}
             />
           ))}
@@ -113,6 +114,7 @@ export default function Market() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {packages.map((mcp) => (
               <MCPCard
+                key={mcp.identifier}
                 mcp={mcp}
               />
             ))}

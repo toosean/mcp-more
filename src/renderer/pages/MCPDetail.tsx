@@ -48,18 +48,26 @@ export default function MCPDetail() {
     }
   }, [org, id]);
 
+  useEffect(() => {
+    if (mcp) {
+      refreshInstalledStatus();
+    }
+  }, [mcp]);
+
+
+  const refreshInstalledStatus = async () => {
+    if (mcp) {
+      const installedStatus = await getMcpInstallStatus(mcp.identifier, mcp.publishedAt);
+      setInstalledStatus(installedStatus);
+    }
+  };
+  
   const loadMcpDetail = async (identifier: string) => {
     try {
       setLoading(true);
       const detail = await getMcpDetail(identifier);
       setMcp(detail);
 
-      // 检查安装状态
-      if (detail) {
-        const installedStatus = await getMcpInstallStatus(detail.identifier);
-        setInstalledStatus(installedStatus);
-
-      }
     } catch (error) {
       window.logAPI.error('Failed to load MCP detail:', error);
       toast({
@@ -111,9 +119,7 @@ export default function MCPDetail() {
 
       await upgradeMcp(mcp);
 
-      // 重新检查安装状态
-      const newInstalledStatus = await getMcpInstallStatus(mcp.identifier);
-      setInstalledStatus(newInstalledStatus);
+      await refreshInstalledStatus();
 
       toast({
         title: t('mcpDetail.toast.upgradeComplete'),
@@ -145,9 +151,7 @@ export default function MCPDetail() {
 
       await installMcp(mcp);
 
-      // 重新检查安装状态
-      const newInstalledStatus = await getMcpInstallStatus(mcp.identifier);
-      setInstalledStatus(newInstalledStatus);
+      await refreshInstalledStatus();
 
       toast({
         title: t('mcpDetail.toast.installComplete'),
@@ -178,9 +182,7 @@ export default function MCPDetail() {
 
       await uninstallMcp(mcp.identifier);
 
-      // 重新检查安装状态
-      const newInstalledStatus = await getMcpInstallStatus(mcp.identifier);
-      setInstalledStatus(newInstalledStatus);
+      await refreshInstalledStatus();
 
       toast({
         title: "Uninstallation Complete",
@@ -316,8 +318,7 @@ export default function MCPDetail() {
             </CardHeader>
             <CardContent className="space-y-4">
 
-
-              {installedStatus === 'installed' && (
+              {installedStatus === 'not_installed' && (
                 <>
                   <Button
                     onClick={handleInstall}
@@ -338,7 +339,7 @@ export default function MCPDetail() {
                   </Button>
                 </>
               )}
-              {installedStatus === 'not_installed' && (
+              {installedStatus === 'installed' && (
                 <>
                   <Button
                     onClick={handleUninstall}
@@ -354,19 +355,19 @@ export default function MCPDetail() {
                     ) : (
                       <>
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Uninstall
+                        Uninstall {mcp.name}
                       </>
                     )}
                   </Button>
                 </>
               )}
               {installedStatus === 'upgradeable' && (
-                <>
+                <>              
                   <Button
                     onClick={handleUpgrade}
                     disabled={installing}
                     variant="destructive"
-                    className="w-full"
+                    className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
                   >
                     {installing ? (
                       <>
@@ -376,7 +377,7 @@ export default function MCPDetail() {
                     ) : (
                       <>
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Upgrade
+                        Upgrade {mcp.name}
                       </>
                     )}
                   </Button>
