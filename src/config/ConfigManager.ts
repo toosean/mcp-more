@@ -11,10 +11,13 @@ export class ConfigManager {
   private store: any; // 使用 any 类型避免类型定义问题
 
   constructor() {
+    // 根据环境决定配置名
+    const configName = process.env.NODE_ENV === 'development' ? 'mcp-more-config-dev' : 'mcp-more-config';
+    
     // 初始化 electron-store
     this.store = new Store({
       defaults: defaultConfig,
-      name: 'mcp-more-config'
+      name: configName
     });
 
     // 检查并执行配置迁移
