@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import {
 
 export default function Browse() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
   
   // 状态管理
@@ -26,7 +27,7 @@ export default function Browse() {
   const [searchLoading, setSearchLoading] = useState(false);
   
   // 筛选和搜索状态
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('query') || '');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>('popular');
 
@@ -108,6 +109,15 @@ export default function Browse() {
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
+    
+    // Update URL parameters
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (value.trim()) {
+      newSearchParams.set('query', value.trim());
+    } else {
+      newSearchParams.delete('query');
+    }
+    setSearchParams(newSearchParams);
   };
 
   const handleCategoryChange = (categoryId: string | null) => {
