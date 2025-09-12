@@ -141,11 +141,21 @@ interface EventAPI {
   removeAllListeners(channel: string): void;
 }
 
+// 定义MCP服务器状态接口
+interface McpServerStatus {
+  status: 'healthy' | 'stopped' | 'error';
+  isListening: boolean;
+  serverCount: number;
+  uptime: number;
+  error?: string;
+}
+
 // 定义MCP API 接口
 interface McpAPI {
   startMcp(mcpId: string): Promise<void>;
   stopMcp(mcpId: string): Promise<void>;
   getMcpStatus(mcpId: string): Promise<'running' | 'stopped' | 'error'>;
+  getServerStatus(): Promise<McpServerStatus>;
 }
 
 // 窗口控制 API 实现
@@ -160,7 +170,7 @@ const windowControlAPI: WindowControlAPI = {
 // 事件监听 API 实现
 const eventAPI: EventAPI = {
   on: (channel: string, callback: (...args: any[]) => void) => {
-    ipcRenderer.on(channel, callback);
+    ipcRenderer.on(channel, (_, ...args) => callback(...args));
     return () => {
       ipcRenderer.removeAllListeners(channel);
     };
@@ -174,7 +184,8 @@ const eventAPI: EventAPI = {
 const mcpAPI: McpAPI = {
   startMcp: (mcpId: string) => ipcRenderer.invoke('mcp:start-mcp', mcpId),
   stopMcp: (mcpId: string) => ipcRenderer.invoke('mcp:stop-mcp', mcpId),
-  getMcpStatus: (mcpId: string) => ipcRenderer.invoke('mcp:get-mcp-status', mcpId)
+  getMcpStatus: (mcpId: string) => ipcRenderer.invoke('mcp:get-mcp-status', mcpId),
+  getServerStatus: () => ipcRenderer.invoke('mcp:get-server-status')
 };
 
 // Shell API 实现

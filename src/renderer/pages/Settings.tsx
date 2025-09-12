@@ -38,6 +38,7 @@ import { useConfig } from '@/hooks/use-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { AppConfig, Theme } from '../../config/types';
 import { useNavigate } from 'react-router-dom';
+import { McpServerStatus } from '@/types/global';
 
 export default function Settings() {
   const { setTheme } = useTheme();
@@ -45,12 +46,20 @@ export default function Settings() {
   const { t, changeLanguage } = useI18n();
   const navigate = useNavigate();
   
+  // 格式化运行时间
+  const formatUptime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+  
   // 本地状态用于临时编辑
   const [localGeneral, setLocalGeneral] = useState<Partial<AppConfig['general']>>({});
   const [appVersion, setAppVersion] = useState<string>('loading...');
   const [isDevMode, setIsDevMode] = useState<boolean>(false);
   const [simulatingUpdate, setSimulatingUpdate] = useState<boolean>(false);
   const [showResetDialog, setShowResetDialog] = useState<boolean>(false);
+  const [serverStatus, setServerStatus] = useState<McpServerStatus | null>(null);
 
   // 监听更新事件来重置模拟状态
   useEffect(() => {
@@ -89,6 +98,32 @@ export default function Settings() {
     };
     
     loadAppVersion();
+  }, []);
+
+  // 获取MCP服务器状态
+  useEffect(() => {
+    const loadServerStatus = async () => {
+      try {
+        const status = await window.mcpAPI.getServerStatus();
+        setServerStatus(status);
+      } catch (err) {
+        window.logAPI.error('Failed to load server status:', err);
+        setServerStatus({
+          status: 'error',
+          isListening: false,
+          serverCount: 0,
+          uptime: 0,
+          error: 'Failed to get status'
+        });
+      }
+    };
+    
+    loadServerStatus();
+    
+    // 每10秒更新一次状态
+    const interval = setInterval(loadServerStatus, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // 当配置加载完成后，同步到本地状态
@@ -531,20 +566,39 @@ export default function Settings() {
               
               <div className="space-y-1">
                 <div className="text-sm text-muted-foreground">{t('settings.system.status')}</div>
-                <Badge className="bg-success text-success-foreground">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  {t('settings.system.healthy')}
-                </Badge>
+                {serverStatus ? (
+                  <Badge className={
+                    serverStatus.status === 'healthy' 
+                      ? "bg-success text-success-foreground"
+                      : "bg-destructive text-destructive-foreground"
+                  }>
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    {serverStatus.status === 'healthy' 
+                      ? t('settings.system.healthy')
+                      : serverStatus.status === 'error'
+                      ? 'Error'
+                      : 'Stopped'}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Loading...
+                  </Badge>
+                )}
               </div>
               
               <div className="space-y-1">
                 <div className="text-sm text-muted-foreground">{t('settings.system.uptime')}</div>
-                <div className="text-sm font-medium">4h 32m</div>
+                <div className="text-sm font-medium">
+                  {serverStatus ? formatUptime(serverStatus.uptime) : 'Loading...'}
+                </div>
               </div>
               
               <div className="space-y-1">
-                <div className="text-sm text-muted-foreground">{t('settings.system.memoryUsage')}</div>
-                <div className="text-sm font-medium">124 MB</div>
+                <div className="text-sm text-muted-foreground">MCP Servers</div>
+                <div className="text-sm font-medium">
+                  {serverStatus ? `${serverStatus.serverCount} active` : 'Loading...'}
+                </div>
               </div>
             </div>
             

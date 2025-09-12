@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { UpdateAvailableOverlay } from "@/components/ui/update-available-overlay
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { toast } from "@/hooks/use-toast";
 import Layout from "./components/layout/Layout";
 import Market from "./pages/Market";
 import Browse from "./pages/Browse";
@@ -20,6 +22,18 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const updater = useUpdater();
+  
+  useEffect(() => {
+    const unsubscribe = window.eventAPI.on('toast', (info: { title: string; description: string, variant: 'default' | 'destructive' | undefined }) => {
+      toast({
+        title: info.title,
+        description: info.description,
+        variant: info.variant || 'default',
+      });
+    });
+
+    return unsubscribe;
+  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>

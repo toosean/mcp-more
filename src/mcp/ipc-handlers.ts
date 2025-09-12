@@ -44,5 +44,20 @@ export function setupMCPIpcHandlers(): void {
     }
   });
 
+  // 获取MCP服务器状态
+  ipcMain.handle('mcp:get-server-status', async () => {
+
+    const isListening = mcpServerManager.isListening();
+    const serverCount = mcpServerManager.getAllMcpServers().length;
+    
+    return {
+      status: isListening ? 'healthy' : 'stopped',
+      isListening,
+      serverCount,
+      uptime: isListening ? process.uptime() : 0
+    };
+
+  });
+
   log.info('MCP IPC handlers set up');
 }

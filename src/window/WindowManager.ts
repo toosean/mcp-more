@@ -397,6 +397,22 @@ export class WindowManager {
     return nativeImage.createFromBuffer(buffer, { width: size, height: size });
   }
 
+
+  toast(title: string, description: string, variant?: 'default' | 'destructive'){
+    if (this.mainWindow) {
+      log.info('windowManager.toast', {
+        title,
+        description,
+        variant
+      });
+      this.mainWindow.webContents.send('toast', {
+        title,
+        description,
+        variant
+      });
+    }
+  }
+
 }
 
 // 导出单例实例

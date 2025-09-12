@@ -5,6 +5,7 @@ import log from 'electron-log';
 import { sessionManager } from './sessionManager.js';
 import { toolRegistry } from './toolRegistry.js';
 import { mcpClientManager } from './mcpClientManager.js';
+import { windowManager } from '../../window/index.js';
 
 // 类型声明
 import type { Application, Request, Response } from 'express';
@@ -17,6 +18,7 @@ export class McpServerManager {
     private app: Application;
     private server: any;
     private mcpServers: McpServer[] = [];
+    private listening = false;
 
     constructor() {
         this.app = express();
@@ -37,10 +39,10 @@ export class McpServerManager {
     private setupRoutes(): void {
         // Handle POST requests for client-to-server communication
         this.app.post('/mcp', this.handleMCPRequest.bind(this));
-        
+
         // Handle GET requests for server-to-client notifications via SSE
         this.app.get('/mcp', this.handleSessionRequest.bind(this));
-        
+
         // Handle DELETE requests for session termination
         this.app.delete('/mcp', this.handleSessionRequest.bind(this));
     }
@@ -69,14 +71,14 @@ export class McpServerManager {
 
             // 注册所有工具到服务器
             await toolRegistry.registerAllTools(mcpServer);
-            
+
             // 连接到预初始化的 MCP 服务器
             await mcpServer.connect(transport);
 
             // 当传输关闭时，删除 MCP 服务器
             transport.onclose = () => {
                 this.mcpServers = this.mcpServers.filter(mcpServer => mcpServer !== mcpServer);
-            };            
+            };
 
         } else {
             // 无效请求
@@ -102,7 +104,7 @@ export class McpServerManager {
      */
     private async handleSessionRequest(req: Request, res: Response): Promise<void> {
         const sessionId = req.headers['mcp-session-id'] as string | undefined;
-        
+
         if (!sessionId || !sessionManager.hasSession(sessionId)) {
             res.status(400).send('Invalid or missing session ID');
             return;
@@ -122,20 +124,40 @@ export class McpServerManager {
         return this.mcpServers;
     }
 
+    isListening(): boolean {
+        return this.listening;
+    }
+
     /**
      * 启动服务器
      * @param port 端口号
      */
     async start(port: number = 7195): Promise<void> {
-   
-        // 初始化 MCP 客户端管理器
+
         await mcpClientManager.initializeClients();
 
-        // 缓存所有工具
         await mcpClientManager.cacheAllTools();
-        
-        this.server = this.app.listen(port, () => {
+
+        this.server = this.app.listen(port);
+
+        this.server.on('listening', () => {
             log.info(`MCP Server started on port ${port}`);
+            this.listening = true;
+        })
+
+        this.server.on('error', (err: any) => {
+            log.error('MCP Server start failed:', err);
+            this.listening = false;
+            
+            // simple delay to avoid window not initialized
+            setTimeout(() => {
+                windowManager.toast(
+                  'MCP Server start failed',
+                  err.message || 'MCP Server start failed',
+                  'destructive'
+              );
+            }, 5000);
+
         });
     }
 

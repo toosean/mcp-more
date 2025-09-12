@@ -1,5 +1,14 @@
 import { AppConfig, PartialAppConfig } from '../../config/types';
 
+// 定义MCP服务器状态接口
+export interface McpServerStatus {
+  status: 'healthy' | 'stopped' | 'error';
+  isListening: boolean;
+  serverCount: number;
+  uptime: number;
+  error?: string;
+}
+
 declare global {
   interface Window {
     appInfoAPI: {
@@ -66,6 +75,7 @@ declare global {
       startMcp(mcpId: string): Promise<void>;
       stopMcp(mcpId: string): Promise<void>;
       getMcpStatus(mcpId: string): Promise<'running' | 'stopped' | 'error'>;
+      getServerStatus(): Promise<McpServerStatus>;
     };
     shellAPI: {
       openExternal(url: string): Promise<void>;
@@ -94,5 +104,3 @@ declare global {
     env: ImportMetaEnv;
   }
 }
-
-export {};
