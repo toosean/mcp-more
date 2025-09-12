@@ -38,26 +38,10 @@ if (started) {
 app.on('ready', () => {
   log.debug('Electron is ready...');
 
-  // 检查是否是自启动（通过检查openAsHidden参数或命令行参数）
-  const isAutoStarted = app.getLoginItemSettings().wasOpenedAsHidden || process.argv.includes('--hidden');
-  const autoStart = configManager.get('general', 'autoStart');
-  
-  // 如果是自启动且配置了自启动，则设置最小化启动
-  if (isAutoStarted && autoStart) {
-    configManager.set('general', 'minimizeOnStartup', true);
-  }
-
   // 创建主窗口和系统托盘
   windowManager.createMainWindow();
   windowManager.createSystemTray();
   
-  // 如果是自启动后，恢复原来的minimizeOnStartup设置
-  if (isAutoStarted && autoStart) {
-    setTimeout(() => {
-      // 延迟恢复，避免影响启动流程
-      configManager.set('general', 'minimizeOnStartup', false);
-    }, 1000);
-  }
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
