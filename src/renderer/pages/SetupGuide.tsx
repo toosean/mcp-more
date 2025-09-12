@@ -20,33 +20,49 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { toast } from '@/hooks/use-toast';
 
+import ClaudeDesktopLogo from '@/assets/client-logos/ClaudeDesktop.png';
+import ClaudeCodeLogo from '@/assets/client-logos/ClaudeCode.png';
+import CursorLogo from '@/assets/client-logos/Cursor.png';
+import VSCodeLogo from '@/assets/client-logos/VSCode.png';
+import AugmentCodeLogo from '@/assets/client-logos/Augment.png';
+
 // 客户端 LOGO 组件
 const ClientLogo = ({ client, className = "" }: { client: string; className?: string }) => {
   const logos = {
     claude: (
-      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm ${className}`}>
-        C
-      </div>
+      <img 
+        src={ClaudeDesktopLogo} 
+        alt="Claude Desktop"
+        className={`w-8 h-8 rounded-lg object-cover ${className}`}
+      />
     ),
     claudecode: (
-      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-orange-600 to-orange-800 flex items-center justify-center text-white font-bold text-sm ${className}`}>
-        CC
-      </div>
+      <img 
+        src={ClaudeCodeLogo} 
+        alt="Claude Code"
+        className={`w-8 h-8 rounded-lg object-cover ${className}`}
+      />
     ),
     cursor: (
-      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm ${className}`}>
-        ⟫
-      </div>
+      <img 
+        src={CursorLogo} 
+        alt="Cursor"
+        className={`w-8 h-8 rounded-lg object-cover ${className}`}
+      />
     ),
     vscode: (
-      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm ${className}`}>
-        VS
-      </div>
+      <img 
+        src={VSCodeLogo} 
+        alt="VS Code"
+        className={`w-8 h-8 rounded-lg object-cover ${className}`}
+      />
     ),
     augment: (
-      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-sm ${className}`}>
-        A
-      </div>
+      <img 
+        src={AugmentCodeLogo} 
+        alt="Augment Code"
+        className={`w-8 h-8 rounded-lg object-cover ${className}`}
+      />
     ),
     others: (
       <div className={`w-8 h-8 rounded-lg bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white ${className}`}>
@@ -116,6 +132,7 @@ export default function SetupGuide() {
         others: '其他客户端'
       },
       claude: {
+        logo: ClaudeDesktopLogo,
         title: 'Claude Desktop 配置',
         description: '为 Claude Desktop 应用配置 MCP 服务器连接',
         steps: [
@@ -144,6 +161,7 @@ export default function SetupGuide() {
         ]
       },
       claudecode: {
+        logo: ClaudeCodeLogo,
         title: 'Claude Code 配置',
         description: '为 Claude Code CLI 工具配置 MCP 服务器连接',
         steps: [
@@ -178,6 +196,7 @@ export default function SetupGuide() {
         ]
       },
       cursor: {
+        logo: CursorLogo,
         title: 'Cursor 编辑器配置',
         description: '为 Cursor AI 编辑器配置 MCP 服务器支持',
         steps: [
@@ -201,6 +220,7 @@ export default function SetupGuide() {
         ]
       },
       vscode: {
+        logo: VSCodeLogo,
         title: 'VS Code 配置',
         description: '为 Visual Studio Code 配置 MCP 服务器集成',
         steps: [
@@ -227,6 +247,7 @@ export default function SetupGuide() {
         ]
       },
       augment: {
+        logo: AugmentCodeLogo,
         title: 'Augment Code 配置',
         description: '为 Augment Code AI 编程助手配置 MCP 服务器连接',
         steps: [
@@ -257,32 +278,6 @@ export default function SetupGuide() {
             name: '标准配置',
             description: '适用于大多数工具：',
             config: mcpConfigJsonString,
-          },
-          {
-            name: 'Continue',
-            description: 'VS Code 中的 AI 编程助手',
-            configPath: '~/.continue/config.json',
-            config: `{
-  "mcpServers": {
-    "${mcpMoreAlias}": {
-      "url": "http://localhost:${portNumber}/mcp"
-    }
-  }
-}`
-          },
-          {
-            name: 'Zed',
-            description: '高性能代码编辑器',
-            configPath: '~/.config/zed/settings.json',
-            config: `{
-  "mcp": {
-    "servers": {
-      "${mcpMoreAlias}": {
-        "url": "http://localhost:${portNumber}/mcp"
-      }
-    }
-  }
-}`
           },
           {
             name: '自定义客户端',
@@ -316,6 +311,7 @@ await client.connect(transport);`
         others: 'Other Clients'
       },
       claude: {
+        logo: ClaudeDesktopLogo,
         title: 'Claude Desktop Configuration',
         description: 'Configure MCP server connections for Claude Desktop application',
         steps: [
@@ -344,6 +340,7 @@ await client.connect(transport);`
         ]
       },
       claudecode: {
+        logo: ClaudeCodeLogo,
         title: 'Claude Code Configuration',
         description: 'Configure MCP server connections for Claude Code CLI tool',
         steps: [
@@ -378,6 +375,7 @@ await client.connect(transport);`
         ]
       },
       cursor: {
+        logo: CursorLogo,
         title: 'Cursor Editor Configuration',
         description: 'Configure MCP server support for Cursor AI editor',
         steps: [
@@ -401,6 +399,7 @@ await client.connect(transport);`
         ]
       },
       vscode: {
+        logo: VSCodeLogo,
         title: 'VS Code Configuration',
         description: 'Configure MCP server integration for Visual Studio Code',
         steps: [
@@ -427,6 +426,7 @@ await client.connect(transport);`
         ]
       },
       augment: {
+        logo: AugmentCodeLogo,
         title: 'Augment Code Configuration',
         description: 'Configure MCP server connections for Augment Code AI programming assistant',
         steps: [
@@ -457,32 +457,6 @@ await client.connect(transport);`
             name: 'Standard config',
             description: 'works in most of the tools:',
             config: mcpConfigJsonString,
-          },
-          {
-            name: 'Continue',
-            description: 'AI programming assistant in VS Code',
-            configPath: '~/.continue/config.json',
-            config: `{
-  "mcpServers": {
-    "${mcpMoreAlias}": {
-      "url": "http://localhost:${portNumber}/mcp"
-    }
-  }
-}`
-          },
-          {
-            name: 'Zed',
-            description: 'High-performance code editor',
-            configPath: '~/.config/zed/settings.json',
-            config: `{
-  "mcp": {
-    "servers": {
-      "${mcpMoreAlias}": {
-        "url": "http://localhost:${portNumber}/mcp"
-      }
-    }
-  }
-}`
           },
           {
             name: 'Custom Client',
