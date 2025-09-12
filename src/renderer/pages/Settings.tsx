@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,10 +47,10 @@ export default function Settings() {
   
   // 本地状态用于临时编辑
   const [localGeneral, setLocalGeneral] = useState<Partial<AppConfig['general']>>({});
-  const [saving, setSaving] = useState(false);
   const [appVersion, setAppVersion] = useState<string>('loading...');
   const [isDevMode, setIsDevMode] = useState<boolean>(false);
   const [simulatingUpdate, setSimulatingUpdate] = useState<boolean>(false);
+  const [showResetDialog, setShowResetDialog] = useState<boolean>(false);
 
   // 监听更新事件来重置模拟状态
   useEffect(() => {
@@ -85,7 +95,7 @@ export default function Settings() {
   useEffect(() => {
     const loadConfig = async () => {
       const config = await getConfig();
-      if (config && !saving) { // 只有在非保存状态下才同步，避免保存时的状态冲突
+      if (config) {
         setLocalGeneral(config.general);
 
         // 同步主题到 next-themes
@@ -95,37 +105,28 @@ export default function Settings() {
       }
     }
     loadConfig();
-  }, [setTheme, saving]);
+  }, [setTheme]);
 
-  const handleSave = async (e?: React.MouseEvent) => {
-    // 防止默认行为和事件冒泡
-    e?.preventDefault();
-    e?.stopPropagation();
+  // 通用的自动保存函数
+  const autoSave = async (key: keyof AppConfig['general'], value: any, additionalAction?: () => void) => {
+    const newGeneral = { ...localGeneral, [key]: value };
+    setLocalGeneral(newGeneral);
     
     try {
-      setSaving(true);
-
       await updateConfig({
-        general: localGeneral,
+        general: newGeneral,
       });
-
-      // 保存成功后应用主题变更
-      if (localGeneral.theme) {
-        setTheme(localGeneral.theme);
+      
+      // 执行额外的操作（如应用主题、切换语言等）
+      if (additionalAction) {
+        additionalAction();
       }
-
-      toast({
-        title: t('settings.messages.saveSuccess.title'),
-        description: t('settings.messages.saveSuccess.description'),
-      });
     } catch (err) {
       toast({
         title: t('settings.messages.saveFailed.title'),
         description: err instanceof Error ? err.message : t('settings.messages.saveFailed.description'),
         variant: "destructive",
       });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -199,8 +200,32 @@ export default function Settings() {
     e?.preventDefault();
     e?.stopPropagation();
     
+    // 显示确认对话框
+    setShowResetDialog(true);
+  };
+
+  const handleConfirmReset = async () => {
     try {
       await resetConfig();
+      
+      // 获取重置后的配置并立即应用
+      const newConfig = await getConfig();
+      if (newConfig) {
+        // 立即应用主题
+        if (newConfig.general.theme) {
+          setTheme(newConfig.general.theme);
+        }
+        
+        // 立即应用语言
+        if (newConfig.general.language) {
+          changeLanguage(newConfig.general.language);
+        }
+        
+        // 更新本地状态
+        setLocalGeneral(newConfig.general);
+      }
+      
+      setShowResetDialog(false);
       toast({
         title: t('settings.messages.resetSuccess.title'),
         description: t('settings.messages.resetSuccess.description'),
@@ -332,7 +357,7 @@ export default function Settings() {
 
       {/* Content Area - with proper scrolling */}
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* General Settings */}
         <Card className="bg-gradient-card border-border/50">
@@ -356,7 +381,7 @@ export default function Settings() {
               </div>
               <Switch 
                 checked={localGeneral.autoStart || false} 
-                onCheckedChange={(checked) => setLocalGeneral(prev => ({ ...prev, autoStart: checked }))} 
+                onCheckedChange={(checked) => autoSave('autoStart', checked)} 
               />
             </div>
                         
@@ -371,11 +396,11 @@ export default function Settings() {
               </div>
               <Switch 
                 checked={localGeneral.minimizeOnStartup || false} 
-                onCheckedChange={(checked) => setLocalGeneral(prev => ({ ...prev, minimizeOnStartup: checked }))} 
+                onCheckedChange={(checked) => autoSave('minimizeOnStartup', checked)} 
               />
             </div>
 
-            <Separator />
+            {/* <Separator />
 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -386,9 +411,9 @@ export default function Settings() {
               </div>
               <Switch 
                 checked={localGeneral.enableTelemetry || false} 
-                onCheckedChange={(checked) => setLocalGeneral(prev => ({ ...prev, enableTelemetry: checked }))} 
+                onCheckedChange={(checked) => autoSave('enableTelemetry', checked)} 
               />
-            </div>
+            </div> */}
             
             <Separator />
             
@@ -401,9 +426,7 @@ export default function Settings() {
               </div>
               <Select 
                 value={localGeneral.theme || 'system'} 
-                onValueChange={(value: Theme) => {
-                  setLocalGeneral(prev => ({ ...prev, theme: value }));
-                }}
+                onValueChange={(value: Theme) => autoSave('theme', value, () => setTheme(value))}
               >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue />
@@ -442,10 +465,7 @@ export default function Settings() {
               </div>
               <Select 
                 value={localGeneral.language || 'zh-CN'} 
-                onValueChange={(value: string) => {
-                  setLocalGeneral(prev => ({ ...prev, language: value }));
-                  changeLanguage(value);
-                }}
+                onValueChange={(value: string) => autoSave('language', value, () => changeLanguage(value))}
               >
                 <SelectTrigger className="w-[140px]">
                   <SelectValue />
@@ -475,7 +495,14 @@ export default function Settings() {
                 id="port-number"
                 type="number"
                 value={String(localGeneral.portNumber)}
-                onChange={(e) => setLocalGeneral(prev => ({ ...prev, portNumber: parseInt(e.target.value)}))}
+                onChange={(e) => {
+                  const portNumber = parseInt(e.target.value);
+                  if (portNumber >= 1 && portNumber <= 65535) {
+                    autoSave('portNumber', portNumber);
+                  } else {
+                    setLocalGeneral(prev => ({ ...prev, portNumber }));
+                  }
+                }}
                 min="1"
                 max="65535"
               />
@@ -553,28 +580,34 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Save Button - Fixed at bottom */}
-      <div className="flex justify-between flex-shrink-0 pt-4 border-t border-border/50">
+      {/* Reset Button - Fixed at bottom */}
+      <div className="flex justify-start flex-shrink-0">
         <Button type="button" variant="outline" onClick={handleReset}>
           <RotateCcw className="h-4 w-4 mr-2" />
           {t('settings.actions.resetAll')}
         </Button>
-        <Button 
-          type="button"
-          onClick={handleSave} 
-          disabled={saving}
-          className="bg-gradient-primary hover:opacity-90"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {t('settings.actions.saving')}
-            </>
-          ) : (
-            t('settings.actions.saveAll')
-          )}
-        </Button>
       </div>
+
+      {/* Reset Confirmation Dialog */}
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('settings.actions.resetAll')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('settings.messages.resetConfirm')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmReset}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('common.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

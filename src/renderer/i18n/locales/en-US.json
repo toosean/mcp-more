@@ -118,7 +118,8 @@
         "title": "Failed to Open Logs Directory",
         "description": "Unable to open logs directory"
       },
-      "loadConfigError": "Failed to load configuration"
+      "loadConfigError": "Failed to load configuration",
+      "resetConfirm": "Are you sure you want to reset all settings? This action cannot be undone."
     },
     "devMode": {
       "title": "🔧 Dev Mode",
