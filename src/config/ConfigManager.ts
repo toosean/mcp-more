@@ -1,7 +1,7 @@
 import Store from 'electron-store';
 import log from 'electron-log';
 import { app } from 'electron';
-import { AppConfig, defaultConfig, PartialAppConfig } from './types';
+import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig } from './types';
 
 /**
  * 配置管理器类
@@ -14,9 +14,12 @@ export class ConfigManager {
     // 根据环境决定配置名
     const configName = process.env.NODE_ENV === 'development' ? 'mcp-more-config-dev' : 'mcp-more-config';
     
+    // 创建动态默认配置（包含系统语言检测）
+    const dynamicDefaults = createDefaultConfig();
+    
     // 初始化 electron-store
     this.store = new Store({
-      defaults: defaultConfig,
+      defaults: dynamicDefaults,
       name: configName
     });
 
