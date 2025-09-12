@@ -238,8 +238,8 @@ export default function Settings() {
     
     try {
       toast({
-        title: t('devMode.title'),
-        description: t('devMode.simulateUpdateStart'),
+        title: t('settings.devMode.title'),
+        description: t('settings.devMode.simulateUpdateStart'),
       });
 
       // 通过IPC触发模拟更新
@@ -248,13 +248,13 @@ export default function Settings() {
       if (result.success) {
         window.logAPI.info('Mock update simulation started:', result.message);
       } else {
-        throw new Error(result.error || t('devMode.simulateStartFailed'));
+        throw new Error(result.error || t('settings.devMode.simulateStartFailed'));
       }
       
     } catch (err) {
       toast({
-        title: t('devMode.simulateFailed'),
-        description: err instanceof Error ? err.message : t('devMode.simulateError'),
+        title: t('settings.devMode.simulateFailed'),
+        description: err instanceof Error ? err.message : t('settings.devMode.simulateError'),
         variant: "destructive",
       });
       setSimulatingUpdate(false);
@@ -537,12 +537,12 @@ export default function Settings() {
                   {simulatingUpdate ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {t('devMode.simulatingUpdate')}
+                      {t('settings.devMode.simulatingUpdate')}
                     </>
                   ) : (
                     <>
                       <Bug className="h-4 w-4 mr-2" />
-                      {t('devMode.simulateUpdateDownload')}
+                      {t('settings.devMode.simulateUpdateDownload')}
                     </>
                   )}
                 </Button>
