@@ -55,6 +55,7 @@ export default function Settings() {
   
   // 本地状态用于临时编辑
   const [localGeneral, setLocalGeneral] = useState<Partial<AppConfig['general']>>({});
+  const [originalPortNumber, setOriginalPortNumber] = useState<number | undefined>(undefined);
   const [appVersion, setAppVersion] = useState<string>('loading...');
   const [isDevMode, setIsDevMode] = useState<boolean>(false);
   const [simulatingUpdate, setSimulatingUpdate] = useState<boolean>(false);
@@ -132,6 +133,7 @@ export default function Settings() {
       const config = await getConfig();
       if (config) {
         setLocalGeneral(config.general);
+        setOriginalPortNumber(config.general.portNumber);
 
         // 同步主题到 next-themes
         if (config.general.theme !== 'system') {
@@ -258,6 +260,7 @@ export default function Settings() {
         
         // 更新本地状态
         setLocalGeneral(newConfig.general);
+        setOriginalPortNumber(newConfig.general.portNumber);
       }
       
       setShowResetDialog(false);
@@ -544,6 +547,11 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">
                 {t('settings.general.portNumber.description')}
               </p>
+              {localGeneral.portNumber !== originalPortNumber && originalPortNumber !== undefined && (
+                <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                  {t('settings.general.portNumber.restartRequired')}
+                </p>
+              )}
             </div>
             
           </CardContent>

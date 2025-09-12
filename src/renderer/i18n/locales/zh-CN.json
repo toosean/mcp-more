@@ -55,7 +55,8 @@
       },
       "portNumber": {
         "label": "端口号",
-        "description": "MCP Client 监听端口号"
+        "description": "MCP Client 监听端口号",
+        "restartRequired": "⚠️ 修改端口后需要重启应用才能生效"
       }
     },
     "system": {

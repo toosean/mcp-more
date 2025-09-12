@@ -55,7 +55,8 @@
       },
       "portNumber": {
         "label": "Port Number",
-        "description": "MCP Client listening port number"
+        "description": "MCP Client listening port number",
+        "restartRequired": "⚠️ Application restart required for port changes to take effect"
       }
     },
     "system": {
