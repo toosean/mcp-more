@@ -254,6 +254,11 @@ export default function SetupGuide() {
         description: '适用于其他支持 MCP 协议的客户端和工具',
         clients: [
           {
+            name: '标准配置',
+            description: '适用于大多数工具：',
+            config: mcpConfigJsonString,
+          },
+          {
             name: 'Continue',
             description: 'VS Code 中的 AI 编程助手',
             configPath: '~/.continue/config.json',
@@ -448,6 +453,11 @@ await client.connect(transport);`
         title: 'Other MCP Clients',
         description: 'For other clients and tools that support MCP protocol',
         clients: [
+          {
+            name: 'Standard config',
+            description: 'works in most of the tools:',
+            config: mcpConfigJsonString,
+          },
           {
             name: 'Continue',
             description: 'AI programming assistant in VS Code',
