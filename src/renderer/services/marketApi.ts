@@ -3,12 +3,12 @@
  * 提供市场相关的 API 调用功能，连接到 Cloudflare Workers 后端
  */
 
-import { 
-  MarketMcp, 
-  MarketCategory, 
-  MarketApiParams, 
-  MarketPackagesResponse, 
-  MarketCategoriesResponse, 
+import {
+  MarketMcp,
+  MarketCategory,
+  MarketApiParams,
+  MarketPackagesResponse,
+  MarketCategoriesResponse,
   MarketMcpDetail,
   MarketMcpDetailResponse,
   MarketHomeApiResponse,
@@ -21,15 +21,34 @@ import {
 const API_BASE_URL = window.env.VITE_API_URL;
 
 /**
+ * 获取当前语言配置
+ */
+async function getCurrentLanguage(): Promise<string> {
+  try {
+    // 使用window.configAPI获取配置中的语言设置
+    const config = await window.configAPI.getConfig();
+    return config?.general?.language || 'en-US';
+  } catch (error) {
+    // 如果获取失败，回退到默认值
+    console.warn('Failed to get language from config, using default:', error);
+    return 'en-US';
+  }
+}
+
+/**
  * 发起 HTTP 请求的通用函数
  */
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+
+  // 获取当前配置的语言设置
+  const language = await getCurrentLanguage();
+
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Accept-Language': navigator.language || 'en-US',
+      'Accept-Language': language,
       ...options.headers,
     },
     ...options,
@@ -37,11 +56,11 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
   try {
     const response = await fetch(url, defaultOptions);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return data;
   } catch (error) {
