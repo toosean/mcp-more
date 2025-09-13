@@ -59,6 +59,20 @@
         "restartRequired": "⚠️ 修改端口后需要重启应用才能生效"
       }
     },
+    "runtimeList": {
+      "title": "运行时列表",
+      "description": "当前系统中可用的 MCP 运行时环境",
+      "status": {
+        "installed": "已安装",
+        "notInstalled": "未安装",
+        "checking": "检测中..."
+      },
+      "actions": {
+        "install": "安装",
+        "installTooltip": "点击快速安装 {{name}}",
+        "refresh": "重新检测运行时环境"
+      }
+    },
     "system": {
       "title": "系统状态",
       "description": "当前系统信息和诊断",

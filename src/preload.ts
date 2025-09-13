@@ -4,6 +4,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import log from 'electron-log/renderer';
 import { AppConfig, PartialAppConfig } from './config/types';
+import { RuntimeInfo } from './runtime/RuntimeManager';
 
 // 配置渲染进程的 electron-log
 log.transports.console.level = 'debug';
@@ -150,6 +151,14 @@ interface McpServerStatus {
   error?: string;
 }
 
+
+// 定义运行时 API 接口
+interface RuntimeAPI {
+  checkRuntimesAsync(): Promise<RuntimeInfo[]>;
+  refreshRuntimesAsync(): Promise<void>;
+  isRuntimeInstalledAsync(runtimeName: string): Promise<boolean>;
+}
+
 // 定义MCP API 接口
 interface McpAPI {
   startMcp(mcpId: string): Promise<void>;
@@ -178,6 +187,13 @@ const eventAPI: EventAPI = {
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel);
   },
+};
+
+// 运行时 API 实现
+const runtimeAPI: RuntimeAPI = {
+  checkRuntimesAsync: () => ipcRenderer.invoke('runtime:check-runtimes'),
+  refreshRuntimesAsync: () => ipcRenderer.invoke('runtime:refresh-runtimes'),
+  isRuntimeInstalledAsync: (runtimeName: string) => ipcRenderer.invoke('runtime:is-runtime-installed', runtimeName),
 };
 
 // MCP API 实现
@@ -269,5 +285,6 @@ contextBridge.exposeInMainWorld('logAPI', logAPI);
 contextBridge.exposeInMainWorld('windowControlAPI', windowControlAPI);
 contextBridge.exposeInMainWorld('eventAPI', eventAPI);
 contextBridge.exposeInMainWorld('mcpAPI', mcpAPI);
+contextBridge.exposeInMainWorld('runtimeAPI', runtimeAPI);
 contextBridge.exposeInMainWorld('shellAPI', shellAPI);
 contextBridge.exposeInMainWorld('updaterAPI', updaterAPI);

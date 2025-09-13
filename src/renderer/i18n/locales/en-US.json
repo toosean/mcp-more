@@ -59,6 +59,20 @@
         "restartRequired": "⚠️ Application restart required for port changes to take effect"
       }
     },
+    "runtimeList": {
+      "title": "Runtime Lists",
+      "description": "Detect available MCP runtime environments on current system",
+      "status": {
+        "installed": "Installed",
+        "notInstalled": "Not Installed",
+        "checking": "Checking..."
+      },
+      "actions": {
+        "install": "Install",
+        "installTooltip": "Click to install {{name}}",
+        "refresh": "Re-detect Runtime Environment"
+      }
+    },
     "system": {
       "title": "System Status",
       "description": "Current system information and diagnostics",

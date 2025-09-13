@@ -39,6 +39,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { AppConfig, Theme } from '../../config/types';
 import { useNavigate } from 'react-router-dom';
 import { McpServerStatus } from '@/types/global';
+import RuntimeList from '@/components/settings/RuntimeList';
 
 export default function Settings() {
   const { setTheme } = useTheme();
@@ -556,89 +557,95 @@ export default function Settings() {
             
           </CardContent>
         </Card>
-
-        {/* System Status */}
-        <Card className="bg-gradient-card border-border/50">
-          <CardHeader>
-            <CardTitle>{t('settings.system.title')}</CardTitle>
-            <CardDescription>
-              {t('settings.system.description')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="text-sm text-muted-foreground">{t('settings.system.version')}</div>
-                <Badge variant="outline">{appVersion}</Badge>
+        
+        <div className="flex flex-col gap-4">
+          {/* Runtime Lists */}
+          <RuntimeList />
+          
+          {/* System Status */}
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle>{t('settings.system.title')}</CardTitle>
+              <CardDescription>
+                {t('settings.system.description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">{t('settings.system.version')}</div>
+                  <Badge variant="outline">{appVersion}</Badge>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">{t('settings.system.status')}</div>
+                  {serverStatus ? (
+                    <Badge className={
+                      serverStatus.status === 'healthy' 
+                        ? "bg-success text-success-foreground"
+                        : "bg-destructive text-destructive-foreground"
+                    }>
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      {serverStatus.status === 'healthy' 
+                        ? t('settings.system.healthy')
+                        : serverStatus.status === 'error'
+                        ? 'Error'
+                        : 'Stopped'}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline">
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Loading...
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">{t('settings.system.uptime')}</div>
+                  <div className="text-sm font-medium">
+                    {serverStatus ? formatUptime(serverStatus.uptime) : 'Loading...'}
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">MCP Servers</div>
+                  <div className="text-sm font-medium">
+                    {serverStatus ? `${serverStatus.serverCount} active` : 'Loading...'}
+                  </div>
+                </div>
               </div>
               
-              <div className="space-y-1">
-                <div className="text-sm text-muted-foreground">{t('settings.system.status')}</div>
-                {serverStatus ? (
-                  <Badge className={
-                    serverStatus.status === 'healthy' 
-                      ? "bg-success text-success-foreground"
-                      : "bg-destructive text-destructive-foreground"
-                  }>
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {serverStatus.status === 'healthy' 
-                      ? t('settings.system.healthy')
-                      : serverStatus.status === 'error'
-                      ? 'Error'
-                      : 'Stopped'}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline">
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Loading...
-                  </Badge>
+              <div className="space-y-3">
+                <Button variant="outline" className="w-full" onClick={handleViewLogs}>
+                  {t('settings.system.viewLogs')}
+                </Button>
+                
+                {/* 开发模式专用按钮 */}
+                {isDevMode && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-orange-500/50 text-orange-600 hover:bg-orange-500/10" 
+                    onClick={handleSimulateUpdate}
+                    disabled={simulatingUpdate}
+                  >
+                    {simulatingUpdate ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {t('settings.devMode.simulatingUpdate')}
+                      </>
+                    ) : (
+                      <>
+                        <Bug className="h-4 w-4 mr-2" />
+                        {t('settings.devMode.simulateUpdateDownload')}
+                      </>
+                    )}
+                  </Button>
                 )}
               </div>
-              
-              <div className="space-y-1">
-                <div className="text-sm text-muted-foreground">{t('settings.system.uptime')}</div>
-                <div className="text-sm font-medium">
-                  {serverStatus ? formatUptime(serverStatus.uptime) : 'Loading...'}
-                </div>
-              </div>
-              
-              <div className="space-y-1">
-                <div className="text-sm text-muted-foreground">MCP Servers</div>
-                <div className="text-sm font-medium">
-                  {serverStatus ? `${serverStatus.serverCount} active` : 'Loading...'}
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full" onClick={handleViewLogs}>
-                {t('settings.system.viewLogs')}
-              </Button>
-              
-              {/* 开发模式专用按钮 */}
-              {isDevMode && (
-                <Button 
-                  variant="outline" 
-                  className="w-full border-orange-500/50 text-orange-600 hover:bg-orange-500/10" 
-                  onClick={handleSimulateUpdate}
-                  disabled={simulatingUpdate}
-                >
-                  {simulatingUpdate ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {t('settings.devMode.simulatingUpdate')}
-                    </>
-                  ) : (
-                    <>
-                      <Bug className="h-4 w-4 mr-2" />
-                      {t('settings.devMode.simulateUpdateDownload')}
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
+
         </div>
       </div>
 

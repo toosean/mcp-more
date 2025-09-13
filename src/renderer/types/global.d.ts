@@ -1,12 +1,19 @@
 import { AppConfig, PartialAppConfig } from '../../config/types';
 
-// 定义MCP服务器状态接口
 export interface McpServerStatus {
   status: 'healthy' | 'stopped' | 'error';
   isListening: boolean;
   serverCount: number;
   uptime: number;
   error?: string;
+}
+
+export interface RuntimeInfo {
+  name: string;
+  version?: string;
+  paths?: string[];
+  isInstalled: boolean;
+  installLink?: string;
 }
 
 declare global {
@@ -19,6 +26,11 @@ declare global {
       getLogsPath(): Promise<string>;
       showLogsDirectory(): Promise<void>;
       getPlatform(): Promise<string>;
+    };
+    runtimeAPI: {
+      checkRuntimesAsync(): Promise<RuntimeInfo[]>;
+      refreshRuntimesAsync(): Promise<void>;
+      isRuntimeInstalledAsync(runtimeName: string): Promise<boolean>;
     };
     configAPI: {
       // 获取配置
