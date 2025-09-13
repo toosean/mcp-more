@@ -168,6 +168,8 @@ export interface McpInstallConfiguration {
   transport: string | null;
   /** 配置 */
   configuration: string | null;
+  /** Runtimes */
+  runtimes: string[] | null;
 }
 
 // MCP安装配置API响应

@@ -38,7 +38,8 @@ export interface Mcp {
     command: string | null;
     environment: Record<string, string> | null;
     json: string | null;
-  }
+  },
+  runtimes?: string[] | null;
 }
 
 // MCP 统计信息

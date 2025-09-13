@@ -42,5 +42,20 @@ export function setupRuntimeIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle('runtime:get-runtime-info', async (event, runtimeName: string) => {
+    try {
+      log.info(`Getting runtime info for ${runtimeName}...`);
+      const runtimeInfo = await runtimeManager.getRuntimeInfoAsync(runtimeName);
+      log.info(`Runtime info for ${runtimeName}:`, runtimeInfo);
+      return runtimeInfo;
+    } catch (error) {
+      log.error(`Error in runtime info for ${runtimeName}:`, error);
+      throw error;
+    }
+  });
+
+  // init runtimes when app start
+  runtimeManager.getRuntimeInfosAsync();
+
   log.info('Runtime IPC handlers setup completed');
 }

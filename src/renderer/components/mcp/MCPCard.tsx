@@ -7,6 +7,7 @@ import { Download, Star, Settings, Eye, Loader2, Trash, ArrowUp } from 'lucide-r
 import { useI18n } from '@/hooks/use-i18n';
 import { toast } from '@/hooks/use-toast';
 import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
+import { useRuntimeInstallDialog } from '@/hooks/use-runtime-install-dialog';
 import { MarketMcp } from '../../types/market';
 
 interface MCPCardProps {
@@ -22,6 +23,9 @@ export default function MCPCard({
   // 内部状态管理
   const [installedStatus, setInstalledStatus] = useState<McpInstallStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Runtime install dialog hook
+  const { handleRuntimeInstall, RuntimeInstallDialog } = useRuntimeInstallDialog();
   const { getMcpInstallStatus, installMcp, uninstallMcp, upgradeMcp } = useMcpManager();
 
 
@@ -64,7 +68,7 @@ export default function MCPCard({
     try {
       setIsLoading(true);
 
-      await installMcp(mcp);
+      await installMcp(mcp, handleRuntimeInstall);
       checkInstallStatus();
 
     } catch (error) {
@@ -249,6 +253,8 @@ export default function MCPCard({
           </Button>
         </div>
       </CardFooter>
+
+      <RuntimeInstallDialog />
     </Card>
   );
 }

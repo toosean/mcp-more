@@ -13,15 +13,14 @@ export default function RuntimeList() {
   const [runtimeLoading, setRuntimeLoading] = useState<boolean>(false);
 
   // 获取运行时列表
-  const loadRuntimeList = async () => {
+  const loadRuntimeList = async (delay: boolean = false) => {
     setRuntimeLoading(true);
     try {
-
       const runtimes = await window.runtimeAPI.checkRuntimesAsync();
+      if(delay) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
       setRuntimeList(runtimes);
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
     } catch (err) {
       window.logAPI?.error('Failed to load runtime list:', err);
       setRuntimeList([]);
@@ -31,7 +30,7 @@ export default function RuntimeList() {
   };
 
   useEffect(() => {
-    loadRuntimeList();
+    loadRuntimeList(false);
   }, []);
 
   // 处理运行时安装
@@ -58,11 +57,7 @@ export default function RuntimeList() {
 
   // 处理立即刷新
   const handleRefresh = async () => {
-    await loadRuntimeList();
-    toast({
-      title: t('settings.runtimeList.messages.refreshed'),
-      description: t('settings.runtimeList.messages.refreshedDesc'),
-    });
+    await loadRuntimeList(true);
   };
 
   return (

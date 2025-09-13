@@ -13,15 +13,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import MCPCard from '@/components/mcp/MCPCard';
 import AddMCPDialog from '@/components/mcp/AddMCPDialog';
-import { Package, Settings, Trash2, Play, Square, Eye, Activity, Plus, Edit, Folder, Globe, Loader2 } from 'lucide-react';
+import { Package, Settings, Trash2, Play, Square, Eye, Activity, Plus, Edit, Folder, Globe, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { Odometer } from '@/components/ui/odometer';
 import { Mcp } from '../../config/types';
 import { useMcpManager } from '@/services/mcpManager';
+import { RuntimeInfo } from '@/types/global';
 interface DisplayMCP {
   identifier: string;
   name: string;
@@ -35,6 +35,8 @@ interface DisplayMCP {
   installed: string | null;
   calls: number | null;
   source: 'manual' | 'json' | 'market' | null;
+  runtimes?: string[] | null;
+  missingRuntimes?: string[];
 }
 
 export default function Installed() {
@@ -47,6 +49,8 @@ export default function Installed() {
     open: false,
     mcp: null
   });
+  const [runtimeList, setRuntimeList] = useState<RuntimeInfo[]>([]);
+  const [runtimeLoading, setRuntimeLoading] = useState(false);
   const { t } = useI18n();
   const { updateConfig, getConfig } = useConfig();
   const { startMcp } = useMcpManager();
@@ -99,6 +103,40 @@ export default function Installed() {
     };
     loadLanguage();
   }, [getConfig]);
+
+  // Load runtime information
+  useEffect(() => {
+    const loadRuntimeInfo = async () => {
+      setRuntimeLoading(true);
+      try {
+        const runtimes = await window.runtimeAPI.checkRuntimesAsync();
+        setRuntimeList(runtimes);
+      } catch (error) {
+        window.logAPI.error('Failed to load runtime list:', error);
+        setRuntimeList([]);
+      } finally {
+        setRuntimeLoading(false);
+      }
+    };
+    loadRuntimeInfo();
+  }, []);
+
+  // Check for missing runtimes for each MCP
+  const checkMissingRuntimes = useCallback((mcpRuntimes: string[] | null | undefined): string[] => {
+    if (!mcpRuntimes || mcpRuntimes.length === 0) {
+      return [];
+    }
+
+    const missingRuntimes: string[] = [];
+    for (const requiredRuntime of mcpRuntimes) {
+      const runtimeInfo = runtimeList.find(r => r.name === requiredRuntime);
+      if (!runtimeInfo || !runtimeInfo.isInstalled) {
+        missingRuntimes.push(requiredRuntime);
+      }
+    }
+
+    return missingRuntimes;
+  }, [runtimeList]);
   
   // Format date string for display
   const formatDate = (dateString: string | null): string => {
@@ -202,6 +240,8 @@ export default function Installed() {
             }
           };
           
+          const missingRuntimes = checkMissingRuntimes(mcp.runtimes);
+
           return {
             identifier: mcp.identifier,
             name: mcp.name || 'Unknown MCP',
@@ -215,6 +255,8 @@ export default function Installed() {
             installed: validateDate(installedDate),
             calls: null as number | null,
             source: mcp.source,
+            runtimes: mcp.runtimes,
+            missingRuntimes: missingRuntimes,
           };
         })
         .sort((a: DisplayMCP, b: DisplayMCP) => {
@@ -243,7 +285,7 @@ export default function Installed() {
       console.error('Failed to load MCPs:', error);
       setMcps([]);
     }
-  }, [getConfig]);
+  }, [getConfig, checkMissingRuntimes]);
 
   // Load MCPs on mount
   useEffect(() => {
@@ -663,7 +705,7 @@ export default function Installed() {
           <div className="space-y-4">
             {mcps.map((mcp) => (
               <Card key={mcp.identifier} className="bg-gradient-card border-border/50">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-3">
@@ -706,7 +748,7 @@ export default function Installed() {
                           </span>
                         )}
                       </div>
-                      
+
                       {/* <div className="flex flex-wrap gap-1">
                         {mcp.tags.map((tag) => (
                           <Badge key={tag} variant="secondary" className="text-xs">
@@ -779,6 +821,16 @@ export default function Installed() {
                       </Button>
                     </div>
                   </div>
+                  {/* Runtime warning for running MCPs with missing runtimes */}
+                  {mcp.status === 'running' && mcp.missingRuntimes && mcp.missingRuntimes.length > 0 && (
+                    <div className="flex items-center gap-2 p-1 mt-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                      <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                        <span className="font-medium">{t('installed.runtime.warning')}</span>{' '}
+                        <span>{t('installed.runtime.missingRuntimes', { runtimes: mcp.missingRuntimes.join(', ') })}</span>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

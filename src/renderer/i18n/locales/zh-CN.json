@@ -248,6 +248,10 @@
       "description": "确定要删除 {{name}} 吗？此操作不可撤销。",
       "cancel": "取消",
       "confirm": "删除"
+    },
+    "runtime": {
+      "warning": "运行时警告：",
+      "missingRuntimes": "缺少必需的运行时环境：{{runtimes}}"
     }
   },
   "addMCP": {
@@ -475,7 +479,19 @@
       "running": "运行 MCP {{name}}",
       "startingUp": "正在努力启动 MCP {{name}}...",
       "started": "MCP {{name}} 已启动",
-      "startedSuccess": "MCP {{name}} 已成功启动！"
+      "startedSuccess": "MCP {{name}} 已成功启动！",
+      "runtimeInstallOpened": "运行时安装页面已打开",
+      "runtimeInstallDesc": "已在浏览器中打开 {{name}} 安装页面，请按照说明安装后重新启动 MCP",
+      "runtimeIgnored": "已忽略运行时要求",
+      "runtimeIgnoredDesc": "已跳过 {{name}} 运行时安装，MCP 将继续启动",
+      "runtimeRequired": "需要 {{name}} 运行时",
+      "runtimeRequiredDesc": "此 MCP 需要 {{name}} 运行时环境，建议先安装相应运行时"
+    },
+    "dialogs": {
+      "runtimeInstallTitle": "需要运行时环境",
+      "runtimeInstallRequired": "此 MCP 需要 {{name}} 运行时环境才能正常工作。是否要打开安装页面？",
+      "installRuntime": "安装运行时",
+      "skipRuntime": "跳过并继续"
     }
   }
 }

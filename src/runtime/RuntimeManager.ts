@@ -83,10 +83,11 @@ export class RuntimeManager {
   }
 
   public async isRuntimeInstalledAsync(runtimeName: string): Promise<boolean> {
-    if(RuntimeManager.supportRuntimes.includes(runtimeName)){
+    if(!RuntimeManager.supportRuntimes.includes(runtimeName)){
       return true;
     }
-    return await this.isRuntimeInstalledAsync(runtimeName);
+    const runtimes = await this.getRuntimeInfosAsync();
+    return runtimes.some(runtime => runtime.isInstalled && runtime.name.toLowerCase() === runtimeName.toLowerCase());
   }
 
   public getInstallLink(runtimeName: string): string | null {

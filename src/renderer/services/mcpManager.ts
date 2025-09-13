@@ -5,6 +5,9 @@ import { toast } from '@/hooks/use-toast';
 import { getMcpInstallConfiguration } from './marketApi';
 import i18n from '@/i18n';
 
+// Type for runtime installation handler
+export type RuntimeInstallHandler = (runtimeName: string) => Promise<boolean>;
+
 export type McpInstallStatus = 'installed' | 'upgradeable' | 'not_installed';
 
 export function useMcpManager() {
@@ -246,11 +249,7 @@ export function useMcpManager() {
     };
   }
 
-  /**
-   * 模拟安装包
-   * TODO: 替换为实际的安装逻辑
-   */
-  const installMcp = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
+  const installMcp = async (mcp: MarketMcp | MarketMcpDetail, runtimeInstallHandler?: RuntimeInstallHandler): Promise<void> => {
 
     const config = await getConfig();
 
@@ -285,6 +284,7 @@ export function useMcpManager() {
         environment: mcpConfig.environment,
         json: mcpConfig.json,
       },
+      runtimes: installConfig.runtimes,
     };
     installedMcps.push(newMcp);
     
@@ -296,11 +296,37 @@ export function useMcpManager() {
     });
     
     // here we don't await it, let it work in the background
-    startMcp(newMcp.identifier, newMcp.name);
+    let shouldStartMcp = true;
 
-    // everything is happen too fast, let's wait for 2 seconds
-    // make user feel the progress
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if(installConfig.runtimes && installConfig.runtimes.length > 0) {
+      for(const runtimeName of installConfig.runtimes) {
+        if(!(await window.runtimeAPI.isRuntimeInstalledAsync(runtimeName))) {
+          // Show runtime installation prompt if handler is provided
+          if (runtimeInstallHandler) {
+            const shouldInstallRuntime = await runtimeInstallHandler(runtimeName);
+  
+            if (shouldInstallRuntime) {
+              // User chose to install runtime, don't start MCP yet
+              shouldStartMcp = false;
+              // Open runtime installation page
+              const runtimeInfo = await window.runtimeAPI.getRuntimeInfoAsync(runtimeName);
+              if(runtimeInfo.installLink) {
+                window.shellAPI.openExternal(runtimeInfo.installLink);
+              }
+             
+            }
+          }
+        }
+      }
+    }
+
+    if(shouldStartMcp) {
+      startMcp(newMcp.identifier, newMcp.name);
+      // everything is happen too fast, let's wait for 2 seconds
+      // make user feel the progress
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
   }
 
   const startMcp = async (identifier: string, name?: string): Promise<void> => {

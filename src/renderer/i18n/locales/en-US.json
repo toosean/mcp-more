@@ -60,7 +60,7 @@
       }
     },
     "runtimeList": {
-      "title": "Runtime Lists",
+      "title": "Runtimes List",
       "description": "Detect available MCP runtime environments on current system",
       "status": {
         "installed": "Installed",
@@ -248,6 +248,10 @@
       "description": "Are you sure you want to delete {{name}}? This action cannot be undone.",
       "cancel": "Cancel",
       "confirm": "Delete"
+    },
+    "runtime": {
+      "warning": "Runtime Warning:",
+      "missingRuntimes": "Missing required runtime(s): {{runtimes}}"
     }
   },
   "addMCP": {
@@ -475,7 +479,19 @@
       "running": "Running MCP {{name}}",
       "startingUp": "We're working hard to get MCP {{name}} up and running...",
       "started": "MCP {{name}} started",
-      "startedSuccess": "MCP {{name}} has been started successfully!"
+      "startedSuccess": "MCP {{name}} has been started successfully!",
+      "runtimeInstallOpened": "Runtime installation page opened",
+      "runtimeInstallDesc": "{{name}} installation page opened in browser, please follow the instructions and restart MCP after installation",
+      "runtimeIgnored": "Runtime requirement ignored",
+      "runtimeIgnoredDesc": "Skipped {{name}} runtime installation, MCP will continue to start",
+      "runtimeRequired": "{{name}} runtime required",
+      "runtimeRequiredDesc": "This MCP requires {{name}} runtime environment, recommend installing the runtime first"
+    },
+    "dialogs": {
+      "runtimeInstallTitle": "Runtime Environment Required",
+      "runtimeInstallRequired": "This MCP requires {{name}} runtime environment to work properly. Would you like to open the installation page?",
+      "installRuntime": "Install Runtime",
+      "skipRuntime": "Skip and Continue"
     }
   }
 }

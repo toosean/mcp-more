@@ -148,7 +148,11 @@ export async function getLatestPackages(limit: number = 10): Promise<MarketMcp[]
  */
 export async function getMcpInstallConfiguration(identifier: string): Promise<McpInstallConfiguration | null> {
   try {
-    const response = await apiRequest<McpInstallConfigurationResponse>(`/api/mcps/${encodeURIComponent(identifier)}/install-configuration`);
+    
+    const response = await apiRequest<McpInstallConfigurationResponse>(`/api/mcps/${encodeURIComponent(identifier)}/install-configuration`, {
+      method: 'POST',
+    });
+
     return response.success ? response.result : null;
   } catch (error) {
     console.error(`Failed to fetch install configuration for ${identifier}:`, error);

@@ -157,6 +157,7 @@ interface RuntimeAPI {
   checkRuntimesAsync(): Promise<RuntimeInfo[]>;
   refreshRuntimesAsync(): Promise<void>;
   isRuntimeInstalledAsync(runtimeName: string): Promise<boolean>;
+  getRuntimeInfoAsync(runtimeName: string): Promise<RuntimeInfo>;
 }
 
 // 定义MCP API 接口
@@ -194,6 +195,7 @@ const runtimeAPI: RuntimeAPI = {
   checkRuntimesAsync: () => ipcRenderer.invoke('runtime:check-runtimes'),
   refreshRuntimesAsync: () => ipcRenderer.invoke('runtime:refresh-runtimes'),
   isRuntimeInstalledAsync: (runtimeName: string) => ipcRenderer.invoke('runtime:is-runtime-installed', runtimeName),
+  getRuntimeInfoAsync: (runtimeName: string) => ipcRenderer.invoke('runtime:get-runtime-info', runtimeName),
 };
 
 // MCP API 实现

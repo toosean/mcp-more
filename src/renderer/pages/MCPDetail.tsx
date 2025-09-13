@@ -31,6 +31,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { MarketMcpDetail } from '../types/market';
 import { getMcpDetail } from '@/services/marketApi';
 import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
+import { useRuntimeInstallDialog } from '@/hooks/use-runtime-install-dialog';
 
 export default function MCPDetail() {
   const { org, id } = useParams<{ org: string, id: string }>();
@@ -41,6 +42,9 @@ export default function MCPDetail() {
   const [loading, setLoading] = useState(true);
   const [installedStatus, setInstalledStatus] = useState<McpInstallStatus | null>(null);
   const [installing, setInstalling] = useState(false);
+
+  // Runtime install dialog hook
+  const { handleRuntimeInstall, RuntimeInstallDialog } = useRuntimeInstallDialog();
   const { getMcpInstallStatus, installMcp, uninstallMcp, upgradeMcp } = useMcpManager();
 
   useEffect(() => {
@@ -150,7 +154,7 @@ export default function MCPDetail() {
         description: t('mcpDetail.toast.installingDesc', { name: mcp.name }),
       });
 
-      await installMcp(mcp);
+      await installMcp(mcp, handleRuntimeInstall);
 
       await refreshInstalledStatus();
 
@@ -486,6 +490,8 @@ export default function MCPDetail() {
           </Card>
         </div>
       </div>
+
+      <RuntimeInstallDialog />
     </div>
   );
 }

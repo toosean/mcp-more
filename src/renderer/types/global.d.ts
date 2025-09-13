@@ -30,6 +30,7 @@ declare global {
     runtimeAPI: {
       checkRuntimesAsync(): Promise<RuntimeInfo[]>;
       refreshRuntimesAsync(): Promise<void>;
+      getRuntimeInfoAsync(runtimeName: string): Promise<RuntimeInfo>;
       isRuntimeInstalledAsync(runtimeName: string): Promise<boolean>;
     };
     configAPI: {
