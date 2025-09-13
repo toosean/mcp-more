@@ -290,6 +290,7 @@ export function useMcpManager() {
     
     updateConfig({
       mcp: {
+        ...config.mcp,
         installedMcps: installedMcps,
       },
     });
@@ -349,6 +350,7 @@ export function useMcpManager() {
 
     updateConfig({
       mcp: {
+        ...config.mcp,
         installedMcps: installedMcps,
       },
     });
