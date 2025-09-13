@@ -86,7 +86,7 @@ export default function MCPDetail() {
       if (!runtimeInfo || !runtimeInfo.isInstalled) {
         missingRuntimes.push(requiredRuntime);
       } else {
-        missingRuntimes.push(requiredRuntime);
+        installedRuntimes.push(requiredRuntime);
       }
     }
 

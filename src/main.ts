@@ -29,7 +29,7 @@ log.info('Electron is starting...');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
-  log.info('Electron is starting...');
+  log.info(`Electron is starting...${app.getVersion()}`);
   app.quit();
 }
 
