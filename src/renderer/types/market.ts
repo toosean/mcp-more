@@ -105,6 +105,8 @@ export interface MarketMcpDetail {
   configuration: string | null;
   /** 是否已安装 */
   isInstalled?: boolean;
+  /** Runtimes */
+  runtimes: string[] | null;
 }
 
 // API 请求参数类型

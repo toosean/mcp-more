@@ -463,6 +463,10 @@
       "uninstallCompleteDesc": "{{name}} has been removed successfully!",
       "uninstallFailed": "Uninstallation Failed",
       "uninstallFailedDesc": "Failed to remove {{name}}. Please try again."
+    },
+    "runtime": {
+      "notInstalled": "Runtime {{name}} not installed",
+      "check": "Check"
     }
   },
   "mcpManager": {

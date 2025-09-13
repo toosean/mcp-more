@@ -463,6 +463,10 @@
       "uninstallCompleteDesc": "{{name}} 已成功移除！",
       "uninstallFailed": "卸载失败",
       "uninstallFailedDesc": "移除 {{name}} 失败，请重试。"
+    },
+    "runtime": {
+      "notInstalled": "运行时 {{name}} 未安装",
+      "check": "查看"
     }
   },
   "mcpManager": {

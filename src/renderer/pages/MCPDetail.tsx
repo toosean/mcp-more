@@ -17,10 +17,9 @@ import {
   Github,
   ExternalLink,
   Loader2,
-  Settings,
   Trash2,
-  Copy,
-  ArrowUp
+  ArrowUp,
+  AlertTriangle
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -32,6 +31,7 @@ import { MarketMcpDetail } from '../types/market';
 import { getMcpDetail } from '@/services/marketApi';
 import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
 import { useRuntimeInstallDialog } from '@/hooks/use-runtime-install-dialog';
+import { RuntimeInfo } from '@/types/global';
 
 export default function MCPDetail() {
   const { org, id } = useParams<{ org: string, id: string }>();
@@ -42,6 +42,7 @@ export default function MCPDetail() {
   const [loading, setLoading] = useState(true);
   const [installedStatus, setInstalledStatus] = useState<McpInstallStatus | null>(null);
   const [installing, setInstalling] = useState(false);
+  const [runtimeList, setRuntimeList] = useState<RuntimeInfo[]>([]);
 
   // Runtime install dialog hook
   const { handleRuntimeInstall, RuntimeInstallDialog } = useRuntimeInstallDialog();
@@ -56,9 +57,50 @@ export default function MCPDetail() {
   useEffect(() => {
     if (mcp) {
       refreshInstalledStatus();
+      loadRuntimeInfo();
     }
   }, [mcp]);
 
+  // Load runtime information
+  const loadRuntimeInfo = async () => {
+    try {
+      const runtimes = await window.runtimeAPI.checkRuntimesAsync();
+      setRuntimeList(runtimes);
+    } catch (error) {
+      window.logAPI.error('Failed to load runtime list:', error);
+      setRuntimeList([]);
+    }
+  };
+
+  // Check runtime status for this MCP
+  const getRuntimeStatus = () => {
+    if (!mcp?.runtimes || mcp.runtimes.length === 0) {
+      return { hasRuntimes: false, missingRuntimes: [] as string[], installedRuntimes: [] as string[] };
+    }
+
+    const missingRuntimes: string[] = [];
+    const installedRuntimes: string[] = [];
+
+    for (const requiredRuntime of mcp.runtimes) {
+      const runtimeInfo = runtimeList.find(r => r.name === requiredRuntime);
+      if (!runtimeInfo || !runtimeInfo.isInstalled) {
+        missingRuntimes.push(requiredRuntime);
+      } else {
+        missingRuntimes.push(requiredRuntime);
+      }
+    }
+
+    return {
+      hasRuntimes: true,
+      missingRuntimes,
+      installedRuntimes,
+      allInstalled: missingRuntimes.length === 0
+    };
+  };
+
+  const handleClickRuntimeInstall = () => {
+    navigate(`/settings`);
+  };
 
   const refreshInstalledStatus = async () => {
     if (mcp) {
@@ -240,11 +282,41 @@ export default function MCPDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Overview
+                {t('mcpDetail.sections.overview')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground">{mcp.description || 'No description available'}</p>
+              <p className="text-muted-foreground">{mcp.description || t('mcpDetail.info.noDescription')}</p>
+
+              {/* Runtime Requirements */}
+              {(() => {
+                const runtimeStatus = getRuntimeStatus();
+                if (runtimeStatus.missingRuntimes.length === 0) return null;
+
+                return (
+                  <div className="space-y-3">
+                    {/* Missing Runtimes */}
+                    {runtimeStatus.missingRuntimes.map((runtime) => (
+                      <div key={runtime} className="flex items-center gap-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                        <div className="flex-1">
+                          <span className="text-sm text-yellow-800 dark:text-yellow-200">
+                            {t('mcpDetail.runtime.notInstalled', { name: runtime })}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-yellow-700 border-yellow-300 hover:bg-yellow-100 dark:text-yellow-300 dark:border-yellow-600 dark:hover:bg-yellow-800/30"
+                          onClick={handleClickRuntimeInstall}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          {t('mcpDetail.runtime.check')}
+                        </Button>
+                      </div>
+                    ))}
+                </div>);
+              })()}
             </CardContent>
           </Card>
 
@@ -300,7 +372,7 @@ export default function MCPDetail() {
                     tr: ({ children }) => <tr className="border-b border-border">{children}</tr>,
                     th: ({ children }) => <th className="border border-border px-3 py-2 text-left font-medium text-foreground">{children}</th>,
                     td: ({ children }) => <td className="border border-border px-3 py-2 text-muted-foreground">{children}</td>,
-                    img: ({ src, alt }) => <img src={src} alt={alt} className="max-w-full h-auto rounded-md mb-3" />,
+                    img: ({ src, alt }) => <img src={src} alt={alt} className="max-w-full h-auto rounded-md mb-3" style={{ display: 'unset' }} />,
                     hr: () => <hr className="border-t border-border my-6" />,
                     strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
                     em: ({ children }) => <em className="italic text-foreground">{children}</em>,

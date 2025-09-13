@@ -608,7 +608,7 @@ export default function Settings() {
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">MCP Servers</div>
+                  <div className="text-sm text-muted-foreground">MCP Client(s)</div>
                   <div className="text-sm font-medium">
                     {serverStatus ? `${serverStatus.serverCount} active` : 'Loading...'}
                   </div>
