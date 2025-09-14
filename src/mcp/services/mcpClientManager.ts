@@ -213,7 +213,7 @@ export class McpClientManager {
     // 统计每个工具名称出现的次数，并存储到一个 Map 中
     const toolNameCount: Map<string, number> = new Map();
     scopedTools.forEach(tool => {
-      const toolName = `${tool.clientInstance.mcp.name}__${tool.name}`;
+      const toolName = `${tool.clientInstance.mcp.code}__${tool.name}`;
       const count = toolNameCount.get(toolName) || 0;
       toolNameCount.set(toolName, count + 1);
     });
@@ -224,7 +224,7 @@ export class McpClientManager {
 
       const uniqueName = toolNameCount.get(toolName) === 1
         ? toolName
-        : `${tool.clientInstance.mcp.identifier.replace('/', '__')}__${toolName}`;
+        : `${tool.clientInstance.mcp.identifier.replace('/', '_')}__${toolName}`;
 
       tools.push({
         clientInstance: tool.clientInstance,

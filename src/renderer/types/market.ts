@@ -13,6 +13,8 @@ export interface MarketMcp {
   identifier: string;
   /** 包名称 */
   name: string;
+  /** Code name */
+  code: string;
   /** 包描述 */
   description: string | null;
   /** Logo URL */
@@ -69,6 +71,8 @@ export interface MarketMcpDetail {
   identifier: string;
   /** 包名称 */
   name: string;
+  /** Code name */
+  code: string;
   /** 包描述 */
   description: string | null;
   /** Logo URL */

@@ -83,6 +83,7 @@ export function useMcpManager() {
           updatedMCP = {
             ...editingMCP,
             name: mcpJsonData.name || editingMCP.name,
+            code: mcpJsonData.name.replace(/\s+/g, '_'),
             description: mcpJsonData.description || editingMCP.description,
             author: mcpJsonData.author || editingMCP.author,
             version: mcpJsonData.version || editingMCP.version,
@@ -99,6 +100,7 @@ export function useMcpManager() {
         } else {
           updatedMCP = {
             source: 'json',
+            code: mcpJsonData.name.replace(/\s+/g, '_'),
             identifier: mcpJsonData.identifier || mcpId,
             name: mcpJsonData.name || key,
             description: mcpJsonData.description || null,
@@ -135,6 +137,7 @@ export function useMcpManager() {
             source: 'manual',
             identifier: mcpId,
             name,
+            code: name.replace(/\s+/g, '_'),
             description: null,
             author: null,
             version: null,
@@ -271,6 +274,7 @@ export function useMcpManager() {
       source: 'market' as const,
       identifier: mcp.identifier,
       name: mcp.name,
+      code: mcp.code,
       description: mcp.description,
       author: mcp.author,
       version: mcp.version,
