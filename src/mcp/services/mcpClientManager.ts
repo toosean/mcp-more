@@ -220,7 +220,7 @@ export class McpClientManager {
 
     for (const tool of scopedTools) {
 
-      const toolName = `${tool.clientInstance.mcp.name}__${tool.name}`;
+      const toolName = `${tool.clientInstance.mcp.code}__${tool.name}`;
 
       const uniqueName = toolNameCount.get(toolName) === 1
         ? toolName
