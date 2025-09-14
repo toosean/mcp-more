@@ -67,9 +67,11 @@ export default function Browse() {
       
       if (packagesRes.success) {
         setPackages(packagesRes.result.list);
-        setTotalCount(packagesRes.result.total);
         // Calculate total pages based on pageSize
         setTotalPages(Math.ceil(packagesRes.result.total / 20));
+
+        // summ category count
+        setTotalCount(categoriesRes.result.list.filter(c=>c.count).reduce((acc, category) => acc + category.count, 0));
       }
       
       if (categoriesRes.success) {
@@ -101,7 +103,6 @@ export default function Browse() {
       
       if (response.success) {
         setPackages(response.result.list);
-        setTotalCount(response.result.total);
         setTotalPages(Math.ceil(response.result.total / 20));
       }
     } catch (error) {
