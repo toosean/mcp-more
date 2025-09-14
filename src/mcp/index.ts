@@ -9,14 +9,14 @@ import { configManager } from '../config/ConfigManager.js';
  */
 export async function startMCPServer(): Promise<void> {
     try {
-        // 先启动 MCP 客户端
-        await mcpClientManager.initializeClients();
-        
         // 从配置中获取端口号
         const portNumber = configManager.get('general', 'portNumber');
         
-        // 然后启动 HTTP 服务器
+        // 启动 HTTP 服务器
         await mcpServerManager.start(portNumber);
+
+        // 启动 MCP 客户端
+        await mcpClientManager.initializeClients();
         
         log.info('MCP system started successfully');
     } catch (error) {

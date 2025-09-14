@@ -5,6 +5,38 @@
 // 主题类型
 export type Theme = 'light' | 'dark' | 'system';
 
+// OAuth 相关类型定义
+export interface OAuthTokens {
+  access_token: string;
+  refresh_token?: string;
+  expires_at?: number;
+  scope?: string;
+}
+
+export interface OAuthClientInfo {
+  client_id: string;
+  redirect_uris: string[];
+  client_name: string;
+}
+
+export interface OAuthProtectedResourceMetadata {
+  resource?: string;
+  authorization_servers?: string[];
+  scopes_supported?: string[];
+  bearer_methods_supported?: string[];
+  resource_documentation?: string;
+}
+
+// 导入SDK的AuthorizationServerMetadata类型
+import { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
+
+export interface OAuthMetadata {
+  resourceMetadata?: OAuthProtectedResourceMetadata;
+  authorizationServerMetadata?: AuthorizationServerMetadata;
+  resourceUrl?: string;
+  lastDiscovery?: number;
+}
+
 // 通用设置
 export interface GeneralSettings {
   /** 在系统启动时一起启动 */
@@ -40,6 +72,28 @@ export interface Mcp {
     json: string | null;
   },
   runtimes?: string[] | null;
+  
+  // OAuth 配置
+  oauth?: {
+    /** 用户配置的客户端信息 */
+    clientId?: string;
+    clientSecret?: string;
+    scopes?: string;
+    /** 自动 OAuth 开关 */
+    autoOAuth?: boolean;
+    /** 授权服务器端点（可选，支持自动发现） */
+    authorizationUrl?: string;
+    tokenUrl?: string;
+  };
+
+  /** OAuth 运行时数据 */
+  oauthTokens?: OAuthTokens;
+
+  /** 动态注册的客户端信息 */
+  oauthClientInfo?: OAuthClientInfo;
+
+  /** OAuth 元数据缓存 */
+  oauthMetadata?: OAuthMetadata;
 }
 
 // MCP 统计信息

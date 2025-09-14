@@ -59,5 +59,54 @@ export function setupMCPIpcHandlers(): void {
 
   });
 
+  // OAuth 相关处理器
+  ipcMain.handle('mcp:trigger-oauth-flow', async (event, mcpIdentifier: string) => {
+    try {
+      log.info(`Triggering OAuth flow for MCP: ${mcpIdentifier}`);
+      const result = await mcpClientManager.triggerOAuthFlow(mcpIdentifier);
+      log.info(`OAuth flow result for ${mcpIdentifier}:`, result);
+      return result;
+    } catch (error) {
+      log.error(`Failed to trigger OAuth flow for ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  });
+
+  // 完成OAuth授权流程
+  ipcMain.handle('mcp:complete-oauth-flow', async (event, mcpIdentifier: string, authorizationCode: string) => {
+    try {
+      log.info(`Completing OAuth flow for MCP: ${mcpIdentifier}`);
+      const result = await mcpClientManager.completeOAuthFlow(mcpIdentifier, authorizationCode);
+      log.info(`OAuth completion result for ${mcpIdentifier}:`, result);
+      return result;
+    } catch (error) {
+      log.error(`Failed to complete OAuth flow for ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  });
+
+  // 获取OAuth状态
+  ipcMain.handle('mcp:get-oauth-state', async (event, mcpIdentifier: string) => {
+    try {
+      log.debug(`Getting OAuth state for MCP: ${mcpIdentifier}`);
+      const state = await mcpClientManager.getOAuthState(mcpIdentifier);
+      return state;
+    } catch (error) {
+      log.error(`Failed to get OAuth state for ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('mcp:clear-oauth-data', async (event, mcpIdentifier: string) => {
+    try {
+      log.info(`Clearing OAuth data for MCP: ${mcpIdentifier}`);
+      await mcpClientManager.clearOAuthData(mcpIdentifier);
+      log.info(`OAuth data cleared for ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to clear OAuth data for ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  });
+
   log.info('MCP IPC handlers set up');
 }

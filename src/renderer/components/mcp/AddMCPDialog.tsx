@@ -20,12 +20,17 @@ interface AddMCPDialogProps {
 
 export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, editingMCP }: AddMCPDialogProps) {
   const { t } = useI18n();
-  const { installMcpManually } = useMcpManager();
+  const { installMcpManually, triggerOAuthFlow, clearOAuthData } = useMcpManager();
   
   const isEditing = !!editingMCP;
   const isLocalMCP = editingMCP?.config?.command && editingMCP?.source !== 'json';
   const isRemoteMCP = editingMCP?.config?.url && editingMCP?.source !== 'json';
   const isJSONMCP = editingMCP?.source === 'json';
+
+  // OAuth configuration state
+  const [oauthConfig, setOauthConfig] = useState<Partial<Mcp['oauth']>>(
+    editingMCP?.oauth || {}
+  );
 
   // Memoized helper functions
   const mcpHelpers = useMemo(() => {
@@ -159,6 +164,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
       const result = await installMcpManually({
         name,
         url,
+        oauth: oauthConfig,
         editingMCP
       });
 
@@ -374,6 +380,7 @@ KEY2=value2`}
                   required
                 />
               </div>
+
               <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
                 {isEditing ? t('addMCP.buttons.updateRemote') : t('addMCP.buttons.addRemote')}
               </Button>

@@ -9,6 +9,10 @@ import { configManager } from '../../config';
 import { Mcp } from '../../config/types';
 import { McpClientInstance, McpToolInstance } from '../interfaces/types.js';
 import { toolRegistry } from "./toolRegistry";
+import { ElectronOAuthClientProvider } from './oauth/ElectronOAuthClientProvider';
+import { MetadataDiscoveryService } from './oauth/metadataDiscovery';
+import { OAuthStateMachine } from './oauth/oauth-state-machine';
+import { is401Error, getOAuthErrorDescription } from './oauth/oauthUtils';
 
 /**
  * MCP 客户端管理器
@@ -16,6 +20,7 @@ import { toolRegistry } from "./toolRegistry";
 export class McpClientManager {
   private clients: McpClientInstance[] = [];
   private cachedTools: McpToolInstance[] = [];
+  private metadataService = new MetadataDiscoveryService();
 
   private getMcpByIdentifier(mcpIdentifier: string): Mcp | undefined {
     const mcpConfig = configManager.getSection('mcp');
@@ -47,17 +52,38 @@ export class McpClientManager {
       // 远程 MCP - 使用 URL 连接
       const url = new URL(mcp.config.url);
 
+      // 获取最新的 MCP 配置（确保包含最新的 OAuth tokens）
+      const latestMcp = this.getMcpByIdentifier(mcp.identifier) || mcp;
+
+      // 准备 OAuth 头部（如果需要）
+      const headers: Record<string, string> = {};
+      if (latestMcp.oauthTokens?.access_token) {
+        headers['Authorization'] = `Bearer ${latestMcp.oauthTokens.access_token}`;
+        log.debug(`Adding OAuth authorization header for MCP: ${latestMcp.identifier}`);
+        log.debug(`Token: ${latestMcp.oauthTokens.access_token.substring(0, 20)}...`);
+      } else {
+        log.debug(`No OAuth tokens found for MCP: ${mcp.identifier}`);
+      }
+
       if (url.protocol === 'ws:' || url.protocol === 'wss:') {
-        // WebSocket 连接
+        // WebSocket 连接 - 注意：WebSocket 传输不支持自定义头部
+        // 如果需要 OAuth，建议使用 HTTP/SSE 传输
+        if (Object.keys(headers).length > 0) {
+          log.warn(`MCP ${mcp.identifier}: WebSocket transport does not support OAuth headers. Consider using HTTP/SSE transport for OAuth support.`);
+        }
         transport = new WebSocketClientTransport(url);
       } else if (url.protocol === 'http:' || url.protocol === 'https:') {
         // HTTP 连接 - 根据路径判断使用 SSE 还是 StreamableHTTP
         if (url.pathname.endsWith('/sse')) {
           // 如果路径以 /sse 结尾，使用 SSE 传输
-          transport = new SSEClientTransport(url);
+          transport = new SSEClientTransport(url, {
+            requestInit: Object.keys(headers).length > 0 ? { headers } : undefined
+          });
         } else {
           // 否则使用 StreamableHTTP 传输
-          transport = new StreamableHTTPClientTransport(url);
+          transport = new StreamableHTTPClientTransport(url, {
+            requestInit: Object.keys(headers).length > 0 ? { headers } : undefined
+          });
         }
       } else {
         //throw new Error(`不支持的协议: ${url.protocol}`);
@@ -96,13 +122,42 @@ export class McpClientManager {
   /**
    * 连接到 MCP 客户端
    * @param clientInstance 客户端实例
+   * @param retryCount 重试计数
    */
-  private async connectClient(clientInstance: McpClientInstance): Promise<void> {
+  private async connectClient(
+    clientInstance: McpClientInstance, 
+    retryCount: number = 0
+  ): Promise<void> {
+
+    log.error(`Connecting MCP client: ${clientInstance.mcp.identifier}`);
+//    debugger;
+    
     try {
       await clientInstance.client.connect(clientInstance.transport);
       log.info(`MCP client connected: ${clientInstance.mcp.identifier}`);
     } catch (error) {
       log.error(`Failed to connect MCP client: ${clientInstance.mcp.identifier}`, error);
+
+      // OAuth 重试逻辑
+      if (this.is401Error(error) && 
+          clientInstance.mcp.oauth?.autoOAuth !== false && 
+          retryCount < 2) {
+
+        log.info(`Attempting OAuth flow for 401 error: ${clientInstance.mcp.identifier}`);
+        const shouldRetry = await this.handleOAuthError(clientInstance.mcp, error);
+
+        if (shouldRetry) {
+          // 使用新令牌重新创建客户端实例
+          const updatedMcp = this.getMcpByIdentifier(clientInstance.mcp.identifier);
+          if (updatedMcp) {
+            const newClientInstance = await this.createClientInstance(updatedMcp);
+            
+            // 递归调用，使用新的客户端实例重试连接
+            return this.connectClient(newClientInstance, retryCount + 1);
+          }
+        }
+      }
+
       throw error;
     }
   }
@@ -514,6 +569,360 @@ export class McpClientManager {
   async reloadClients(): Promise<void> {
     await this.disconnectAllClients();
     await this.initializeClients();
+  }
+
+  /**
+   * 检查错误是否为 401 认证错误（使用导入的工具函数）
+   */
+  private is401Error(error: unknown): boolean {
+    return is401Error(error);
+  }
+
+  /**
+   * 处理 OAuth 认证错误（使用状态机）
+   */
+  private async handleOAuthError(mcp: Mcp, error: unknown): Promise<boolean> {
+    if (!this.is401Error(error) || !true){ //!mcp.oauth?.autoOAuth) {
+      return false;
+    }
+
+    try {
+      log.info(`Starting OAuth state machine flow for MCP: ${mcp.identifier}`);
+      // 创建 OAuth 状态机
+      const stateMachine = new OAuthStateMachine(
+        mcp.config.url!,
+        mcp,
+        (updates) => this.updateMcpConfig(mcp.identifier, updates)
+      );
+
+      // 运行自动化流程直到需要用户交互
+      const result = await stateMachine.run();
+
+      if (result.result === 'ERROR') {
+        const errorMsg = stateMachine.getError() || 'OAuth state machine failed';
+        log.error(`OAuth state machine error for MCP ${mcp.identifier}: ${errorMsg}`);
+        return false;
+      }
+
+      if (result.result === 'AUTHORIZED') {
+        log.info(`OAuth flow completed successfully for MCP: ${mcp.identifier}`);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      log.error(`OAuth state machine failed for MCP: ${mcp.identifier}`, error);
+      return false;
+    }
+  }
+
+  /**
+   * 处理 OAuth 认证错误（传统方式，保留作为后备）
+   */
+  // private async handleOAuthErrorLegacy(mcp: Mcp, error: unknown): Promise<boolean> {
+  //   if (!this.is401Error(error) || !mcp.oauth?.autoOAuth) {
+  //     return false;
+  //   }
+
+  //   try {
+  //     log.info(`Starting OAuth flow for MCP: ${mcp.identifier}`);
+
+  //     // 1. 元数据发现
+  //     const discoveryResult = await this.metadataService.discoverAllMetadata(mcp.config.url!);
+
+  //     if (!discoveryResult.authServerMetadata) {
+  //       log.error(`OAuth metadata discovery failed for MCP: ${mcp.identifier}`);
+  //       return false;
+  //     }
+
+  //     // 2. 作用域确定
+  //     const scope = this.determineScope(mcp, discoveryResult.resourceMetadata);
+
+  //     // 3. 创建 OAuth 客户端提供者
+  //     const oauthProvider = new ElectronOAuthClientProvider(
+  //       mcp.config.url!,
+  //       scope,
+  //       mcp,
+  //       (updates) => this.updateMcpConfig(mcp.identifier, updates)
+  //     );
+
+  //     // 4. 执行完整 OAuth 流程
+  //     const result = await oauthProvider.performOAuthFlow(
+  //       discoveryResult.authServerUrl,
+  //       discoveryResult.authServerMetadata,
+  //       scope,
+  //       discoveryResult.resourceUrl?.toString()
+  //     );
+
+  //     if (result === 'AUTHORIZED') {
+  //       // 5. 更新配置并保存元数据
+  //       await this.updateMcpOAuthData(mcp.identifier, oauthProvider, discoveryResult);
+  //       return true;
+  //     }
+
+  //     return false;
+  //   } catch (error) {
+  //     log.error(`OAuth flow failed for MCP: ${mcp.identifier}`, error);
+  //     return false;
+  //   }
+  // }
+
+  /**
+   * 确定 OAuth 作用域
+   */
+  private determineScope(mcp: Mcp, resourceMetadata?: any): string | undefined {
+    // 1. 用户指定的作用域（最高优先级）
+    if (mcp.oauth?.scopes) {
+      return mcp.oauth.scopes;
+    }
+
+    // 2. 从资源元数据推断作用域
+    if (resourceMetadata?.scopes_supported?.length) {
+      // 使用第一个支持的作用域作为默认
+      return resourceMetadata.scopes_supported[0];
+    }
+
+    // 3. 没有指定作用域
+    return undefined;
+  }
+
+  /**
+   * 更新 MCP 配置
+   */
+  private updateMcpConfig(mcpIdentifier: string, updates: Partial<Mcp>): void {
+    try {
+      const mcpConfig = configManager.getSection('mcp');
+      const mcpIndex = mcpConfig.installedMcps.findIndex(m => m.identifier === mcpIdentifier);
+      
+      if (mcpIndex !== -1) {
+        mcpConfig.installedMcps[mcpIndex] = {
+          ...mcpConfig.installedMcps[mcpIndex],
+          ...updates
+        };
+        
+        configManager.setSection('mcp', mcpConfig);
+        log.debug(`MCP configuration updated: ${mcpIdentifier}`);
+      }
+    } catch (error) {
+      log.error(`Failed to update MCP configuration: ${mcpIdentifier}`, error);
+    }
+  }
+
+  /**
+   * 更新 MCP OAuth 数据
+   */
+  private async updateMcpOAuthData(
+    mcpIdentifier: string,
+    oauthProvider: ElectronOAuthClientProvider,
+    discoveryResult: any
+  ): Promise<void> {
+    try {
+      const tokens = await oauthProvider.tokens();
+      const clientInfo = await oauthProvider.clientInformation();
+
+      const updates: Partial<Mcp> = {
+        oauthTokens: tokens,
+        oauthClientInfo: clientInfo ? {
+          client_id: clientInfo.client_id,
+          redirect_uris: clientInfo.redirect_uris,
+          client_name: clientInfo.client_name || 'mcp-more'
+        } : undefined,
+        oauthMetadata: {
+          resourceMetadata: discoveryResult.resourceMetadata,
+          authorizationServerMetadata: discoveryResult.authServerMetadata,
+          resourceUrl: discoveryResult.resourceUrl?.toString(),
+          lastDiscovery: Date.now()
+        }
+      };
+
+      this.updateMcpConfig(mcpIdentifier, updates);
+      log.info(`OAuth data updated for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to update OAuth data for MCP: ${mcpIdentifier}`, error);
+    }
+  }
+
+  /**
+   * 手动触发 OAuth 流程（使用状态机）
+   */
+  // async triggerOAuthFlow(mcpIdentifier: string): Promise<{
+  //   success: boolean;
+  //   authorizationUrl?: string;
+  //   error?: string;
+  // }> {
+  //   const mcp = this.getMcpByIdentifier(mcpIdentifier);
+  //   if (!mcp) {
+  //     throw new Error(`MCP not found: ${mcpIdentifier}`);
+  //   }
+
+  //   if (!mcp.oauth?.autoOAuth) {
+  //     throw new Error(`OAuth not enabled for MCP: ${mcpIdentifier}`);
+  //   }
+
+  //   try {
+  //     log.info(`Manual OAuth trigger for MCP: ${mcpIdentifier}`);
+
+  //     // 创建 OAuth 状态机
+  //     const stateMachine = new OAuthStateMachine(
+  //       mcp.config.url!,
+  //       mcp,
+  //       (updates) => this.updateMcpConfig(mcp.identifier, updates)
+  //     );
+
+  //     // 运行自动化流程直到需要用户交互
+  //     const result = await stateMachine.runUntilUserInteraction();
+
+  //     if (result.result === 'ERROR') {
+  //       const errorMsg = stateMachine.getError() || 'OAuth state machine failed';
+  //       return {
+  //         success: false,
+  //         error: getOAuthErrorDescription(errorMsg)
+  //       };
+  //     }
+
+  //     if (result.result === 'AUTHORIZED') {
+  //       return { success: true };
+  //     }
+
+  //     if (result.result === 'IN_PROGRESS' && result.authorizationUrl) {
+  //       return {
+  //         success: true,
+  //         authorizationUrl: result.authorizationUrl
+  //       };
+  //     }
+
+  //     return {
+  //       success: false,
+  //       error: 'OAuth flow in unexpected state'
+  //     };
+  //   } catch (error) {
+  //     log.error(`Manual OAuth trigger failed for MCP: ${mcpIdentifier}`, error);
+  //     return {
+  //       success: false,
+  //       error: getOAuthErrorDescription(error)
+  //     };
+  //   }
+  // }
+
+  /**
+   * 手动触发 OAuth 流程（传统方式，保留作为后备）
+   */
+  // async triggerOAuthFlowLegacy(mcpIdentifier: string): Promise<boolean> {
+  //   const mcp = this.getMcpByIdentifier(mcpIdentifier);
+  //   if (!mcp) {
+  //     throw new Error(`MCP not found: ${mcpIdentifier}`);
+  //   }
+
+  //   if (!mcp.oauth?.autoOAuth) {
+  //     throw new Error(`OAuth not enabled for MCP: ${mcpIdentifier}`);
+  //   }
+
+  //   return this.handleOAuthErrorLegacy(mcp, new Error('Manual OAuth trigger'));
+  // }
+
+  /**
+   * 完成 OAuth 授权流程（用户提供授权码后）
+   */
+  // async completeOAuthFlow(mcpIdentifier: string, authorizationCode: string, state: string): Promise<{
+  //   success: boolean;
+  //   error?: string;
+  // }> {
+  //   debugger;
+  //   const mcp = this.getMcpByIdentifier(mcpIdentifier);
+  //   if (!mcp) {
+  //     throw new Error(`MCP not found: ${mcpIdentifier}`);
+  //   }
+
+  //   try {
+  //     log.info(`Completing OAuth flow for MCP: ${mcpIdentifier}`);
+
+  //     // 创建 OAuth 状态机
+  //     const stateMachine = new OAuthStateMachine(
+  //       mcp.config.url!,
+  //       mcp,
+  //       (updates) => this.updateMcpConfig(mcp.identifier, updates)
+  //     );
+
+  //     // 提供授权码并完成流程
+  //     const result = await stateMachine.provideAuthorizationCode(authorizationCode, state);
+
+  //     if (result === 'AUTHORIZED') {
+  //       log.info(`OAuth flow completed successfully for MCP: ${mcpIdentifier}`);
+
+  //       // 重新连接客户端使用新的令牌
+  //       try {
+  //         const clientInstance = this.getClientInstance(mcp);
+  //         if (clientInstance) {
+  //           // 关闭现有连接
+  //           await clientInstance.client.close();
+
+  //           // 创建新的客户端实例
+  //           const newClientInstance = await this.createClientInstance(mcp);
+
+  //           // 替换客户端实例
+  //           const index = this.clients.findIndex(c => c.mcp.identifier === mcp.identifier);
+  //           if (index !== -1) {
+  //             this.clients[index] = newClientInstance;
+  //           }
+
+  //           // 重新连接
+  //           await this.connectClient(newClientInstance);
+
+  //           // 更新工具缓存
+  //           await this.cacheAllTools();
+  //           await toolRegistry.refreshToolRegisters();
+  //         }
+  //       } catch (reconnectError) {
+  //         log.warn(`Failed to reconnect after OAuth completion: ${mcpIdentifier}`, reconnectError);
+  //       }
+
+  //       return { success: true };
+  //     }
+
+  //     const errorMsg = stateMachine.getError() || 'OAuth completion failed';
+  //     return {
+  //       success: false,
+  //       error: getOAuthErrorDescription(errorMsg)
+  //     };
+  //   } catch (error) {
+  //     log.error(`OAuth completion failed for MCP: ${mcpIdentifier}`, error);
+  //     return {
+  //       success: false,
+  //       error: getOAuthErrorDescription(error)
+  //     };
+  //   }
+  // }
+
+  /**
+   * 获取 OAuth 状态机当前状态（用于调试）
+   */
+  async getOAuthState(mcpIdentifier: string): Promise<any> {
+    const mcp = this.getMcpByIdentifier(mcpIdentifier);
+    if (!mcp) {
+      throw new Error(`MCP not found: ${mcpIdentifier}`);
+    }
+
+    const stateMachine = new OAuthStateMachine(
+      mcp.config.url!,
+      mcp,
+      (updates) => this.updateMcpConfig(mcp.identifier, updates)
+    );
+
+    return stateMachine.getCurrentState();
+  }
+
+  /**
+   * 清除 OAuth 数据
+   */
+  async clearOAuthData(mcpIdentifier: string): Promise<void> {
+    const updates: Partial<Mcp> = {
+      oauthTokens: undefined,
+      oauthClientInfo: undefined,
+      oauthMetadata: undefined
+    };
+
+    this.updateMcpConfig(mcpIdentifier, updates);
+    log.info(`OAuth data cleared for MCP: ${mcpIdentifier}`);
   }
 }
 

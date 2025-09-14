@@ -19,11 +19,14 @@ export class McpServerManager {
     private server: any;
     private mcpServers: McpServer[] = [];
     private listening = false;
+    private port: number = 0;
+    private oauthCallback: ((url: URL, res: Response) => void)[] | undefined;
 
     constructor() {
         this.app = express();
         this.setupMiddleware();
         this.setupRoutes();
+        this.oauthCallback = [];
     }
 
     /**
@@ -31,6 +34,12 @@ export class McpServerManager {
      */
     private setupMiddleware(): void {
         this.app.use(express.json());
+    }
+
+    public subscribeOAuthCallback(callback: (url: URL, res: Response) => void): void {
+        console.log('subscribeOAuthCallback: ', callback);
+        this.oauthCallback?.push(callback);
+        console.log('oauthCallback length: ', this.oauthCallback?.length);
     }
 
     /**
@@ -45,6 +54,9 @@ export class McpServerManager {
 
         // Handle DELETE requests for session termination
         this.app.delete('/mcp', this.handleSessionRequest.bind(this));
+
+        // Handle GET requests for OAuth callback
+        this.app.get('/oauth/callback', this.handleOAuthCallback.bind(this));
     }
 
     /**
@@ -116,6 +128,22 @@ export class McpServerManager {
         }
     }
 
+    private async handleOAuthCallback(req: Request, res: Response): Promise<void> {
+        
+        try {
+            const url = new URL(req.url!, `http://localhost:${this.port}`);
+            
+            console.log(`OAuth callback received: ${req.method} ${url.pathname}${url.search}`);
+        
+            if (url.pathname === '/oauth/callback') {
+                this.oauthCallback?.forEach(callback => callback(url, res));
+            } 
+            
+        } catch (error) {
+            console.error('Error handling OAuth callback request:', error);
+        }
+    }
+
     /**
      * 获取所有 MCP 服务器
      * @returns MCP 服务器数组
@@ -134,11 +162,10 @@ export class McpServerManager {
      */
     async start(port: number = 7195): Promise<void> {
 
-        await mcpClientManager.initializeClients();
-
         await mcpClientManager.cacheAllTools();
 
         this.server = this.app.listen(port);
+        this.port = port;
 
         this.server.on('listening', () => {
             log.info(`MCP Server started on port ${port}`);

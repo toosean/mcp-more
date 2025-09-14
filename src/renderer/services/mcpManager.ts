@@ -20,10 +20,11 @@ export function useMcpManager() {
     url?: string;
     json?: string;
     environment?: Record<string, string>;
+    oauth?: Partial<Mcp['oauth']>;
     editingMCP?: Mcp | null;
   }): Promise<{ success: boolean; mcpId: string; error?: string }> => {
     try {
-      const { name, command, url, json, environment, editingMCP } = mcpData;
+      const { name, command, url, json, environment, oauth, editingMCP } = mcpData;
       const config = await getConfig();
       const existingMcps = config?.mcp?.installedMcps || [];
       
@@ -123,6 +124,7 @@ export function useMcpManager() {
             ...editingMCP,
             name,
             updated: new Date().toISOString(),
+            oauth: oauth || editingMCP.oauth,
             config: {
               ...editingMCP.config,
               command: command || null,
@@ -142,6 +144,7 @@ export function useMcpManager() {
             license: null,
             installed: new Date().toISOString(),
             enabled: true,
+            oauth: oauth,
             config: {
               url: url || null,
               command: command || null,
@@ -382,6 +385,56 @@ export function useMcpManager() {
     });
   }
 
+  // OAuth functions
+  // const triggerOAuthFlow = async (mcpIdentifier: string): Promise<{
+  //   success: boolean;
+  //   authorizationUrl?: string;
+  //   error?: string;
+  // }> => {
+  //   try {
+  //     return await window.mcpAPI.triggerOAuthFlow(mcpIdentifier);
+  //   } catch (error) {
+  //     console.error('Failed to trigger OAuth flow:', error);
+  //     return {
+  //       success: false,
+  //       error: error instanceof Error ? error.message : 'Unknown error'
+  //     };
+  //   }
+  // };
+
+  // const completeOAuthFlow = async (mcpIdentifier: string, authorizationCode: string): Promise<{
+  //   success: boolean;
+  //   error?: string;
+  // }> => {
+  //   try {
+  //     return await window.mcpAPI.completeOAuthFlow(mcpIdentifier, authorizationCode);
+  //   } catch (error) {
+  //     console.error('Failed to complete OAuth flow:', error);
+  //     return {
+  //       success: false,
+  //       error: error instanceof Error ? error.message : 'Unknown error'
+  //     };
+  //   }
+  // };
+
+  // const getOAuthState = async (mcpIdentifier: string): Promise<any> => {
+  //   try {
+  //     return await window.mcpAPI.getOAuthState(mcpIdentifier);
+  //   } catch (error) {
+  //     console.error('Failed to get OAuth state:', error);
+  //     return null;
+  //   }
+  // };
+
+  const clearOAuthData = async (mcpIdentifier: string): Promise<void> => {
+    try {
+      await window.mcpAPI.clearOAuthData(mcpIdentifier);
+    } catch (error) {
+      console.error('Failed to clear OAuth data:', error);
+      throw error;
+    }
+  };
+
   return {
     startMcp,
     getMcpInstallStatus,
@@ -390,5 +443,9 @@ export function useMcpManager() {
     upgradeMcp,
     uninstallMcp,
     installMcpManually,
+    //triggerOAuthFlow,
+    //completeOAuthFlow,
+    //getOAuthState,
+    clearOAuthData,
   }
 }
