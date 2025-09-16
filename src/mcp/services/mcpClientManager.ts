@@ -13,6 +13,8 @@ import { ElectronOAuthClientProvider } from './oauth/ElectronOAuthClientProvider
 import { MetadataDiscoveryService } from './oauth/metadataDiscovery';
 import { OAuthStateMachine } from './oauth/oauth-state-machine';
 import { is401Error, getOAuthErrorDescription } from './oauth/oauthUtils';
+import { JSONSchema7 } from "json-schema";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types";
 
 /**
  * MCP 客户端管理器
@@ -254,18 +256,20 @@ export class McpClientManager {
       name: string;
       title: string;
       description: string;
-      inputSchema: any;
+      inputSchema: JSONSchema7;
+      annotations: ToolAnnotations;
     }[] = [];
 
     for (const clientInstance of clientInstances) {
       const clientTools = await this.listTools(clientInstance.mcp);
-      clientTools.tools.forEach((tool: any) => {
+      clientTools.tools.forEach((tool) => {
         scopedTools.push({
           clientInstance,
-          name: tool.name,
+          name: `${clientInstance.mcp.code}__${tool.name}`,
           title: tool.title,
           description: tool.description,
-          inputSchema: tool.inputSchema
+          inputSchema: tool.inputSchema as JSONSchema7,
+          annotations: tool.annotations
         });
       });
     }
@@ -274,18 +278,16 @@ export class McpClientManager {
     // 统计每个工具名称出现的次数，并存储到一个 Map 中
     const toolNameCount: Map<string, number> = new Map();
     scopedTools.forEach(tool => {
-      const toolName = `${tool.clientInstance.mcp.code}__${tool.name}`;
-      const count = toolNameCount.get(toolName) || 0;
-      toolNameCount.set(toolName, count + 1);
+      const count = toolNameCount.get(tool.name) || 0;
+      toolNameCount.set(tool.name, count + 1);
     });
 
     for (const tool of scopedTools) {
 
-      const toolName = `${tool.clientInstance.mcp.code}__${tool.name}`;
 
-      const uniqueName = toolNameCount.get(toolName) === 1
-        ? toolName
-        : `${tool.clientInstance.mcp.identifier.replace('/', '_')}__${toolName}`;
+      const uniqueName = toolNameCount.get(tool.name) === 1
+        ? tool.name
+        : `${tool.clientInstance.mcp.identifier.replace('/', '_')}__${tool.name}`;
 
       tools.push({
         clientInstance: tool.clientInstance,
@@ -293,7 +295,8 @@ export class McpClientManager {
         name: tool.name,
         title: tool.title,
         description: tool.description,
-        inputSchema: tool.inputSchema
+        inputSchema: tool.inputSchema,
+        annotations: tool.annotations
       });
 
     }
@@ -335,7 +338,7 @@ export class McpClientManager {
    * @returns 工具执行结果
    */
   async callTool(toolName: string, args: any = {}) {
-
+debugger;
     const cachedTool = this.cachedTools.find(tool => tool.wrapperName === toolName);
     if (!cachedTool) {
       throw new Error(`Tool not found: ${toolName}`);

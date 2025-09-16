@@ -3,7 +3,8 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { Mcp } from '../../config/types';
-
+import { JSONSchema7 } from "json-schema";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types";
 /**
  * MCP 客户端实例接口
  */
@@ -22,7 +23,8 @@ export interface McpToolInstance {
     name: string;
     title: string;
     description: string;
-    inputSchema: any;
+    inputSchema: JSONSchema7;
+    annotations: ToolAnnotations;
 }
 
 /**

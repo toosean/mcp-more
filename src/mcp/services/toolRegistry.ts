@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import log from 'electron-log';
 import { McpToolRegister, McpToolInstance, ToolCallRecord } from '../interfaces/types.js';
-import { convertJsonSchemaToZod } from '../utils/schemaConverter.js';
+import { convertJsonSchema7ToZodRawShape } from '../utils/schemaConverter.js';
 import { mcpClientManager } from './mcpClientManager.js';
 import { configManager } from '../../config/index.js';
 import { broadcastStatisticsUpdate } from '../../config/ipc-handlers.js';
@@ -78,7 +78,8 @@ export class ToolRegistry {
             wrapperName,
             {
                 description: toolInstance.description,
-                inputSchema: convertJsonSchemaToZod(toolInstance.inputSchema)
+                inputSchema: convertJsonSchema7ToZodRawShape(toolInstance.inputSchema),
+                annotations: toolInstance.annotations
             },
             async (args: any) => {
                 return this.handleToolCall(wrapperName, args);
@@ -98,7 +99,7 @@ export class ToolRegistry {
      */
     private async updateStatistics(toolName: string): Promise<void> {
         try {
-            // 从工具名称中提取 MCP 包名称（格式：mcpName__toolName）
+            // 从工具名称中提取 MCP 包名称
             const clientInstance = await mcpClientManager.getToolInstanceByToolName(toolName);
             
             // 获取当前配置
