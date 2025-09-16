@@ -58,7 +58,7 @@ export interface Mcp {
   source: 'manual' | 'json' | 'market' | null; //null | manual |json  表示本地安装
   identifier: string;
   name: string;
-  code: string | null;
+  code: string;
   description: string | null;
   author: string | null;
   version: string | null;

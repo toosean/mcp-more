@@ -285,7 +285,7 @@ export class McpClientManager {
 
       const uniqueName = toolNameCount.get(toolName) === 1
         ? toolName
-        : `${tool.clientInstance.mcp.identifier.replace('/', '__')}__${toolName}`;
+        : `${tool.clientInstance.mcp.identifier.replace('/', '_')}__${toolName}`;
 
       tools.push({
         clientInstance: tool.clientInstance,
