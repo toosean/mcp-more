@@ -228,8 +228,9 @@
       "configuringDesc": "Configuring {{name}}...",
       "started": "MCP Started",
       "startedDesc": "{{name}} has been successfully started.",
-      "stopped": "MCP Stopped", 
+      "stopped": "MCP Stopped",
       "stoppedDesc": "{{name}} has been successfully stopped.",
+      "startFailed": "Failed to start MCP",
       "toggleFailed": "Failed to toggle MCP status",
       "uninstallFailed": "Failed to uninstall MCP",
       "startAllFailed": "Failed to start all MCPs",
@@ -242,6 +243,12 @@
       "allRunningDesc": "All MCPs are already running.",
       "allStopped": "All MCPs Stopped",
       "allStoppedDesc": "All MCPs are already stopped."
+    },
+    "authDialog": {
+      "title": "Authentication Required",
+      "description": "{{name}} requires authentication to start. Would you like to continue?",
+      "retry": "Continue",
+      "cancel": "Cancel"
     },
     "deleteDialog": {
       "title": "Confirm Delete",

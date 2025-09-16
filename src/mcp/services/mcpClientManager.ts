@@ -16,6 +16,13 @@ import { is401Error, getOAuthErrorDescription } from './oauth/oauthUtils';
 import { JSONSchema7 } from "json-schema";
 import { ToolAnnotations } from "@modelcontextprotocol/sdk/types";
 
+export class McpStartNeedsAuthError extends Error{
+  constructor(message: string) {
+    super(message);
+    this.name = 'McpStartNeedsAuthError';
+  }
+}
+
 /**
  * MCP 客户端管理器
  */
@@ -164,6 +171,10 @@ export class McpClientManager {
             return this.connectClient(newClientInstance, autoOAuth);
           }
         }
+      }
+
+      if(this.is401Error(error) && autoOAuth === false) {
+        throw new McpStartNeedsAuthError(`[401] MCP ${clientInstance.mcp.name} needs Authorization.`);
       }
 
       throw error;
@@ -375,8 +386,7 @@ debugger;
       let client = this.getClientInstance(mcp);
 
       if (client) {
-        log.debug(`MCP client already connected: ${mcp.identifier}`);
-        return;
+        this.clients = this.clients.filter(client => client.mcp.identifier !== mcpIdentifier);
       }
 
       // 如果客户端不存在，需要先创建
@@ -393,9 +403,26 @@ debugger;
       await this.cacheAllTools();
       await toolRegistry.refreshToolRegisters();
 
+      if (mcp) {
+        mcp.latestError = null;
+        mcp.latestErrorDetail = null;
+        this.updateMcpConfig(mcpIdentifier, mcp);
+      }
 
     } catch (error) {
-      log.error(`Failed to start MCP client: ${mcpIdentifier}`, error);
+
+      this.clients = this.clients.filter(client => client.mcp.identifier !== mcpIdentifier);
+
+      if (error instanceof McpStartNeedsAuthError) {
+        const mcp = this.getMcpByIdentifier(mcpIdentifier);
+        if (mcp) {
+          mcp.latestError = 'auth';
+          mcp.latestErrorDetail = error.message;
+          this.updateMcpConfig(mcpIdentifier, mcp);
+        }
+      }
+
+      log.error(`McpClientManager.startMcp Failed to start MCP client: ${mcpIdentifier}`, error);
       throw error;
     }
   }
@@ -405,10 +432,11 @@ debugger;
    * @param mcpIdentifier MCP 标识符
    */
   async stopMcp(mcpIdentifier: string): Promise<void> {
-
-    const mcp = this.getEnabledMcps().find(mcp => mcp.identifier === mcpIdentifier);
-    if (!mcp) {
-      throw new Error(`MCP not found: ${mcpIdentifier}`);
+    
+    const mcp = this.getMcpByIdentifier(mcpIdentifier);
+    if (mcp && mcp.enabled) {
+      mcp.enabled = false;
+      this.updateMcpConfig(mcpIdentifier, mcp);
     }
 
     try {
@@ -434,7 +462,21 @@ debugger;
 
       log.info(`MCP client stopped: ${mcp.identifier}`);
 
+      if (mcp) {
+        mcp.latestError = null;
+        mcp.latestErrorDetail = null;
+        this.updateMcpConfig(mcpIdentifier, mcp);
+      }
+
     } catch (error) {
+
+      const mcp = this.getMcpByIdentifier(mcpIdentifier);
+      if(mcp) {
+        mcp.latestError = 'unknown';
+        mcp.latestErrorDetail = error instanceof Error ? error.message : 'Unknown error';
+        this.updateMcpConfig(mcpIdentifier, mcp);
+      }
+
       log.error(`Failed to stop MCP client: ${mcp.identifier}`, error);
       throw error;
     }

@@ -22,6 +22,10 @@ import { Odometer } from '@/components/ui/odometer';
 import { Mcp } from '../../config/types';
 import { useMcpManager } from '@/services/mcpManager';
 import { RuntimeInfo } from '@/types/global';
+import { useConfirm } from '@/hooks/use-confirm';
+import { McpStartNeedsAuthError } from 'src/mcp/services/mcpClientManager';
+import { useOAuthConfirmDialog } from '@/hooks/use-oauth-confirm-dialog';
+
 interface DisplayMCP {
   identifier: string;
   name: string;
@@ -53,7 +57,10 @@ export default function Installed() {
   const [runtimeLoading, setRuntimeLoading] = useState(false);
   const { t } = useI18n();
   const { updateConfig, getConfig } = useConfig();
-  const { startMcp } = useMcpManager();
+  const { startMcp, stopMcp, uninstallMcp } = useMcpManager();
+  const { confirm, ConfirmDialog } = useConfirm<{ mcpName: string; mcpIdentifier: string }>();
+  const { handleOAuthConfirm, OAuthConfirmDialog } = useOAuthConfirmDialog();
+
 
   // Get source type display info
   const getSourceInfo = (source: 'manual' | 'json' | 'market' | null) => {
@@ -310,24 +317,7 @@ export default function Installed() {
       const currentConfig = await getConfig();
       if (!currentConfig?.mcp?.installedMcps) return;
 
-      // Stop client
-      try{
-        await window.mcpAPI.stopMcp(mcp.identifier);
-      } catch (error) {
-        // 在删除包的过程中，报错则不处理
-        window.logAPI.error('Failed to stop MCP:', error);
-      }
-
-      const updatedMcps = currentConfig.mcp.installedMcps.filter(installedMcp => 
-        installedMcp.identifier !== mcp.identifier
-      );
-
-      await updateConfig({
-        mcp: {
-          ...currentConfig.mcp,
-          installedMcps: updatedMcps
-        }
-      });
+      await uninstallMcp(mcp.identifier);
 
       // Close dialog and refresh MCPs
       setConfirmDeleteDialog({ open: false, mcp: null });
@@ -365,15 +355,66 @@ export default function Installed() {
 
       if (mcp.status === 'running') {
         // 停止客户端
-        await window.mcpAPI.stopMcp(mcp.identifier);
+        await stopMcp(mcp.identifier);
         toast({
           title: t('installed.toast.stopped'),
           description: t('installed.toast.stoppedDesc', { name: mcp.name }),
         });
       } else {
         // 启动客户端
-        startMcp(mcp.identifier, mcp.name);
+        try{
+
+          await startMcp(mcp.identifier, mcp.name);
+          
+        } catch (error) {
+
+          const errorMessage: string = error.toString();
+          console.log('XX_FAIL:', errorMessage, errorMessage.includes('McpStartNeedsAuthError'));
+          if(errorMessage.includes('McpStartNeedsAuthError')){
+              // 检查是否是OAuth认证错误
+              const configMcp = currentConfig.mcp.installedMcps.find(m => m.identifier === id);
+              // 显示OAuth重试确认对话框
+              let shouldRetry = false;
+              if(configMcp?.authMethod || configMcp?.authMethod?.includes('oauth')){
+                shouldRetry = await confirm(
+                  { mcpName: mcp.name, mcpIdentifier: mcp.identifier },
+                  {
+                    title: t('installed.authDialog.title'),
+                    description: t('installed.authDialog.description', { name: mcp.name }),
+                    confirmText: t('installed.authDialog.retry'),
+                    cancelText: t('installed.authDialog.cancel'),
+                  }
+                );
+              }else{
+                shouldRetry = await handleOAuthConfirm(mcp.name);
+              }
+  
+              if (shouldRetry) {
+                // 用户确认后重新尝试启动
+                try {
+                  await startMcp(mcp.identifier, mcp.name, true);
+                } catch (retryError) {
+                  toast({
+                    title: t('common.error'),
+                    description: t('installed.toast.startFailed'),
+                    variant: 'destructive'
+                  });
+                }
+              }
+            } else {
+              // 普通错误处理
+              toast({
+                title: t('common.error'),
+                description: t('installed.toast.startFailed'),
+                variant: 'destructive'
+              });
+            }
+
+          }
       }
+
+      const status = await window.mcpAPI.getMcpStatus(mcp.identifier);
+      const enabled = status === 'running';
 
       // 更新配置中的enabled状态
       const updatedMcps = currentConfig.mcp.installedMcps.map((mcp) => {
@@ -381,7 +422,7 @@ export default function Installed() {
         if (pkgId === id) {
           return {
             ...mcp,
-            enabled: !mcp.enabled
+            enabled: enabled
           };
         }
         return mcp;
@@ -839,8 +880,8 @@ export default function Installed() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog 
-        open={confirmDeleteDialog.open} 
+      <AlertDialog
+        open={confirmDeleteDialog.open}
         onOpenChange={(open) => setConfirmDeleteDialog({ open, mcp: open ? confirmDeleteDialog.mcp : null })}
       >
         <AlertDialogContent>
@@ -852,7 +893,7 @@ export default function Installed() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('installed.deleteDialog.cancel')}</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleConfirmUninstall}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -861,6 +902,10 @@ export default function Installed() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Auth Retry Confirmation Dialog */}
+      <ConfirmDialog />
+      <OAuthConfirmDialog />
     </div>
   );
 }

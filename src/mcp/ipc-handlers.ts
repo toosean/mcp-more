@@ -15,7 +15,7 @@ export function setupMCPIpcHandlers(): void {
       await mcpClientManager.startMcp(mcpIdentifier, autoOAuth);
       log.info(`MCP client started successfully: ${mcpIdentifier}`);
     } catch (error) {
-      log.error(`Failed to start MCP client ${mcpIdentifier}:`, error);
+      log.error(`setupMCPIpcHandlers Failed to start MCP client ${mcpIdentifier}:`, error);
       throw error;
     }
   });

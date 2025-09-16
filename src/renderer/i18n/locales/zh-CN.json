@@ -230,6 +230,7 @@
       "startedDesc": "{{name}} 已成功启动。",
       "stopped": "MCP 已停止",
       "stoppedDesc": "{{name}} 已成功停止。",
+      "startFailed": "启动 MCP 失败",
       "toggleFailed": "切换 MCP 状态失败",
       "uninstallFailed": "卸载 MCP 失败",
       "startAllFailed": "启动全部 MCP 失败",
@@ -242,6 +243,12 @@
       "allRunningDesc": "所有 MCP 都已在运行中。",
       "allStopped": "全部 MCP 已停止",
       "allStoppedDesc": "所有 MCP 都已停止。"
+    },
+    "authDialog": {
+      "title": "需要身份验证",
+      "description": "{{name}} 需要进行身份验证才能启动，是否继续？",
+      "retry": "继续",
+      "cancel": "取消"
     },
     "deleteDialog": {
       "title": "确认删除",

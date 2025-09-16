@@ -287,7 +287,7 @@ export function useMcpManager() {
       updated: mcp.updatedAt,
       license: mcp.license,
       installed: new Date().toISOString(),
-      enabled: true,
+      enabled: false,
       config: {
         url: mcpConfig.url,
         command: mcpConfig.command,
@@ -295,6 +295,7 @@ export function useMcpManager() {
         json: mcpConfig.json,
       },
       runtimes: installConfig.runtimes,
+      authMethod: installConfig.authMethod,
     };
     installedMcps.push(newMcp);
     
@@ -350,16 +351,28 @@ export function useMcpManager() {
       progress: true,
     });
 
-    window.mcpAPI.startMcp(identifier, autoOAuth).then(() => {
+    try{
+      await window.mcpAPI.startMcp(identifier, autoOAuth);
       toastId.dismiss();
       toast({
         title: i18n.t('mcpManager.messages.started', { name: name ?? identifier }),
         description: i18n.t('mcpManager.messages.startedSuccess', { name: name ?? identifier }),
       });
-    }).catch((error) => {
-      window.logAPI.error(`Failed to start MCP ${name ?? identifier}:`, error);
-      toastId.dismiss();
-    });
+    } catch (error) {
+      console.error(`useMcpManager.startMcp Failed to start MCP client: ${identifier}`, error);
+      throw error;
+    }
+
+
+  }
+
+  const stopMcp = async (identifier: string): Promise<void> => {
+    const config = await getConfig();
+    const installedMcps = config.mcp.installedMcps;
+    const installedMcp = installedMcps.find(mcp => mcp.identifier === identifier);
+    if(installedMcp) {
+      await window.mcpAPI.stopMcp(identifier);
+    }
   }
 
   const upgradeMcp = async (mcp: MarketMcp | MarketMcpDetail): Promise<void> => {
@@ -448,6 +461,7 @@ export function useMcpManager() {
 
   return {
     startMcp,
+    stopMcp,
     getMcpInstallStatus,
     parseMcpJson,
     installMcp,

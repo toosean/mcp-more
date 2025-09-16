@@ -66,6 +66,8 @@ export interface Mcp {
   license: string | null;
   installed: string | null;
   enabled: boolean;
+  latestError?: 'auth' | 'unknown' | null;
+  latestErrorDetail?: string | null;
   config: {
     url: string | null;
     command: string | null;
@@ -73,6 +75,7 @@ export interface Mcp {
     json: string | null;
   },
   runtimes?: string[] | null;
+  authMethod?: 'oauth'[] | null;
   
   // OAuth 配置
   oauth?: {

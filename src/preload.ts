@@ -211,7 +211,14 @@ const runtimeAPI: RuntimeAPI = {
 
 // MCP API 实现
 const mcpAPI: McpAPI = {
-  startMcp: (mcpId: string, autoOAuth: boolean) => ipcRenderer.invoke('mcp:start-mcp', mcpId, autoOAuth),
+  startMcp: async (mcpId: string, autoOAuth: boolean) => {
+    try{
+      return await ipcRenderer.invoke('mcp:start-mcp', mcpId, autoOAuth);
+    } catch (error) {
+      console.error(`mcpAPI.startMcp Failed to start MCP client: ${mcpId}`, error);
+      throw error;
+    }
+  },
   stopMcp: (mcpId: string) => ipcRenderer.invoke('mcp:stop-mcp', mcpId),
   getMcpStatus: (mcpId: string) => ipcRenderer.invoke('mcp:get-mcp-status', mcpId),
   getServerStatus: () => ipcRenderer.invoke('mcp:get-server-status'),
