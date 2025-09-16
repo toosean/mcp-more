@@ -495,7 +495,11 @@
       "runtimeInstallTitle": "Runtime Environment Required",
       "runtimeInstallRequired": "This MCP requires {{name}} runtime environment to work properly. Would you like to open the installation page?",
       "installRuntime": "Install Runtime",
-      "skipRuntime": "Skip and Continue"
+      "skipRuntime": "Skip and Continue",
+      "oauthConfirmTitle": "OAuth Authentication Required",
+      "oauthConfirmRequired": "{{name}} requires OAuth authentication to access external services. Would you like to start the OAuth verification?",
+      "startOAuth": "Continue",
+      "notNow": "Not Now"
     }
   }
 }

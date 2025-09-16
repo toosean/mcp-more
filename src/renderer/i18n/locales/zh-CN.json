@@ -495,7 +495,11 @@
       "runtimeInstallTitle": "需要运行时环境",
       "runtimeInstallRequired": "此 MCP 需要 {{name}} 运行时环境才能正常工作。是否要打开安装页面？",
       "installRuntime": "安装运行时",
-      "skipRuntime": "跳过并继续"
+      "skipRuntime": "跳过并继续",
+      "oauthConfirmTitle": "需要OAuth身份验证",
+      "oauthConfirmRequired": "{{name}} 需要OAuth身份验证以访问外部服务。是否要开始OAuth验证？",
+      "startOAuth": "继续",
+      "notNow": "稍后处理"
     }
   }
 }

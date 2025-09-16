@@ -13,6 +13,8 @@ export interface MarketMcp {
   identifier: string;
   /** 包名称 */
   name: string;
+  /** 包代码 */
+  code: string | null;
   /** 包描述 */
   description: string | null;
   /** Logo URL */
@@ -69,6 +71,8 @@ export interface MarketMcpDetail {
   identifier: string;
   /** 包名称 */
   name: string;
+  /** 包代码 */
+  code: string | null;
   /** 包描述 */
   description: string | null;
   /** Logo URL */
@@ -107,6 +111,8 @@ export interface MarketMcpDetail {
   isInstalled?: boolean;
   /** Runtimes */
   runtimes: string[] | null;
+  /** Auth Method */
+  authMethod: 'oauth'[] | null;
 }
 
 // API 请求参数类型
@@ -172,6 +178,8 @@ export interface McpInstallConfiguration {
   configuration: string | null;
   /** Runtimes */
   runtimes: string[] | null;
+  /** Auth Method */
+  authMethod: 'oauth'[] | null;
 }
 
 // MCP安装配置API响应

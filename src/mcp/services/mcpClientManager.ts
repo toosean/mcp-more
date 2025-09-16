@@ -126,7 +126,7 @@ export class McpClientManager {
    */
   private async connectClient(
     clientInstance: McpClientInstance, 
-    retryCount: number = 0
+    autoOAuth: boolean = false
   ): Promise<void> {
 
     log.error(`Connecting MCP client: ${clientInstance.mcp.identifier}`);
@@ -140,20 +140,26 @@ export class McpClientManager {
 
       // OAuth 重试逻辑
       if (this.is401Error(error) && 
-          clientInstance.mcp.oauth?.autoOAuth !== false && 
-          retryCount < 2) {
+          autoOAuth !== false) {
 
         log.info(`Attempting OAuth flow for 401 error: ${clientInstance.mcp.identifier}`);
-        const shouldRetry = await this.handleOAuthError(clientInstance.mcp, error);
+        const shouldRetry = await this.handleOAuthError(clientInstance.mcp, error, autoOAuth);
 
         if (shouldRetry) {
           // 使用新令牌重新创建客户端实例
           const updatedMcp = this.getMcpByIdentifier(clientInstance.mcp.identifier);
           if (updatedMcp) {
+            
             const newClientInstance = await this.createClientInstance(updatedMcp);
+
+            // 更新客户端实例
+            this.clients = [
+              ...this.clients.filter(client => client.mcp.identifier !== clientInstance.mcp.identifier),
+              newClientInstance
+            ]
             
             // 递归调用，使用新的客户端实例重试连接
-            return this.connectClient(newClientInstance, retryCount + 1);
+            return this.connectClient(newClientInstance, autoOAuth);
           }
         }
       }
@@ -268,14 +274,14 @@ export class McpClientManager {
     // 统计每个工具名称出现的次数，并存储到一个 Map 中
     const toolNameCount: Map<string, number> = new Map();
     scopedTools.forEach(tool => {
-      const toolName = `${tool.clientInstance.mcp.name}__${tool.name}`;
+      const toolName = `${tool.clientInstance.mcp.code}__${tool.name}`;
       const count = toolNameCount.get(toolName) || 0;
       toolNameCount.set(toolName, count + 1);
     });
 
     for (const tool of scopedTools) {
 
-      const toolName = `${tool.clientInstance.mcp.name}__${tool.name}`;
+      const toolName = `${tool.clientInstance.mcp.code}__${tool.name}`;
 
       const uniqueName = toolNameCount.get(toolName) === 1
         ? toolName
@@ -355,7 +361,7 @@ export class McpClientManager {
    * 启动指定 MCP 客户端
    * @param mcpIdentifier MCP 标识符
    */
-  async startMcp(mcpIdentifier: string): Promise<void> {
+  async startMcp(mcpIdentifier: string, autoOAuth: boolean = false): Promise<void> {
     try {
       const mcp = this.getMcpByIdentifier(mcpIdentifier);
       if (!mcp) {
@@ -377,7 +383,7 @@ export class McpClientManager {
         client = await this.createClientInstance(mcp);
         this.clients.push(client);
 
-        await this.connectClient(client);
+        await this.connectClient(client, autoOAuth);
         log.info(`MCP client started: ${mcp.identifier}`);
       }
 
@@ -581,8 +587,8 @@ export class McpClientManager {
   /**
    * 处理 OAuth 认证错误（使用状态机）
    */
-  private async handleOAuthError(mcp: Mcp, error: unknown): Promise<boolean> {
-    if (!this.is401Error(error) || !true){ //!mcp.oauth?.autoOAuth) {
+  private async handleOAuthError(mcp: Mcp, error: unknown, autoOAuth: boolean = false): Promise<boolean> {
+    if (!this.is401Error(error) || !autoOAuth) {
       return false;
     }
 

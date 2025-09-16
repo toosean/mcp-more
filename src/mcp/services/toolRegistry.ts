@@ -71,7 +71,7 @@ export class ToolRegistry {
         server: McpServer, 
         toolInstance: McpToolInstance
     ): void {
-        log.debug(`Register tool: ${toolInstance.name}`);
+        log.debug(`Register tool: ${toolInstance.name} -> ${toolInstance.wrapperName}`);
         
         const wrapperName = toolInstance.wrapperName;
         const toolRegister = server.registerTool(

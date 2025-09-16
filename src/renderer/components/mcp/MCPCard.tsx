@@ -9,6 +9,8 @@ import { toast } from '@/hooks/use-toast';
 import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
 import { useRuntimeInstallDialog } from '@/hooks/use-runtime-install-dialog';
 import { MarketMcp } from '../../types/market';
+import { useOAuthConfirmDialog } from '@/hooks/use-oauth-confirm-dialog';
+import { OAuthConfirmHandler } from '@/services/mcpManager';
 
 interface MCPCardProps {
   mcp: MarketMcp;
@@ -26,6 +28,7 @@ export default function MCPCard({
 
   // Runtime install dialog hook
   const { handleRuntimeInstall, RuntimeInstallDialog } = useRuntimeInstallDialog();
+  const { handleOAuthConfirm, OAuthConfirmDialog } = useOAuthConfirmDialog();
   const { getMcpInstallStatus, installMcp, uninstallMcp, upgradeMcp } = useMcpManager();
 
 
@@ -68,7 +71,7 @@ export default function MCPCard({
     try {
       setIsLoading(true);
 
-      await installMcp(mcp, handleRuntimeInstall);
+      await installMcp(mcp, handleRuntimeInstall, handleOAuthConfirm);
       checkInstallStatus();
 
     } catch (error) {
@@ -255,6 +258,7 @@ export default function MCPCard({
       </CardFooter>
 
       <RuntimeInstallDialog />
+      <OAuthConfirmDialog />
     </Card>
   );
 }

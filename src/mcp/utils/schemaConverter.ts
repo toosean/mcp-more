@@ -25,7 +25,7 @@ export function convertJsonSchemaToZod(jsonSchema: any): any {
             return z.array(z.any());
         }
     } else if (jsonSchema.type === "object") {
-        const zodShape: any = {};
+        const zodShape = z.object({});
         const required = jsonSchema.required || [];
 
         if (jsonSchema.properties) {
@@ -41,7 +41,7 @@ export function convertJsonSchemaToZod(jsonSchema: any): any {
                     zodType = zodType.optional();
                 }
 
-                zodShape[key] = zodType;
+                zodShape.setKey(key, zodType);
             });
         }
 

@@ -162,8 +162,6 @@ export class McpServerManager {
      */
     async start(port: number = 7195): Promise<void> {
 
-        await mcpClientManager.cacheAllTools();
-
         this.server = this.app.listen(port);
         this.port = port;
 

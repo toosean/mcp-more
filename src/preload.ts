@@ -162,21 +162,21 @@ interface RuntimeAPI {
 
 // 定义MCP API 接口
 interface McpAPI {
-  startMcp(mcpId: string): Promise<void>;
+  startMcp(mcpId: string, autoOAuth: boolean): Promise<void>;
   stopMcp(mcpId: string): Promise<void>;
   getMcpStatus(mcpId: string): Promise<'running' | 'stopped' | 'error'>;
   getServerStatus(): Promise<McpServerStatus>;
-  triggerOAuthFlow(mcpId: string): Promise<{
-    success: boolean;
-    authorizationUrl?: string;
-    error?: string;
-  }>;
-  completeOAuthFlow(mcpId: string, authorizationCode: string): Promise<{
-    success: boolean;
-    error?: string;
-  }>;
-  getOAuthState(mcpId: string): Promise<any>;
-  clearOAuthData(mcpId: string): Promise<void>;
+  // triggerOAuthFlow(mcpId: string): Promise<{
+  //   success: boolean;
+  //   authorizationUrl?: string;
+  //   error?: string;
+  // }>;
+  // completeOAuthFlow(mcpId: string, authorizationCode: string): Promise<{
+  //   success: boolean;
+  //   error?: string;
+  // }>;
+  // getOAuthState(mcpId: string): Promise<any>;
+  // clearOAuthData(mcpId: string): Promise<void>;
 }
 
 // 窗口控制 API 实现
@@ -211,15 +211,15 @@ const runtimeAPI: RuntimeAPI = {
 
 // MCP API 实现
 const mcpAPI: McpAPI = {
-  startMcp: (mcpId: string) => ipcRenderer.invoke('mcp:start-mcp', mcpId),
+  startMcp: (mcpId: string, autoOAuth: boolean) => ipcRenderer.invoke('mcp:start-mcp', mcpId, autoOAuth),
   stopMcp: (mcpId: string) => ipcRenderer.invoke('mcp:stop-mcp', mcpId),
   getMcpStatus: (mcpId: string) => ipcRenderer.invoke('mcp:get-mcp-status', mcpId),
   getServerStatus: () => ipcRenderer.invoke('mcp:get-server-status'),
-  triggerOAuthFlow: (mcpId: string) => ipcRenderer.invoke('mcp:trigger-oauth-flow', mcpId),
-  completeOAuthFlow: (mcpId: string, authorizationCode: string) =>
-    ipcRenderer.invoke('mcp:complete-oauth-flow', mcpId, authorizationCode),
-  getOAuthState: (mcpId: string) => ipcRenderer.invoke('mcp:get-oauth-state', mcpId),
-  clearOAuthData: (mcpId: string) => ipcRenderer.invoke('mcp:clear-oauth-data', mcpId)
+  // triggerOAuthFlow: (mcpId: string) => ipcRenderer.invoke('mcp:trigger-oauth-flow', mcpId),
+  // completeOAuthFlow: (mcpId: string, authorizationCode: string) =>
+  //   ipcRenderer.invoke('mcp:complete-oauth-flow', mcpId, authorizationCode),
+  // getOAuthState: (mcpId: string) => ipcRenderer.invoke('mcp:get-oauth-state', mcpId),
+  // clearOAuthData: (mcpId: string) => ipcRenderer.invoke('mcp:clear-oauth-data', mcpId)
 };
 
 // Shell API 实现

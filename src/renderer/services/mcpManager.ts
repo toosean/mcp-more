@@ -8,6 +8,9 @@ import i18n from '@/i18n';
 // Type for runtime installation handler
 export type RuntimeInstallHandler = (runtimeName: string) => Promise<boolean>;
 
+// Type for OAuth confirmation handler
+export type OAuthConfirmHandler = (mcpName: string) => Promise<boolean>;
+
 export type McpInstallStatus = 'installed' | 'upgradeable' | 'not_installed';
 
 export function useMcpManager() {
@@ -252,7 +255,7 @@ export function useMcpManager() {
     };
   }
 
-  const installMcp = async (mcp: MarketMcp | MarketMcpDetail, runtimeInstallHandler?: RuntimeInstallHandler): Promise<void> => {
+  const installMcp = async (mcp: MarketMcp | MarketMcpDetail, runtimeInstallHandler?: RuntimeInstallHandler, oauthConfirmHandler?: OAuthConfirmHandler): Promise<void> => {
 
     const config = await getConfig();
 
@@ -274,6 +277,7 @@ export function useMcpManager() {
       source: 'market' as const,
       identifier: mcp.identifier,
       name: mcp.name,
+      code: mcp.code,
       description: mcp.description,
       author: mcp.author,
       version: mcp.version,
@@ -323,8 +327,12 @@ export function useMcpManager() {
       }
     }
 
+    if(shouldStartMcp && installConfig.authMethod && installConfig.authMethod.includes('oauth')) {
+      shouldStartMcp = await oauthConfirmHandler(newMcp.name);
+    }
+
     if(shouldStartMcp) {
-      startMcp(newMcp.identifier, newMcp.name);
+      startMcp(newMcp.identifier, newMcp.name, true);
       // everything is happen too fast, let's wait for 2 seconds
       // make user feel the progress
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -332,14 +340,14 @@ export function useMcpManager() {
 
   }
 
-  const startMcp = async (identifier: string, name?: string): Promise<void> => {
+  const startMcp = async (identifier: string, name?: string, autoOAuth: boolean = false): Promise<void> => {
     const toastId = toast({
       title: i18n.t('mcpManager.messages.running', { name: name ?? identifier }),
       description: i18n.t('mcpManager.messages.startingUp', { name: name ?? identifier }),
       progress: true,
     });
 
-    window.mcpAPI.startMcp(identifier).then(() => {
+    window.mcpAPI.startMcp(identifier, autoOAuth).then(() => {
       toastId.dismiss();
       toast({
         title: i18n.t('mcpManager.messages.started', { name: name ?? identifier }),
@@ -426,14 +434,14 @@ export function useMcpManager() {
   //   }
   // };
 
-  const clearOAuthData = async (mcpIdentifier: string): Promise<void> => {
-    try {
-      await window.mcpAPI.clearOAuthData(mcpIdentifier);
-    } catch (error) {
-      console.error('Failed to clear OAuth data:', error);
-      throw error;
-    }
-  };
+  // const clearOAuthData = async (mcpIdentifier: string): Promise<void> => {
+  //   try {
+  //     await window.mcpAPI.clearOAuthData(mcpIdentifier);
+  //   } catch (error) {
+  //     console.error('Failed to clear OAuth data:', error);
+  //     throw error;
+  //   }
+  // };
 
   return {
     startMcp,
@@ -446,6 +454,6 @@ export function useMcpManager() {
     //triggerOAuthFlow,
     //completeOAuthFlow,
     //getOAuthState,
-    clearOAuthData,
+    //clearOAuthData,
   }
 }

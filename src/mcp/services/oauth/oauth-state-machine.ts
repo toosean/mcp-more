@@ -20,6 +20,7 @@ import {
 import { mcpServerManager } from '../mcpServer';
 import { CallbackParams } from 'src/main/oauth/callbackServer';
 import { mcpClientManager } from '../mcpClientManager';
+import log from 'electron-log';
 
 /**
  * OAuth 流程状态定义（使用导入的类型）
@@ -48,7 +49,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
       const { serverUrl, updateState } = context;
       const metadataService = new MetadataDiscoveryService();
 
-      console.log('OAuth State Machine: Starting metadata discovery for', serverUrl);
+      log.log('OAuth State Machine: Starting metadata discovery for', serverUrl);
 
       try {
         // 发现受保护资源元数据
@@ -77,9 +78,9 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
           step: 'client_registration'
         });
 
-        console.log('OAuth State Machine: Metadata discovery completed');
+        log.log('OAuth State Machine: Metadata discovery completed');
       } catch (error) {
-        console.error('OAuth State Machine: Metadata discovery failed:', error);
+        log.error('OAuth State Machine: Metadata discovery failed:', error);
         updateState({
           error: error instanceof Error ? error.message : 'Metadata discovery failed',
           step: 'complete'
@@ -96,7 +97,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
     execute: async (context: StateMachineContext) => {
       const { state, provider, updateState } = context;
 
-      console.log('OAuth State Machine: Starting client registration');
+      log.log('OAuth State Machine: Starting client registration');
       try {
         if (!state.oauthMetadata) {
           throw new Error('OAuth metadata not available');
@@ -113,7 +114,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
         // 将所有支持的作用域添加到客户端注册中（Inspector模式）
         if (scopesSupported?.length) {
           clientMetadata.scope = scopesSupported.join(' ');
-          console.log('OAuth State Machine: Updated client metadata with scopes:', clientMetadata.scope);
+          log.log('OAuth State Machine: Updated client metadata with scopes:', clientMetadata.scope);
         }
 
         // 发现最终使用的作用域
@@ -123,7 +124,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
         let clientInfo = await provider.clientInformation();
 
         if (!clientInfo && state.oauthMetadata.registration_endpoint) {
-          console.log('OAuth State Machine: Registering new OAuth client using DCR');
+          log.log('OAuth State Machine: Registering new OAuth client using DCR');
           // 通过提供者的方法进行动态注册（Inspector模式）
           clientInfo = await provider.registerClient(state.authServerUrl, state.oauthMetadata);
           provider.saveClientInformation(clientInfo);
@@ -139,9 +140,9 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
           step: 'authorization_redirect'
         });
 
-        console.log('OAuth State Machine: Client registration completed');
+        log.log('OAuth State Machine: Client registration completed');
       } catch (error) {
-        console.error('OAuth State Machine: Client registration failed:', error);
+        log.error('OAuth State Machine: Client registration failed:', error);
         updateState({
           error: error instanceof Error ? error.message : 'Client registration failed',
           step: 'complete'
@@ -157,7 +158,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
 
     execute: async (context: StateMachineContext) => {
       const { state, serverUrl, updateState } = context;
-      console.log('OAuth State Machine: Preparing authorization redirect');
+      log.log('OAuth State Machine: Preparing authorization redirect');
 
       try {
         if (!state.oauthMetadata || !state.oauthClientInfo) {
@@ -272,27 +273,27 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
           const browserLauncher = new BrowserLauncher();
           const launchResult = await browserLauncher.openAuthorizationUrl(authUrlString);
           if (!launchResult.success) {
-            console.warn('Failed to open authorization URL in browser:', launchResult.message);
+            log.warn('Failed to open authorization URL in browser:', launchResult.message);
             // 继续流程，但记录警告
           } else {
-            console.log('OAuth State Machine: Authorization URL opened in browser');
+            log.log('OAuth State Machine: Authorization URL opened in browser');
           }
 
         } catch (browserError) {
-          console.warn('Browser launch error:', browserError);
+          log.warn('Browser launch error:', browserError);
           // 继续流程，不阻塞OAuth状态机
         }    
 
-        console.log('OAuth State Machine: Authorization redirect prepared');
+        log.log('OAuth State Machine: Authorization redirect prepared');
 
         // 等待回调
         const result = await returnPromise;
         updateState(result);
 
-        debugger;
+        //debugger;
 
       } catch (error) {
-        console.error('OAuth State Machine: Authorization redirect preparation failed:', error);
+        log.error('OAuth State Machine: Authorization redirect preparation failed:', error);
         updateState({
           error: error instanceof Error ? error.message : 'Authorization redirect preparation failed',
           step: 'complete'
@@ -309,7 +310,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
     execute: async (context: StateMachineContext) => {
       const { state, updateState } = context;
 
-      console.log('OAuth State Machine: Validating authorization code');
+      log.log('OAuth State Machine: Validating authorization code');
 
       if (!state.authorizationCode) {
         updateState({
@@ -325,7 +326,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
         step: 'token_request'
       });
 
-      console.log('OAuth State Machine: Authorization code validated');
+      log.log('OAuth State Machine: Authorization code validated');
     }
   },
 
@@ -341,7 +342,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
     execute: async (context: StateMachineContext) => {
       const { state, serverUrl, provider, updateState } = context;
 
-      console.log('OAuth State Machine: Starting token request');
+      log.log('OAuth State Machine: Starting token request');
 
       try {
         if (!state.authorizationCode || !state.oauthMetadata || !state.oauthClientInfo) {
@@ -349,8 +350,8 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
         }
 
         // 从会话存储获取 PKCE 参数
-        console.log('OAuth State Machine: Server URL:', serverUrl);
-        console.log('OAuth State Machine: Getting session for state:', state.state);
+        log.log('OAuth State Machine: Server URL:', serverUrl);
+        log.log('OAuth State Machine: Getting session for state:', state.state);
         const session = sessionStorage.getSession(serverUrl, state.state);
         if (!session?.codeVerifier) {
           throw new Error('PKCE code verifier not found in session');
@@ -382,9 +383,9 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
           step: 'complete'
         });
 
-        console.log('OAuth State Machine: Token request completed successfully');
+        log.log('OAuth State Machine: Token request completed successfully');
       } catch (error) {
-        console.error('OAuth State Machine: Token request failed:', error);
+        log.error('OAuth State Machine: Token request failed:', error);
         updateState({
           error: error instanceof Error ? error.message : 'Token request failed',
           step: 'complete'
@@ -397,7 +398,7 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
     canTransition: async () => false, // 终端状态
 
     execute: async () => {
-      console.log('OAuth State Machine: Flow completed');
+      log.log('OAuth State Machine: Flow completed');
       // 无操作，这是终端状态
     }
   }
@@ -464,7 +465,7 @@ export class OAuthStateMachine {
     // 检查是否可以执行该步骤
     const canExecute = await transition.canTransition(context);
     if (!canExecute) {
-      console.warn(`OAuth State Machine: Cannot execute step ${currentStep}`);
+      log.warn(`OAuth State Machine: Cannot execute step ${currentStep}`);
       return 'ERROR';
     }
 
@@ -491,7 +492,7 @@ export class OAuthStateMachine {
     result: OAuthFlowResult;
     authorizationUrl?: string;
   }> {
-    console.log('OAuth State Machine: Starting automated flow');
+    log.log('OAuth State Machine: Starting automated flow');
 
     while (this.state.step !== 'complete' &&
            //this.state.step !== 'authorization_code' &&

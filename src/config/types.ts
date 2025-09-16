@@ -58,6 +58,7 @@ export interface Mcp {
   source: 'manual' | 'json' | 'market' | null; //null | manual |json  表示本地安装
   identifier: string;
   name: string;
+  code: string | null;
   description: string | null;
   author: string | null;
   version: string | null;
@@ -79,8 +80,6 @@ export interface Mcp {
     clientId?: string;
     clientSecret?: string;
     scopes?: string;
-    /** 自动 OAuth 开关 */
-    autoOAuth?: boolean;
     /** 授权服务器端点（可选，支持自动发现） */
     authorizationUrl?: string;
     tokenUrl?: string;

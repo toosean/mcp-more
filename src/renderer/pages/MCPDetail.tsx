@@ -32,6 +32,7 @@ import { getMcpDetail } from '@/services/marketApi';
 import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
 import { useRuntimeInstallDialog } from '@/hooks/use-runtime-install-dialog';
 import { RuntimeInfo } from '@/types/global';
+import { useOAuthConfirmDialog } from '@/hooks/use-oauth-confirm-dialog';
 
 export default function MCPDetail() {
   const { org, id } = useParams<{ org: string, id: string }>();
@@ -46,6 +47,7 @@ export default function MCPDetail() {
 
   // Runtime install dialog hook
   const { handleRuntimeInstall, RuntimeInstallDialog } = useRuntimeInstallDialog();
+  const { handleOAuthConfirm, OAuthConfirmDialog } = useOAuthConfirmDialog();
   const { getMcpInstallStatus, installMcp, uninstallMcp, upgradeMcp } = useMcpManager();
 
   useEffect(() => {
@@ -196,7 +198,7 @@ export default function MCPDetail() {
         description: t('mcpDetail.toast.installingDesc', { name: mcp.name }),
       });
 
-      await installMcp(mcp, handleRuntimeInstall);
+      await installMcp(mcp, handleRuntimeInstall, handleOAuthConfirm);
 
       await refreshInstalledStatus();
 
