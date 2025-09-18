@@ -383,22 +383,31 @@ export function useMcpManager() {
   }
 
   /**
-   * 模拟卸载包
-   * TODO: 替换为实际的卸载逻辑
+   * 卸载 MCP 包，包括清除 OAuth 相关的敏感数据
    */
   const uninstallMcp = async (identifier: string): Promise<void> => {
 
     const config = await getConfig();
-    
+
     let installedMcps = config.mcp.installedMcps;
-    const installedMcp = installedMcps.find(mcp => mcp.identifier === mcp.identifier);
+    const installedMcp = installedMcps.find(mcp => mcp.identifier === identifier);
 
     if (!installedMcp) {
       throw new Error(i18n.t('mcpManager.errors.notInstalled'));
     }
 
+    // 停止 MCP 客户端
     await window.mcpAPI.stopMcp(identifier);
 
+    // 清除所有 OAuth 相关的敏感数据
+    try {
+      await window.mcpAPI.clearOAuthData(identifier);
+    } catch (error) {
+      console.warn(`Failed to clear OAuth data for MCP ${identifier}:`, error);
+      // 不要因为清除 OAuth 数据失败而终止卸载过程
+    }
+
+    // 从配置中移除 MCP
     installedMcps = installedMcps.filter(mcp => mcp.identifier !== identifier);
 
     updateConfig({

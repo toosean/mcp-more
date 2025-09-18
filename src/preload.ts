@@ -176,7 +176,7 @@ interface McpAPI {
   //   error?: string;
   // }>;
   // getOAuthState(mcpId: string): Promise<any>;
-  // clearOAuthData(mcpId: string): Promise<void>;
+  clearOAuthData(mcpId: string): Promise<void>;
 }
 
 // 窗口控制 API 实现
@@ -226,7 +226,7 @@ const mcpAPI: McpAPI = {
   // completeOAuthFlow: (mcpId: string, authorizationCode: string) =>
   //   ipcRenderer.invoke('mcp:complete-oauth-flow', mcpId, authorizationCode),
   // getOAuthState: (mcpId: string) => ipcRenderer.invoke('mcp:get-oauth-state', mcpId),
-  // clearOAuthData: (mcpId: string) => ipcRenderer.invoke('mcp:clear-oauth-data', mcpId)
+  clearOAuthData: (mcpId: string) => ipcRenderer.invoke('mcp:clear-oauth-data', mcpId)
 };
 
 // Shell API 实现

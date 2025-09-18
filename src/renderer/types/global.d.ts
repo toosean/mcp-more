@@ -90,7 +90,7 @@ declare global {
       getMcpStatus(mcpId: string): Promise<'running' | 'stopped' | 'error'>;
       getServerStatus(): Promise<McpServerStatus>;
       // triggerOAuthFlow(mcpId: string): Promise<boolean>;
-      // clearOAuthData(mcpId: string): Promise<void>;
+      clearOAuthData(mcpId: string): Promise<void>;
     };
     shellAPI: {
       openExternal(url: string): Promise<void>;

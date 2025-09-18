@@ -97,16 +97,16 @@ export function setupMCPIpcHandlers(): void {
   //   }
   // });
 
-  // ipcMain.handle('mcp:clear-oauth-data', async (event, mcpIdentifier: string) => {
-  //   try {
-  //     log.info(`Clearing OAuth data for MCP: ${mcpIdentifier}`);
-  //     await mcpClientManager.clearOAuthData(mcpIdentifier);
-  //     log.info(`OAuth data cleared for ${mcpIdentifier}`);
-  //   } catch (error) {
-  //     log.error(`Failed to clear OAuth data for ${mcpIdentifier}:`, error);
-  //     throw error;
-  //   }
-  // });
+  ipcMain.handle('mcp:clear-oauth-data', async (event, mcpIdentifier: string) => {
+    try {
+      log.info(`Clearing OAuth data for MCP: ${mcpIdentifier}`);
+      await mcpClientManager.clearOAuthData(mcpIdentifier);
+      log.info(`OAuth data cleared for ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to clear OAuth data for ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  });
 
   log.info('MCP IPC handlers set up');
 }
