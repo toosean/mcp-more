@@ -2,6 +2,9 @@
  * OAuth 2.1 类型定义
  */
 
+import { Mcp } from "src/config";
+import { ElectronOAuthClientProvider } from "./ElectronOAuthClientProvider";
+
 export interface OAuthClientMetadata {
   redirect_uris: string[];
   token_endpoint_auth_method?: string;
@@ -107,9 +110,10 @@ export interface OAuthFlowState {
 }
 
 export interface StateMachineContext {
+  mcp: Mcp;
   state: OAuthFlowState;
   serverUrl: string;
-  provider: any; // ElectronOAuthClientProvider，避免循环依赖
+  provider: ElectronOAuthClientProvider;
   updateState: (updates: Partial<OAuthFlowState>) => void;
 }
 

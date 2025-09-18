@@ -13,7 +13,7 @@ import {
   OAuthStep,
   OAuthFlowState as ImportedOAuthFlowState,
   StateTransition,
-  StateMachineContext as ImportedStateMachineContext,
+  StateMachineContext,
   OAuthFlowResult
 } from './types';
 import { mcpServerManager } from '../mcpServer';
@@ -25,17 +25,6 @@ import { shell } from 'electron';
  * OAuth 流程状态定义（使用导入的类型）
  */
 export interface OAuthFlowState extends ImportedOAuthFlowState {}
-
-/**
- * 状态机上下文（使用导入的类型）
- */
-interface StateMachineContext {
-  mcp: Mcp;
-  state: OAuthFlowState;
-  serverUrl: string;
-  provider: ElectronOAuthClientProvider;
-  updateState: (updates: Partial<OAuthFlowState>) => void;
-}
 
 /**
  * OAuth 状态转换定义

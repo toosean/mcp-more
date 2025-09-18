@@ -12,7 +12,7 @@ import { toolRegistry } from "./toolRegistry";
 import { ElectronOAuthClientProvider } from './oauth/ElectronOAuthClientProvider';
 import { MetadataDiscoveryService } from './oauth/metadataDiscovery';
 import { OAuthStateMachine } from './oauth/oauth-state-machine';
-import { is401Error, getOAuthErrorDescription } from './oauth/oauthUtils';
+import { is401Error } from './oauth/oauthUtils';
 import { JSONSchema7 } from "json-schema";
 import { ToolAnnotations } from "@modelcontextprotocol/sdk/types";
 
