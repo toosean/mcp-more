@@ -473,22 +473,4 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
     
     return (tokens.expires_at - now) <= fiveMinutes;
   }
-
-  /**
-   * 获取有效的访问令牌（自动刷新如果需要）
-   */
-  async getValidAccessToken(): Promise<string | undefined> {
-    let tokens = await this.tokens();
-
-    // 如果令牌即将过期，尝试刷新
-    if (tokens && this.isTokenExpiringSoon(tokens)) {
-      console.log('Access token is expiring soon, attempting refresh...');
-      const refreshedTokens = await this.refreshToken();
-      if (refreshedTokens) {
-        tokens = refreshedTokens;
-      }
-    }
-
-    return tokens?.access_token;
-  }
 }

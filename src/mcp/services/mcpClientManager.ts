@@ -168,7 +168,7 @@ export class McpClientManager {
       log.error(`Failed to connect MCP client: ${clientInstance.mcp.identifier}`, error);
 
       // OAuth 重试逻辑
-      if (this.is401Error(error) && 
+      if (is401Error(error) && 
           autoOAuth !== false) {
 
         log.info(`Attempting OAuth flow for 401 error: ${clientInstance.mcp.identifier}`);
@@ -193,7 +193,7 @@ export class McpClientManager {
         }
       }
 
-      if(this.is401Error(error) && autoOAuth === false) {
+      if(is401Error(error) && autoOAuth === false) {
         throw new McpStartNeedsAuthError(`[401] MCP ${clientInstance.mcp.name} needs Authorization.`);
       }
 
@@ -648,17 +648,10 @@ export class McpClientManager {
   }
 
   /**
-   * 检查错误是否为 401 认证错误（使用导入的工具函数）
-   */
-  private is401Error(error: unknown): boolean {
-    return is401Error(error);
-  }
-
-  /**
    * 处理 OAuth 认证错误（使用状态机）
    */
   private async handleOAuthError(mcp: Mcp, error: unknown, autoOAuth: boolean = false): Promise<boolean> {
-    if (!this.is401Error(error) || !autoOAuth) {
+    if (!is401Error(error) || !autoOAuth) {
       return false;
     }
 
