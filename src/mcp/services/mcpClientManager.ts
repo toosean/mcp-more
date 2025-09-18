@@ -37,13 +37,18 @@ export class McpClientManager {
     return installedMcps.find(mcp => mcp.identifier === mcpIdentifier);
   }
 
+  private getAllMcps(): Mcp[] {
+    const mcpConfig = configManager.getSection('mcp');
+    const installedMcps = mcpConfig.installedMcps;
+    return installedMcps;
+  }
+
   /**
    * 获取配置中所有已启用的 MCP 包
    * @returns 已启用的 MCP 包数组
    */
   private getEnabledMcps(): Mcp[] {
-    const mcpConfig = configManager.getSection('mcp');
-    const installedMcps = mcpConfig.installedMcps;
+    const installedMcps = this.getAllMcps();
 
     // 数组结构，只返回已启用的包
     return installedMcps.filter(mcp => mcp.enabled && mcp.installed !== null);
@@ -488,7 +493,7 @@ debugger;
    * @param mcpIdentifier MCP 标识符
    */
   async getMcpStatus(mcpIdentifier: string): Promise<string> {
-    const mcp = this.getEnabledMcps().find(mcp => mcp.identifier === mcpIdentifier);
+    const mcp = this.getAllMcps().find(mcp => mcp.identifier === mcpIdentifier);
     if (!mcp) {
       throw new Error(`MCP not found: ${mcpIdentifier}`);
     }

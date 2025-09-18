@@ -369,7 +369,6 @@ export default function Installed() {
         } catch (error) {
 
           const errorMessage: string = error.toString();
-          console.log('XX_FAIL:', errorMessage, errorMessage.includes('McpStartNeedsAuthError'));
           if(errorMessage.includes('McpStartNeedsAuthError')){
               // 检查是否是OAuth认证错误
               const configMcp = currentConfig.mcp.installedMcps.find(m => m.identifier === id);

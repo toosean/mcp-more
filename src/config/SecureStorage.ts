@@ -1,4 +1,4 @@
-import * as keytar from 'keytar';
+const keytar = require('keytar');
 import log from 'electron-log';
 import { OAuthTokens, OAuthClientInfo } from './types';
 
