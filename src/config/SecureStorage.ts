@@ -1,32 +1,39 @@
-const keytar = require('keytar');
+import { safeStorage } from 'electron';
+import Store from 'electron-store';
 import log from 'electron-log';
 import { OAuthTokens, OAuthClientInfo } from './types';
 
+// Use electron-store with encryption for secure storage
+const secureStore = new Store({
+  name: 'secure-storage',
+  encryptionKey: 'mcp-more-secure-key'
+}) as any; // Use any to avoid TypeScript issues with electron-store methods
+
 /**
  * 安全存储服务类
- * 使用 keytar 安全存储 OAuth 敏感数据
+ * 使用 electron-store 加密存储 OAuth 敏感数据
  */
 export class SecureStorage {
   private static readonly SERVICE_NAME = 'mcp-more';
 
   /**
-   * 生成 OAuth tokens 的 keytar 账户名
+   * 生成 OAuth tokens 的存储键名
    */
-  private static getTokensAccount(mcpIdentifier: string): string {
+  private static getTokensKey(mcpIdentifier: string): string {
     return `oauth-tokens-${mcpIdentifier}`;
   }
 
   /**
-   * 生成 OAuth client secret 的 keytar 账户名
+   * 生成 OAuth client secret 的存储键名
    */
-  private static getClientSecretAccount(mcpIdentifier: string): string {
+  private static getClientSecretKey(mcpIdentifier: string): string {
     return `oauth-client-secret-${mcpIdentifier}`;
   }
 
   /**
-   * 生成 OAuth client info 的 keytar 账户名
+   * 生成 OAuth client info 的存储键名
    */
-  private static getClientInfoAccount(mcpIdentifier: string): string {
+  private static getClientInfoKey(mcpIdentifier: string): string {
     return `oauth-client-info-${mcpIdentifier}`;
   }
 
@@ -35,9 +42,8 @@ export class SecureStorage {
    */
   async saveOAuthTokens(mcpIdentifier: string, tokens: OAuthTokens): Promise<void> {
     try {
-      const account = SecureStorage.getTokensAccount(mcpIdentifier);
-      const tokensJson = JSON.stringify(tokens);
-      await keytar.setPassword(SecureStorage.SERVICE_NAME, account, tokensJson);
+      const key = SecureStorage.getTokensKey(mcpIdentifier);
+      secureStore.set(key, tokens);
       log.info(`OAuth tokens saved for MCP: ${mcpIdentifier}`);
     } catch (error) {
       log.error(`Failed to save OAuth tokens for MCP ${mcpIdentifier}:`, error);
@@ -50,14 +56,9 @@ export class SecureStorage {
    */
   async getOAuthTokens(mcpIdentifier: string): Promise<OAuthTokens | null> {
     try {
-      const account = SecureStorage.getTokensAccount(mcpIdentifier);
-      const tokensJson = await keytar.getPassword(SecureStorage.SERVICE_NAME, account);
-
-      if (!tokensJson) {
-        return null;
-      }
-
-      return JSON.parse(tokensJson) as OAuthTokens;
+      const key = SecureStorage.getTokensKey(mcpIdentifier);
+      const tokens = secureStore.get(key) as OAuthTokens | undefined;
+      return tokens || null;
     } catch (error) {
       log.error(`Failed to get OAuth tokens for MCP ${mcpIdentifier}:`, error);
       return null;
@@ -69,8 +70,8 @@ export class SecureStorage {
    */
   async deleteOAuthTokens(mcpIdentifier: string): Promise<void> {
     try {
-      const account = SecureStorage.getTokensAccount(mcpIdentifier);
-      await keytar.deletePassword(SecureStorage.SERVICE_NAME, account);
+      const key = SecureStorage.getTokensKey(mcpIdentifier);
+      secureStore.delete(key);
       log.info(`OAuth tokens deleted for MCP: ${mcpIdentifier}`);
     } catch (error) {
       log.error(`Failed to delete OAuth tokens for MCP ${mcpIdentifier}:`, error);
@@ -83,8 +84,8 @@ export class SecureStorage {
    */
   async saveClientSecret(mcpIdentifier: string, clientSecret: string): Promise<void> {
     try {
-      const account = SecureStorage.getClientSecretAccount(mcpIdentifier);
-      await keytar.setPassword(SecureStorage.SERVICE_NAME, account, clientSecret);
+      const key = SecureStorage.getClientSecretKey(mcpIdentifier);
+      secureStore.set(key, clientSecret);
       log.info(`OAuth client secret saved for MCP: ${mcpIdentifier}`);
     } catch (error) {
       log.error(`Failed to save OAuth client secret for MCP ${mcpIdentifier}:`, error);
@@ -97,8 +98,9 @@ export class SecureStorage {
    */
   async getClientSecret(mcpIdentifier: string): Promise<string | null> {
     try {
-      const account = SecureStorage.getClientSecretAccount(mcpIdentifier);
-      return await keytar.getPassword(SecureStorage.SERVICE_NAME, account);
+      const key = SecureStorage.getClientSecretKey(mcpIdentifier);
+      const secret = secureStore.get(key) as string | undefined;
+      return secret || null;
     } catch (error) {
       log.error(`Failed to get OAuth client secret for MCP ${mcpIdentifier}:`, error);
       return null;
@@ -110,8 +112,8 @@ export class SecureStorage {
    */
   async deleteClientSecret(mcpIdentifier: string): Promise<void> {
     try {
-      const account = SecureStorage.getClientSecretAccount(mcpIdentifier);
-      await keytar.deletePassword(SecureStorage.SERVICE_NAME, account);
+      const key = SecureStorage.getClientSecretKey(mcpIdentifier);
+      secureStore.delete(key);
       log.info(`OAuth client secret deleted for MCP: ${mcpIdentifier}`);
     } catch (error) {
       log.error(`Failed to delete OAuth client secret for MCP ${mcpIdentifier}:`, error);
@@ -124,9 +126,8 @@ export class SecureStorage {
    */
   async saveClientInfo(mcpIdentifier: string, clientInfo: OAuthClientInfo): Promise<void> {
     try {
-      const account = SecureStorage.getClientInfoAccount(mcpIdentifier);
-      const clientInfoJson = JSON.stringify(clientInfo);
-      await keytar.setPassword(SecureStorage.SERVICE_NAME, account, clientInfoJson);
+      const key = SecureStorage.getClientInfoKey(mcpIdentifier);
+      secureStore.set(key, clientInfo);
       log.info(`OAuth client info saved for MCP: ${mcpIdentifier}`);
     } catch (error) {
       log.error(`Failed to save OAuth client info for MCP ${mcpIdentifier}:`, error);
@@ -139,14 +140,9 @@ export class SecureStorage {
    */
   async getClientInfo(mcpIdentifier: string): Promise<OAuthClientInfo | null> {
     try {
-      const account = SecureStorage.getClientInfoAccount(mcpIdentifier);
-      const clientInfoJson = await keytar.getPassword(SecureStorage.SERVICE_NAME, account);
-
-      if (!clientInfoJson) {
-        return null;
-      }
-
-      return JSON.parse(clientInfoJson) as OAuthClientInfo;
+      const key = SecureStorage.getClientInfoKey(mcpIdentifier);
+      const clientInfo = secureStore.get(key) as OAuthClientInfo | undefined;
+      return clientInfo || null;
     } catch (error) {
       log.error(`Failed to get OAuth client info for MCP ${mcpIdentifier}:`, error);
       return null;
@@ -158,8 +154,8 @@ export class SecureStorage {
    */
   async deleteClientInfo(mcpIdentifier: string): Promise<void> {
     try {
-      const account = SecureStorage.getClientInfoAccount(mcpIdentifier);
-      await keytar.deletePassword(SecureStorage.SERVICE_NAME, account);
+      const key = SecureStorage.getClientInfoKey(mcpIdentifier);
+      secureStore.delete(key);
       log.info(`OAuth client info deleted for MCP: ${mcpIdentifier}`);
     } catch (error) {
       log.error(`Failed to delete OAuth client info for MCP ${mcpIdentifier}:`, error);
@@ -208,17 +204,16 @@ export class SecureStorage {
    */
   async getAllOAuthAccounts(): Promise<string[]> {
     try {
-      const credentials = await keytar.findCredentials(SecureStorage.SERVICE_NAME);
+      const allKeys = Object.keys(secureStore.store);
       const mcpIdentifiers = new Set<string>();
 
-      credentials.forEach((credential: any) => {
-        const account = credential.account;
-        if (account.startsWith('oauth-tokens-')) {
-          mcpIdentifiers.add(account.replace('oauth-tokens-', ''));
-        } else if (account.startsWith('oauth-client-secret-')) {
-          mcpIdentifiers.add(account.replace('oauth-client-secret-', ''));
-        } else if (account.startsWith('oauth-client-info-')) {
-          mcpIdentifiers.add(account.replace('oauth-client-info-', ''));
+      allKeys.forEach((key) => {
+        if (key.startsWith('oauth-tokens-')) {
+          mcpIdentifiers.add(key.replace('oauth-tokens-', ''));
+        } else if (key.startsWith('oauth-client-secret-')) {
+          mcpIdentifiers.add(key.replace('oauth-client-secret-', ''));
+        } else if (key.startsWith('oauth-client-info-')) {
+          mcpIdentifiers.add(key.replace('oauth-client-info-', ''));
         }
       });
 
