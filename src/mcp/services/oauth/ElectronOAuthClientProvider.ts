@@ -26,9 +26,9 @@ export interface OAuthClientProvider {
   redirectUrl: string;
   clientMetadata: OAuthClientMetadata;
   tokens(): Promise<OAuthTokens | undefined>;
-  saveTokens(tokens: OAuthTokens): void;
+  saveTokens(tokens: OAuthTokens): Promise<void>;
   clientInformation(): Promise<OAuthClientInformation | undefined>;
-  saveClientInformation(clientInfo: OAuthClientInformation): void;
+  saveClientInformation(clientInfo: OAuthClientInformation): Promise<void>;
   registerClient(authServerUrl: string, authServerMetadata: AuthorizationServerMetadata): Promise<OAuthClientInformation>;
 }
 
@@ -77,36 +77,46 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
    * 获取当前令牌
    */
   async tokens(): Promise<OAuthTokens | undefined> {
-    return this.mcp?.oauthTokens;
+    if (!this.mcp?.identifier) {
+      return undefined;
+    }
+    return await configManager.getOAuthTokens(this.mcp.identifier);
   }
 
   /**
    * 保存令牌
    */
-  saveTokens(tokens: OAuthTokens): void {
-    if (this.updateMcpConfig) {
-      this.updateMcpConfig({ oauthTokens: tokens });
+  async saveTokens(tokens: OAuthTokens): Promise<void> {
+    if (!this.mcp?.identifier) {
+      throw new Error('MCP identifier is required to save tokens');
     }
-    console.log('OAuth tokens saved for MCP:', this.mcp?.identifier);
+    await configManager.saveOAuthTokens(this.mcp.identifier, tokens);
+    console.log('OAuth tokens saved for MCP:', this.mcp.identifier);
   }
 
   /**
    * 获取客户端信息 - 三层优先级
    */
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
+    if (!this.mcp?.identifier) {
+      return undefined;
+    }
+
     // 1. 用户配置的客户端信息（最高优先级）
     if (this.mcp?.oauth?.clientId) {
+      const clientSecret = await configManager.getClientSecret(this.mcp.identifier);
       return {
         client_id: this.mcp.oauth.clientId,
-        client_secret: this.mcp.oauth.clientSecret,
+        client_secret: clientSecret || undefined,
         ...this.clientMetadata
       };
     }
 
     // 2. 动态注册的客户端信息
-    if (this.mcp?.oauthClientInfo) {
+    const clientInfo = await configManager.getClientInfo(this.mcp.identifier);
+    if (clientInfo) {
       return {
-        ...this.mcp.oauthClientInfo,
+        ...clientInfo,
         ...this.clientMetadata
       };
     }
@@ -116,22 +126,28 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
   }
 
   /**
-   * 保存客户端信息（不存储 client_secret 以确保安全）
+   * 保存客户端信息（敏感数据存储到安全存储）
    */
-  saveClientInformation(clientInformation: OAuthClientInformation): void {
-    const { client_secret, ...safeInfo } = clientInformation;
-    
-    if (this.updateMcpConfig) {
-      this.updateMcpConfig({
-        oauthClientInfo: {
-          client_id: safeInfo.client_id,
-          redirect_uris: safeInfo.redirect_uris,
-          client_name: safeInfo.client_name || 'mcp-more'
-        }
-      });
+  async saveClientInformation(clientInformation: OAuthClientInformation): Promise<void> {
+    if (!this.mcp?.identifier) {
+      throw new Error('MCP identifier is required to save client information');
     }
-    
-    console.log('OAuth client information saved for MCP:', this.mcp?.identifier);
+
+    const { client_secret, ...safeInfo } = clientInformation;
+
+    // 保存 client_secret 到安全存储（如果存在）
+    if (client_secret) {
+      await configManager.saveClientSecret(this.mcp.identifier, client_secret);
+    }
+
+    // 保存客户端信息到安全存储
+    await configManager.saveClientInfo(this.mcp.identifier, {
+      client_id: safeInfo.client_id,
+      redirect_uris: safeInfo.redirect_uris,
+      client_name: safeInfo.client_name || 'mcp-more'
+    });
+
+    console.log('OAuth client information saved for MCP:', this.mcp.identifier);
   }
 
   /**

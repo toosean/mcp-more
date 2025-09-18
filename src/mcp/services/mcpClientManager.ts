@@ -66,10 +66,11 @@ export class McpClientManager {
 
       // 准备 OAuth 头部（如果需要）
       const headers: Record<string, string> = {};
-      if (latestMcp.oauthTokens?.access_token) {
-        headers['Authorization'] = `Bearer ${latestMcp.oauthTokens.access_token}`;
+      const oauthTokens = await configManager.getOAuthTokens(latestMcp.identifier);
+      if (oauthTokens?.access_token) {
+        headers['Authorization'] = `Bearer ${oauthTokens.access_token}`;
         log.debug(`Adding OAuth authorization header for MCP: ${latestMcp.identifier}`);
-        log.debug(`Token: ${latestMcp.oauthTokens.access_token.substring(0, 20)}...`);
+        log.debug(`Token: ${oauthTokens.access_token.substring(0, 20)}...`);
       } else {
         log.debug(`No OAuth tokens found for MCP: ${mcp.identifier}`);
       }
@@ -771,13 +772,21 @@ debugger;
       const tokens = await oauthProvider.tokens();
       const clientInfo = await oauthProvider.clientInformation();
 
-      const updates: Partial<Mcp> = {
-        oauthTokens: tokens,
-        oauthClientInfo: clientInfo ? {
+      // 保存敏感数据到安全存储
+      if (tokens) {
+        await configManager.saveOAuthTokens(mcpIdentifier, tokens);
+      }
+
+      if (clientInfo) {
+        await configManager.saveClientInfo(mcpIdentifier, {
           client_id: clientInfo.client_id,
           redirect_uris: clientInfo.redirect_uris,
           client_name: clientInfo.client_name || 'mcp-more'
-        } : undefined,
+        });
+      }
+
+      // 只保存非敏感的元数据到配置文件
+      const updates: Partial<Mcp> = {
         oauthMetadata: {
           resourceMetadata: discoveryResult.resourceMetadata,
           authorizationServerMetadata: discoveryResult.authServerMetadata,
@@ -966,14 +975,21 @@ debugger;
    * 清除 OAuth 数据
    */
   async clearOAuthData(mcpIdentifier: string): Promise<void> {
-    const updates: Partial<Mcp> = {
-      oauthTokens: undefined,
-      oauthClientInfo: undefined,
-      oauthMetadata: undefined
-    };
+    try {
+      // 从安全存储中删除敏感数据
+      await configManager.deleteAllOAuthData(mcpIdentifier);
 
-    this.updateMcpConfig(mcpIdentifier, updates);
-    log.info(`OAuth data cleared for MCP: ${mcpIdentifier}`);
+      // 清除配置文件中的非敏感元数据
+      const updates: Partial<Mcp> = {
+        oauthMetadata: undefined
+      };
+
+      this.updateMcpConfig(mcpIdentifier, updates);
+      log.info(`OAuth data cleared for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to clear OAuth data for MCP: ${mcpIdentifier}`, error);
+      throw error;
+    }
   }
 }
 

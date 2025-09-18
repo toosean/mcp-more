@@ -1,7 +1,8 @@
 import Store from 'electron-store';
 import log from 'electron-log';
 import { app } from 'electron';
-import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig } from './types';
+import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig, OAuthTokens, OAuthClientInfo } from './types';
+import { secureStorage } from './SecureStorage';
 
 /**
  * 配置管理器类
@@ -94,7 +95,7 @@ export class ConfigManager {
 
     // 如果是更新 general 部分且包含 autoStart，需要更新系统设置
     if (section === 'general' && value && 'autoStart' in value) {
-      this.updateAutoStartSetting(value.autoStart as boolean);
+      this.updateAutoStartSetting((value as any).autoStart);
     }
   }
 
@@ -206,6 +207,185 @@ export class ConfigManager {
     }
 
     return validatedConfig;
+  }
+
+  /**
+   * OAuth 安全数据管理方法
+   */
+
+  /**
+   * 保存 OAuth tokens（使用安全存储）
+   */
+  async saveOAuthTokens(mcpIdentifier: string, tokens: OAuthTokens): Promise<void> {
+    try {
+      await secureStorage.saveOAuthTokens(mcpIdentifier, tokens);
+      log.info(`OAuth tokens saved securely for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to save OAuth tokens for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取 OAuth tokens（从安全存储）
+   */
+  async getOAuthTokens(mcpIdentifier: string): Promise<OAuthTokens | null> {
+    try {
+      return await secureStorage.getOAuthTokens(mcpIdentifier);
+    } catch (error) {
+      log.error(`Failed to get OAuth tokens for MCP ${mcpIdentifier}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 删除 OAuth tokens（从安全存储）
+   */
+  async deleteOAuthTokens(mcpIdentifier: string): Promise<void> {
+    try {
+      await secureStorage.deleteOAuthTokens(mcpIdentifier);
+      log.info(`OAuth tokens deleted for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to delete OAuth tokens for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 保存 OAuth client secret（使用安全存储）
+   */
+  async saveClientSecret(mcpIdentifier: string, clientSecret: string): Promise<void> {
+    try {
+      await secureStorage.saveClientSecret(mcpIdentifier, clientSecret);
+      log.info(`OAuth client secret saved securely for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to save OAuth client secret for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取 OAuth client secret（从安全存储）
+   */
+  async getClientSecret(mcpIdentifier: string): Promise<string | null> {
+    try {
+      return await secureStorage.getClientSecret(mcpIdentifier);
+    } catch (error) {
+      log.error(`Failed to get OAuth client secret for MCP ${mcpIdentifier}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 删除 OAuth client secret（从安全存储）
+   */
+  async deleteClientSecret(mcpIdentifier: string): Promise<void> {
+    try {
+      await secureStorage.deleteClientSecret(mcpIdentifier);
+      log.info(`OAuth client secret deleted for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to delete OAuth client secret for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 保存 OAuth client info（使用安全存储）
+   */
+  async saveClientInfo(mcpIdentifier: string, clientInfo: OAuthClientInfo): Promise<void> {
+    try {
+      await secureStorage.saveClientInfo(mcpIdentifier, clientInfo);
+      log.info(`OAuth client info saved securely for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to save OAuth client info for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取 OAuth client info（从安全存储）
+   */
+  async getClientInfo(mcpIdentifier: string): Promise<OAuthClientInfo | null> {
+    try {
+      return await secureStorage.getClientInfo(mcpIdentifier);
+    } catch (error) {
+      log.error(`Failed to get OAuth client info for MCP ${mcpIdentifier}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 删除 OAuth client info（从安全存储）
+   */
+  async deleteClientInfo(mcpIdentifier: string): Promise<void> {
+    try {
+      await secureStorage.deleteClientInfo(mcpIdentifier);
+      log.info(`OAuth client info deleted for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to delete OAuth client info for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 删除特定 MCP 的所有 OAuth 相关数据（从安全存储）
+   */
+  async deleteAllOAuthData(mcpIdentifier: string): Promise<void> {
+    try {
+      await secureStorage.deleteAllOAuthData(mcpIdentifier);
+      log.info(`All OAuth data deleted for MCP: ${mcpIdentifier}`);
+    } catch (error) {
+      log.error(`Failed to delete all OAuth data for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 检查是否存在 OAuth tokens
+   */
+  async hasOAuthTokens(mcpIdentifier: string): Promise<boolean> {
+    try {
+      return await secureStorage.hasOAuthTokens(mcpIdentifier);
+    } catch (error) {
+      log.error(`Failed to check OAuth tokens for MCP ${mcpIdentifier}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * 检查是否存在 client secret
+   */
+  async hasClientSecret(mcpIdentifier: string): Promise<boolean> {
+    try {
+      return await secureStorage.hasClientSecret(mcpIdentifier);
+    } catch (error) {
+      log.error(`Failed to check client secret for MCP ${mcpIdentifier}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * 检查是否存在 client info
+   */
+  async hasClientInfo(mcpIdentifier: string): Promise<boolean> {
+    try {
+      return await secureStorage.hasClientInfo(mcpIdentifier);
+    } catch (error) {
+      log.error(`Failed to check client info for MCP ${mcpIdentifier}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * 获取所有存储的 MCP OAuth 账户（用于调试和管理）
+   */
+  async getAllOAuthAccounts(): Promise<string[]> {
+    try {
+      return await secureStorage.getAllOAuthAccounts();
+    } catch (error) {
+      log.error('Failed to get all OAuth accounts:', error);
+      return [];
+    }
   }
 
   /**

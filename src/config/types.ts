@@ -77,22 +77,16 @@ export interface Mcp {
   runtimes?: string[] | null;
   authMethod?: 'oauth'[] | null;
   
-  // OAuth 配置
+  // OAuth 配置（非敏感数据）
   oauth?: {
-    /** 用户配置的客户端信息 */
+    /** 用户配置的客户端ID（非敏感） */
     clientId?: string;
-    clientSecret?: string;
+    /** OAuth 授权范围 */
     scopes?: string;
     /** 授权服务器端点（可选，支持自动发现） */
     authorizationUrl?: string;
     tokenUrl?: string;
   };
-
-  /** OAuth 运行时数据 */
-  oauthTokens?: OAuthTokens;
-
-  /** 动态注册的客户端信息 */
-  oauthClientInfo?: OAuthClientInfo;
 
   /** OAuth 元数据缓存 */
   oauthMetadata?: OAuthMetadata;
