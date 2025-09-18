@@ -8,7 +8,6 @@ import { MetadataDiscoveryService } from './metadataDiscovery';
 import { sessionStorage } from './sessionStorage';
 import { PKCEService } from './pkce';
 import { selectResourceURL, discoverScopes } from './oauthUtils';
-import { BrowserLauncher } from '../../../main/oauth/browserLauncher';
 import { Mcp } from '../../../config/types';
 import {
   OAuthStep,
@@ -19,8 +18,8 @@ import {
 } from './types';
 import { mcpServerManager } from '../mcpServer';
 import { CallbackParams } from 'src/main/oauth/callbackServer';
-import { mcpClientManager } from '../mcpClientManager';
 import log from 'electron-log';
+import { shell } from 'electron';
 
 /**
  * OAuth 流程状态定义（使用导入的类型）
@@ -268,29 +267,11 @@ const oauthTransitions: Record<OAuthStep, StateTransition> = {
         });
 
         // 自动打开浏览器（类似Inspector的处理方式）
-        try {
-
-          const browserLauncher = new BrowserLauncher();
-          const launchResult = await browserLauncher.openAuthorizationUrl(authUrlString);
-          if (!launchResult.success) {
-            log.warn('Failed to open authorization URL in browser:', launchResult.message);
-            // 继续流程，但记录警告
-          } else {
-            log.log('OAuth State Machine: Authorization URL opened in browser');
-          }
-
-        } catch (browserError) {
-          log.warn('Browser launch error:', browserError);
-          // 继续流程，不阻塞OAuth状态机
-        }    
-
-        log.log('OAuth State Machine: Authorization redirect prepared');
+        await shell.openExternal(authUrlString);
 
         // 等待回调
         const result = await returnPromise;
         updateState(result);
-
-        //debugger;
 
       } catch (error) {
         log.error('OAuth State Machine: Authorization redirect preparation failed:', error);

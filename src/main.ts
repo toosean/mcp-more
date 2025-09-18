@@ -12,6 +12,7 @@ import { updateManager } from './updater';
 import { windowManager } from './window';
 import { menuManager } from './menu';
 import { configManager } from './config/ConfigManager';
+import { mcpClientManager } from './mcp/services/mcpClientManager';
 
 // 配置 electron-log
 log.transports.console.level = 'debug';
@@ -65,7 +66,15 @@ app.on('activate', () => {
 
 // 在应用退出前清理资源
 app.on('before-quit', () => {
+  log.info('Application is quitting, cleaning up resources...');
+
+  // 清理 MCP 客户端管理器资源（包括停止所有 token 刷新任务）
+  mcpClientManager.cleanup();
+
+  // 销毁系统托盘
   windowManager.destroyTray();
+
+  log.info('Application cleanup completed');
 });
 
 

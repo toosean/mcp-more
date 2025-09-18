@@ -30,6 +30,8 @@ export class McpClientManager {
   private clients: McpClientInstance[] = [];
   private cachedTools: McpToolInstance[] = [];
   private metadataService = new MetadataDiscoveryService();
+  private tokenRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
+  private readonly REFRESH_BUFFER_SECONDS = 5 * 60; // 提前 5 分钟刷新
 
   private getMcpByIdentifier(mcpIdentifier: string): Mcp | undefined {
     const mcpConfig = configManager.getSection('mcp');
@@ -71,7 +73,19 @@ export class McpClientManager {
 
       // 准备 OAuth 头部（如果需要）
       const headers: Record<string, string> = {};
-      const oauthTokens = await configManager.getOAuthTokens(latestMcp.identifier);
+
+      // 检查 token 是否过期，如果过期则尝试刷新
+      let oauthTokens = await configManager.getOAuthTokens(latestMcp.identifier);
+      if (oauthTokens && this.isTokenExpired(oauthTokens)) {
+        log.info(`Token expired for MCP: ${latestMcp.identifier}, attempting to refresh`);
+        const refreshSuccess = await this.refreshOAuthToken(latestMcp.identifier);
+        if (refreshSuccess) {
+          oauthTokens = await configManager.getOAuthTokens(latestMcp.identifier);
+        } else {
+          log.warn(`Failed to refresh expired token for MCP: ${latestMcp.identifier}`);
+        }
+      }
+
       if (oauthTokens?.access_token) {
         headers['Authorization'] = `Bearer ${oauthTokens.access_token}`;
         log.debug(`Adding OAuth authorization header for MCP: ${latestMcp.identifier}`);
@@ -214,7 +228,7 @@ export class McpClientManager {
       }
     }
 
-    for (const client of this.clients.values()) {
+    for (const client of this.clients) {
       if (!enabledMCPs.some(mcp => mcp.identifier === client.mcp.identifier)) {
         await this.stopMcp(client.mcp.identifier);
         closedCount++;
@@ -355,7 +369,6 @@ export class McpClientManager {
    * @returns 工具执行结果
    */
   async callTool(toolName: string, args: any = {}) {
-debugger;
     const cachedTool = this.cachedTools.find(tool => tool.wrapperName === toolName);
     if (!cachedTool) {
       throw new Error(`Tool not found: ${toolName}`);
@@ -414,6 +427,7 @@ debugger;
         mcp.latestErrorDetail = null;
         mcp.enabled = true;
         this.updateMcpConfig(mcpIdentifier, mcp);
+        this.scheduleTokenRefresh(mcpIdentifier);
       }
 
     } catch (error) {
@@ -466,6 +480,9 @@ debugger;
 
       await this.cacheAllTools();
       await toolRegistry.refreshToolRegisters();
+
+      // 停止 token 自动刷新
+      this.clearTokenRefreshTimer(mcpIdentifier);
 
       log.info(`MCP client stopped: ${mcp.identifier}`);
 
@@ -768,48 +785,6 @@ debugger;
   }
 
   /**
-   * 更新 MCP OAuth 数据
-   */
-  private async updateMcpOAuthData(
-    mcpIdentifier: string,
-    oauthProvider: ElectronOAuthClientProvider,
-    discoveryResult: any
-  ): Promise<void> {
-    try {
-      const tokens = await oauthProvider.tokens();
-      const clientInfo = await oauthProvider.clientInformation();
-
-      // 保存敏感数据到安全存储
-      if (tokens) {
-        await configManager.saveOAuthTokens(mcpIdentifier, tokens);
-      }
-
-      if (clientInfo) {
-        await configManager.saveClientInfo(mcpIdentifier, {
-          client_id: clientInfo.client_id,
-          redirect_uris: clientInfo.redirect_uris,
-          client_name: clientInfo.client_name || 'mcp-more'
-        });
-      }
-
-      // 只保存非敏感的元数据到配置文件
-      const updates: Partial<Mcp> = {
-        oauthMetadata: {
-          resourceMetadata: discoveryResult.resourceMetadata,
-          authorizationServerMetadata: discoveryResult.authServerMetadata,
-          resourceUrl: discoveryResult.resourceUrl?.toString(),
-          lastDiscovery: Date.now()
-        }
-      };
-
-      this.updateMcpConfig(mcpIdentifier, updates);
-      log.info(`OAuth data updated for MCP: ${mcpIdentifier}`);
-    } catch (error) {
-      log.error(`Failed to update OAuth data for MCP: ${mcpIdentifier}`, error);
-    }
-  }
-
-  /**
    * 手动触发 OAuth 流程（使用状态机）
    */
   // async triggerOAuthFlow(mcpIdentifier: string): Promise<{
@@ -983,6 +958,9 @@ debugger;
    */
   async clearOAuthData(mcpIdentifier: string): Promise<void> {
     try {
+      // 停止 token 自动刷新
+      this.clearTokenRefreshTimer(mcpIdentifier);
+
       // 从安全存储中删除敏感数据
       await configManager.deleteAllOAuthData(mcpIdentifier);
 
@@ -997,6 +975,167 @@ debugger;
       log.error(`Failed to clear OAuth data for MCP: ${mcpIdentifier}`, error);
       throw error;
     }
+  }
+
+  /**
+   * 清理所有资源，包括停止所有 token 刷新任务
+   */
+  cleanup(): void {
+    log.info('Cleaning up MCP Client Manager resources');
+
+    // 停止所有 token 刷新任务
+    this.clearAllTokenRefreshTimers();
+
+    // 断开所有客户端连接
+    this.clients.forEach(client => {
+      try {
+        client.client.close();
+      } catch (error) {
+        log.error(`Error closing client ${client.mcp.identifier}:`, error);
+      }
+    });
+
+    this.clients = [];
+    this.cachedTools = [];
+
+    log.info('MCP Client Manager cleanup completed');
+  }
+
+  /**
+   * 检查 token 是否已过期
+   */
+  private isTokenExpired(tokens: any): boolean {
+    if (!tokens.expires_at) {
+      return false;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    return tokens.expires_at <= now;
+  }
+
+  /**
+   * 安排 token 自动刷新
+   */
+  private async scheduleTokenRefresh(mcpIdentifier: string): Promise<void> {
+    try {
+      // 清除现有的定时器
+      this.clearTokenRefreshTimer(mcpIdentifier);
+      const tokens = await configManager.getOAuthTokens(mcpIdentifier);
+
+      if (!tokens || !tokens.refresh_token || !tokens.expires_at) {
+        log.debug(`No valid token or refresh_token found for MCP: ${mcpIdentifier}`);
+        return;
+      }
+
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = tokens.expires_at;
+      const refreshAt = expiresAt - this.REFRESH_BUFFER_SECONDS;
+
+      if (refreshAt <= now) {
+        // Token 已经过期或即将过期，稍后刷新
+        log.info(`Token for ${mcpIdentifier} is expired or expiring soon, scheduling immediate refresh`);
+        setTimeout(() => this.performTokenRefresh(mcpIdentifier), 1000);
+      } else {
+        // 安排未来的刷新
+        const delayMs = (refreshAt - now) * 1000;
+        log.info(`Scheduling token refresh for ${mcpIdentifier} in ${Math.round(delayMs / 1000)} seconds`);
+
+        const timer = setTimeout(() => {
+          this.performTokenRefresh(mcpIdentifier);
+        }, delayMs);
+
+        this.tokenRefreshTimers.set(mcpIdentifier, timer);
+      }
+    } catch (error) {
+      log.error(`Failed to schedule token refresh for ${mcpIdentifier}:`, error);
+    }
+  }
+
+  /**
+   * 执行 token 刷新
+   */
+  private async performTokenRefresh(mcpIdentifier: string): Promise<void> {
+    try {
+      log.info(`Refreshing token for MCP: ${mcpIdentifier}`);
+
+      const success = await this.refreshOAuthToken(mcpIdentifier);
+      if (success) {
+        this.scheduleTokenRefresh(mcpIdentifier);
+      } else {
+        log.error(`Token refresh failed for ${mcpIdentifier}, marking as auth error`);
+        await this.markMcpAsAuthError(mcpIdentifier);
+      }
+    } catch (error) {
+      log.error(`Token refresh failed for ${mcpIdentifier}:`, error);
+      await this.markMcpAsAuthError(mcpIdentifier);
+    }
+  }
+
+  /**
+   * 手动刷新指定 MCP 的 OAuth token
+   */
+  async refreshOAuthToken(mcpIdentifier: string): Promise<boolean> {
+    try {
+      const mcp = this.getMcpByIdentifier(mcpIdentifier);
+      if (!mcp) {
+        log.warn(`MCP not found: ${mcpIdentifier}`);
+        return false;
+      }
+
+      const oauthProvider = new ElectronOAuthClientProvider(
+        mcp.config.url || '',
+        mcp.oauth?.scopes,
+        mcp
+      );
+
+      const refreshedTokens = await oauthProvider.refreshToken();
+      return refreshedTokens !== undefined;
+    } catch (error) {
+      log.error(`Failed to refresh OAuth token for ${mcpIdentifier}:`, error);
+      return false;
+    }
+  }
+
+
+  /**
+   * 将 MCP 标记为认证错误
+   */
+  private async markMcpAsAuthError(mcpIdentifier: string): Promise<void> {
+    try {
+      const mcp = this.getMcpByIdentifier(mcpIdentifier);
+      if (mcp) {
+        const updates = {
+          latestError: 'auth' as const,
+          latestErrorDetail: 'OAuth token refresh failed',
+          enabled: false
+        };
+
+        this.updateMcpConfig(mcpIdentifier, updates);
+        log.info(`MCP ${mcpIdentifier} marked as having auth error due to token refresh failure`);
+      }
+    } catch (error) {
+      log.error(`Failed to mark MCP ${mcpIdentifier} as auth error:`, error);
+    }
+  }
+
+  /**
+   * 清除 token 刷新定时器
+   */
+  private clearTokenRefreshTimer(mcpIdentifier: string): void {
+    const timer = this.tokenRefreshTimers.get(mcpIdentifier);
+    if (timer) {
+      clearTimeout(timer);
+      this.tokenRefreshTimers.delete(mcpIdentifier);
+    }
+  }
+
+  /**
+   * 清除所有 token 刷新定时器
+   */
+  private clearAllTokenRefreshTimers(): void {
+    this.tokenRefreshTimers.forEach((timer) => {
+      clearTimeout(timer);
+    });
+    this.tokenRefreshTimers.clear();
   }
 }
 

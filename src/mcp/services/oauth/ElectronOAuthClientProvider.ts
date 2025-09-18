@@ -6,20 +6,15 @@
 import { 
   OAuthClientMetadata, 
   OAuthClientInformation, 
-  AuthorizationRequest, 
   TokenRequest,
   RefreshTokenRequest,
   OAuthTokenResponse,
-  OAuthFlowResult 
 } from './types';
 import { Mcp, OAuthTokens } from '../../../config/types';
 import { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 //import { OAuthCallbackServer } from '../../../main/oauth/callbackServer';
-import { BrowserLauncher } from '../../../main/oauth/browserLauncher';
-import { PKCEService } from './pkce';
 import { MetadataDiscoveryService } from './metadataDiscovery';
 import { selectClientAuthMethod, applyClientAuthentication, validateClientAuthMethod } from './clientAuth';
-import { sessionStorage } from './sessionStorage';
 import { configManager } from '../../../config/ConfigManager';
 
 export interface OAuthClientProvider {
@@ -33,9 +28,6 @@ export interface OAuthClientProvider {
 }
 
 export class ElectronOAuthClientProvider implements OAuthClientProvider {
-  //private callbackServer: OAuthCallbackServer;
-  private browserLauncher: BrowserLauncher;
-  private pkceService: PKCEService;
   private metadataService: MetadataDiscoveryService;
   private _mcp: Mcp;
 
@@ -45,9 +37,6 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
     private mcp?: Mcp,
     private updateMcpConfig?: (updates: Partial<Mcp>) => void
   ) {
-    //this.callbackServer = new OAuthCallbackServer();
-    this.browserLauncher = new BrowserLauncher();
-    this.pkceService = new PKCEService();
     this.metadataService = new MetadataDiscoveryService();
     this._mcp = mcp;
   }
