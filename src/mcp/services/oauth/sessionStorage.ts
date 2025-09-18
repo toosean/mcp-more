@@ -4,6 +4,7 @@
  */
 
 import * as crypto from 'crypto';
+import log from 'electron-log';
 
 export interface OAuthSession {
   serverUrl: string;
@@ -52,7 +53,7 @@ export class SessionStorage {
 
     this.sessions.set(sessionKey, fullSession);
     
-    console.debug(`OAuth session stored for server: ${serverUrl}, key: ${sessionKey}`);
+    log.debug(`OAuth session stored for server: ${serverUrl}, key: ${sessionKey}`);
     
     // 清理过期会话
     this.cleanExpiredSessions();
@@ -68,13 +69,13 @@ export class SessionStorage {
     const session = this.sessions.get(sessionKey);
 
     if (!session) {
-      console.debug(`OAuth session not found for server: ${serverUrl}, state: ${state}`);
+      log.debug(`OAuth session not found for server: ${serverUrl}, state: ${state}`);
       return undefined;
     }
 
     // 检查会话是否过期
     if (Date.now() > session.expiresAt) {
-      console.debug(`OAuth session expired for server: ${serverUrl}, state: ${state}`);
+      log.debug(`OAuth session expired for server: ${serverUrl}, state: ${state}`);
       this.sessions.delete(sessionKey);
       return undefined;
     }
@@ -91,7 +92,7 @@ export class SessionStorage {
     
     if (existed) {
       this.sessions.delete(sessionKey);
-      console.debug(`OAuth session removed for server: ${serverUrl}, state: ${state}`);
+      log.debug(`OAuth session removed for server: ${serverUrl}, state: ${state}`);
     }
     
     return existed;
@@ -134,7 +135,7 @@ export class SessionStorage {
     });
 
     if (keysToRemove.length > 0) {
-      console.debug(`Cleaned ${keysToRemove.length} expired OAuth sessions`);
+      log.debug(`Cleaned ${keysToRemove.length} expired OAuth sessions`);
     }
   }
 
@@ -156,7 +157,7 @@ export class SessionStorage {
     });
 
     if (keysToRemove.length > 0) {
-      console.debug(`Cleared ${keysToRemove.length} OAuth sessions for server: ${serverUrl}`);
+      log.debug(`Cleared ${keysToRemove.length} OAuth sessions for server: ${serverUrl}`);
     }
 
     return keysToRemove.length;
@@ -170,7 +171,7 @@ export class SessionStorage {
     this.sessions.clear();
     
     if (count > 0) {
-      console.debug(`Cleared all ${count} OAuth sessions`);
+      log.debug(`Cleared all ${count} OAuth sessions`);
     }
     
     return count;
@@ -229,7 +230,7 @@ export class SessionStorage {
 
       return true;
     } catch (error) {
-      console.error('Session validation error:', error);
+      log.error('Session validation error:', error);
       return false;
     }
   }

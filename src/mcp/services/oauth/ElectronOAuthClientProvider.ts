@@ -16,6 +16,7 @@ import { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/au
 import { MetadataDiscoveryService } from './metadataDiscovery';
 import { selectClientAuthMethod, applyClientAuthentication, validateClientAuthMethod } from './clientAuth';
 import { configManager } from '../../../config/ConfigManager';
+import log from 'electron-log';
 
 export interface OAuthClientProvider {
   redirectUrl: string;
@@ -80,7 +81,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
       throw new Error('MCP identifier is required to save tokens');
     }
     await configManager.saveOAuthTokens(this.mcp.identifier, tokens);
-    console.log('OAuth tokens saved for MCP:', this.mcp.identifier);
+    log.log('OAuth tokens saved for MCP:', this.mcp.identifier);
   }
 
   /**
@@ -136,7 +137,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
       client_name: safeInfo.client_name || 'mcp-more'
     });
 
-    console.log('OAuth client information saved for MCP:', this.mcp.identifier);
+    log.log('OAuth client information saved for MCP:', this.mcp.identifier);
   }
 
   /**
@@ -151,7 +152,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
   //   let callbackParams: any = null;
     
   //   try {
-  //     console.log('Starting OAuth flow for:', this.serverUrl);
+  //     log.log('Starting OAuth flow for:', this.serverUrl);
 
   //     // 1. 验证授权服务器支持
   //     this.metadataService.validateAuthorizationServerSupport(authServerMetadata);
@@ -169,7 +170,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
 
   //     // 3. 启动回调服务器
   //     const callbackUrl = await this.callbackServer.startServer();
-  //     console.log('OAuth callback server ready:', callbackUrl);
+  //     log.log('OAuth callback server ready:', callbackUrl);
 
   //     // 4. 生成 PKCE 参数
   //     const pkceParams = await this.pkceService.generateChallenge();
@@ -220,12 +221,12 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
   //     }
 
   //     // 8. 等待回调
-  //     console.log('Waiting for OAuth callback...');
+  //     log.log('Waiting for OAuth callback...');
   //     callbackParams = await this.callbackServer.waitForCallback();
 
   //     // 9. 处理错误
   //     if (callbackParams.error) {
-  //       console.error('OAuth authorization error:', callbackParams.error_description || callbackParams.error);
+  //       log.error('OAuth authorization error:', callbackParams.error_description || callbackParams.error);
   //       return 'ERROR';
   //     }
 
@@ -267,11 +268,11 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
   //     // 14. 清理会话
   //     sessionStorage.removeSession(this.serverUrl, callbackParams.state);
 
-  //     console.log('OAuth flow completed successfully');
+  //     log.log('OAuth flow completed successfully');
   //     return 'AUTHORIZED';
 
   //   } catch (error) {
-  //     console.error('OAuth flow failed:', error);
+  //     log.error('OAuth flow failed:', error);
   //     return 'ERROR';
   //   } finally {
   //     // 清理资源
@@ -295,7 +296,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
       throw new Error('Dynamic client registration not supported');
     }
 
-    console.log('Registering OAuth client using SDK registerClient');
+    log.log('Registering OAuth client using SDK registerClient');
 
     try {
       // 使用SDK的registerClient函数，类似Inspector的做法
@@ -306,10 +307,10 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
         clientMetadata: this.clientMetadata
       });
 
-      console.log('Client registered successfully:', { client_id: clientInfo.client_id });
+      log.log('Client registered successfully:', { client_id: clientInfo.client_id });
       return clientInfo;
     } catch (error) {
-      console.error('Dynamic client registration failed:', error);
+      log.error('Dynamic client registration failed:', error);
       throw new Error(`Client registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -323,7 +324,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
     clientInfo: OAuthClientInformation,
     metadata: { authServerMetadata: AuthorizationServerMetadata }
   ): Promise<OAuthTokens> {
-    console.log('Exchanging authorization code for tokens');
+    log.log('Exchanging authorization code for tokens');
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -371,7 +372,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
       scope: tokenResponse.scope
     };
 
-    console.log('Tokens received successfully');
+    log.log('Tokens received successfully');
     return tokens;
   }
 
@@ -381,7 +382,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
   async refreshToken(): Promise<OAuthTokens | undefined> {
     const currentTokens = await this.tokens();
     if (!currentTokens?.refresh_token) {
-      console.log('No refresh token available');
+      log.log('No refresh token available');
       return undefined;
     }
 
@@ -404,7 +405,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
         resource: metadata.resourceUrl?.toString()
       };
 
-      console.log('Refreshing access token');
+      log.log('Refreshing access token');
 
       const headers: Record<string, string> = {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -432,7 +433,7 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Token refresh failed:', response.status, errorText);
+        log.error('Token refresh failed:', response.status, errorText);
         return undefined;
       }
 
@@ -451,26 +452,13 @@ export class ElectronOAuthClientProvider implements OAuthClientProvider {
       };
 
       this.saveTokens(newTokens);
-      console.log('Token refreshed successfully');
+      log.log('Token refreshed successfully');
       
       return newTokens;
     } catch (error) {
-      console.error('Failed to refresh token:', error);
+      log.error('Failed to refresh token:', error);
       return undefined;
     }
   }
 
-  /**
-   * 检查令牌是否即将过期（5分钟内）
-   */
-  isTokenExpiringSoon(tokens?: OAuthTokens): boolean {
-    if (!tokens?.expires_at) {
-      return false; // 没有过期时间信息，假设未过期
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-    const fiveMinutes = 5 * 60;
-    
-    return (tokens.expires_at - now) <= fiveMinutes;
-  }
 }

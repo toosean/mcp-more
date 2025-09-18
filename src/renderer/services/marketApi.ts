@@ -30,7 +30,7 @@ async function getCurrentLanguage(): Promise<string> {
     return config?.general?.language || 'en-US';
   } catch (error) {
     // 如果获取失败，回退到默认值
-    console.warn('Failed to get language from config, using default:', error);
+    window.logAPI.warn('Failed to get language from config, using default:', error);
     return 'en-US';
   }
 }
@@ -64,7 +64,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error(`API request failed for ${endpoint}:`, error);
+    window.logAPI.error(`API request failed for ${endpoint}:`, error);
     throw error;
   }
 }
@@ -112,7 +112,7 @@ export async function getMcpDetail(identifier: string): Promise<MarketMcpDetail 
     const response = await apiRequest<MarketMcpDetailResponse>(`/api/mcps/${encodeURIComponent(identifier)}`);
     return response.success ? response.result : null;
   } catch (error) {
-    console.error(`Failed to fetch package detail for ${identifier}:`, error);
+    window.logAPI.error(`Failed to fetch package detail for ${identifier}:`, error);
     return null;
   }
 }
@@ -157,7 +157,7 @@ export async function getLatestPackages(limit: number = 10): Promise<MarketMcp[]
     }
     return [];
   } catch (error) {
-    console.error('Failed to fetch latest packages:', error);
+    window.logAPI.error('Failed to fetch latest packages:', error);
     return [];
   }
 }
@@ -174,7 +174,7 @@ export async function getMcpInstallConfiguration(identifier: string): Promise<Mc
 
     return response.success ? response.result : null;
   } catch (error) {
-    console.error(`Failed to fetch install configuration for ${identifier}:`, error);
+    window.logAPI.error(`Failed to fetch install configuration for ${identifier}:`, error);
     return null;
   }
 }

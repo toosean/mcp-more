@@ -5,6 +5,7 @@
 
 import { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { OAuthClientInformation } from './types';
+import log from 'electron-log';
 
 export type ClientAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'none';
 
@@ -82,7 +83,7 @@ export function validateClientAuthMethod(
 ): void {
   // 对于 client_secret_post，建议使用 HTTPS
   if (method === 'client_secret_post' && !isHttps) {
-    console.warn('Using client_secret_post over HTTP is not recommended for security reasons');
+    log.warn('Using client_secret_post over HTTP is not recommended for security reasons');
   }
 
   // 对于公共客户端（没有客户端密钥），只能使用 PKCE
@@ -92,6 +93,6 @@ export function validateClientAuthMethod(
 
   // 对于机密客户端，不建议使用 none 方法（除非同时使用 PKCE）
   if (clientInfo.client_secret && method === 'none') {
-    console.warn('Confidential clients using none authentication method should also use PKCE for enhanced security');
+    log.warn('Confidential clients using none authentication method should also use PKCE for enhanced security');
   }
 }

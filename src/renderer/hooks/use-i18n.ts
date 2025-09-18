@@ -13,7 +13,7 @@ export function useI18n() {
       if (config?.general?.language && i18n.language !== config.general.language) {
         // 只有当配置中的语言和当前 i18n 语言不一致时才更新
         i18n.changeLanguage(config.general.language).catch(error => {
-          console.warn('Failed to change language:', error);
+          window.logAPI.warn('Failed to change language:', error);
         });
       }
     };
@@ -36,7 +36,7 @@ export function useI18n() {
         });
       }
     } catch (error) {
-      console.error('Failed to change language:', error);
+      window.logAPI.error('Failed to change language:', error);
       throw error;
     }
   };

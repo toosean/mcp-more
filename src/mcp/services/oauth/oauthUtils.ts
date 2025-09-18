@@ -6,6 +6,7 @@
 import { MetadataDiscoveryService } from './metadataDiscovery';
 import { OAuthProtectedResourceMetadata } from '../../../config/types';
 import { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
+import log from 'electron-log';
 
 /**
  * 检测是否为 401 未授权错误
@@ -46,12 +47,12 @@ export const discoverScopes = async (
   const metadataService = new MetadataDiscoveryService();
 
   try {
-    console.log('OAuth Utils: Discovering scopes for', serverUrl);
+    log.log('OAuth Utils: Discovering scopes for', serverUrl);
 
     // 第一优先级：受保护资源元数据中的作用域
     if (resourceMetadata?.scopes_supported?.length) {
       const scopes = resourceMetadata.scopes_supported.join(' ');
-      console.log('OAuth Utils: Found scopes from resource metadata:', scopes);
+      log.log('OAuth Utils: Found scopes from resource metadata:', scopes);
       return scopes;
     }
 
@@ -64,14 +65,14 @@ export const discoverScopes = async (
     const oauthMetadata = await metadataService.discoverAuthorizationServerMetadata(authServerUrl);
     if (oauthMetadata?.scopes_supported?.length) {
       const scopes = oauthMetadata.scopes_supported.join(' ');
-      console.log('OAuth Utils: Found scopes from authorization server metadata:', scopes);
+      log.log('OAuth Utils: Found scopes from authorization server metadata:', scopes);
       return scopes;
     }
 
-    console.log('OAuth Utils: No scopes discovered');
+    log.log('OAuth Utils: No scopes discovered');
     return undefined;
   } catch (error) {
-    console.debug('OAuth Utils: Failed to discover scopes:', error);
+    log.debug('OAuth Utils: Failed to discover scopes:', error);
     return undefined;
   }
 };
@@ -86,11 +87,11 @@ export const selectResourceURL = async (
 ): Promise<URL | undefined> => {
   const defaultResource = new URL(serverUrl);
 
-  console.log('OAuth Utils: Selecting resource URL for', defaultResource.href);
+  log.log('OAuth Utils: Selecting resource URL for', defaultResource.href);
 
   // 只有存在资源元数据时才包含资源参数
   if (!resourceMetadata?.resource) {
-    console.log('OAuth Utils: No resource metadata available');
+    log.log('OAuth Utils: No resource metadata available');
     return undefined;
   }
 
@@ -100,15 +101,15 @@ export const selectResourceURL = async (
 
     if (!checkResourceAllowed(defaultResource, configuredResource)) {
       const error = `Protected resource ${configuredResource.href} does not match expected ${defaultResource.href}`;
-      console.error('OAuth Utils:', error);
+      log.error('OAuth Utils:', error);
       throw new Error(error);
     }
 
-    console.log('OAuth Utils: Selected resource URL:', configuredResource.href);
+    log.log('OAuth Utils: Selected resource URL:', configuredResource.href);
     // 使用元数据中的资源，因为这是服务器告诉我们请求的内容
     return configuredResource;
   } catch (error) {
-    console.error('OAuth Utils: Resource URL selection failed:', error);
+    log.error('OAuth Utils: Resource URL selection failed:', error);
     throw error;
   }
 };
@@ -134,162 +135,4 @@ function checkResourceAllowed(
   return false;
 }
 
-/**
- * 构建授权查询参数
- * 过滤掉空值并正确编码参数
- */
-export const buildAuthorizationParams = (params: Record<string, string | undefined>): URLSearchParams => {
-  const searchParams = new URLSearchParams();
 
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      searchParams.append(key, value);
-    }
-  });
-
-  return searchParams;
-};
-
-/**
- * 解析 OAuth 回调 URL 参数
- * 提取授权码、状态参数、错误信息等
- */
-export const parseCallbackParams = (url: string): {
-  code?: string;
-  state?: string;
-  error?: string;
-  error_description?: string;
-  error_uri?: string;
-} => {
-  try {
-    const urlObj = new URL(url);
-    const params = urlObj.searchParams;
-
-    return {
-      code: params.get('code') || undefined,
-      state: params.get('state') || undefined,
-      error: params.get('error') || undefined,
-      error_description: params.get('error_description') || undefined,
-      error_uri: params.get('error_uri') || undefined,
-    };
-  } catch (error) {
-    console.error('OAuth Utils: Failed to parse callback URL:', error);
-    return {};
-  }
-};
-
-/**
- * 验证状态参数防止 CSRF 攻击
- */
-export const validateStateParameter = (
-  receivedState: string | undefined,
-  expectedState: string | undefined
-): boolean => {
-  if (!receivedState || !expectedState) {
-    console.warn('OAuth Utils: Missing state parameter - possible CSRF attack');
-    return false;
-  }
-
-  const isValid = receivedState === expectedState;
-  if (!isValid) {
-    console.warn('OAuth Utils: State parameter mismatch - possible CSRF attack');
-  }
-
-  return isValid;
-};
-
-/**
- * 检查令牌是否即将过期
- * 默认提前 5 分钟判断为即将过期
- */
-export const isTokenExpiringSoon = (
-  expiresAt?: number,
-  bufferMinutes: number = 5
-): boolean => {
-  if (!expiresAt) {
-    return false; // 没有过期时间信息，假设未过期
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  const bufferSeconds = bufferMinutes * 60;
-
-  return (expiresAt - now) <= bufferSeconds;
-};
-
-/**
- * 计算令牌过期时间
- */
-export const calculateTokenExpiration = (expiresInSeconds?: number): number | undefined => {
-  if (!expiresInSeconds) {
-    return undefined;
-  }
-
-  return Math.floor(Date.now() / 1000) + expiresInSeconds;
-};
-
-/**
- * 清理敏感数据（用于日志记录）
- * 移除或混淆敏感信息如令牌、密钥等
- */
-export const sanitizeForLogging = (data: any): any => {
-  if (!data || typeof data !== 'object') {
-    return data;
-  }
-
-  const sanitized = { ...data };
-
-  // 需要清理的敏感字段
-  const sensitiveFields = [
-    'access_token',
-    'refresh_token',
-    'client_secret',
-    'code',
-    'code_verifier',
-    'authorization',
-    'password'
-  ];
-
-  sensitiveFields.forEach(field => {
-    if (sanitized[field]) {
-      if (typeof sanitized[field] === 'string') {
-        const value = sanitized[field] as string;
-        // 只显示前4个字符和后4个字符，中间用星号替代
-        if (value.length > 8) {
-          sanitized[field] = `${value.substring(0, 4)}***${value.substring(value.length - 4)}`;
-        } else {
-          sanitized[field] = '***';
-        }
-      } else {
-        sanitized[field] = '[REDACTED]';
-      }
-    }
-  });
-
-  return sanitized;
-};
-
-/**
- * 生成随机字符串（用于状态参数等）
- */
-export const generateRandomString = (length: number = 32): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  let result = '';
-
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return result;
-};
-
-/**
- * 验证 URL 格式
- */
-export const isValidUrl = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};

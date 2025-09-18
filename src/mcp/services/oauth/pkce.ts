@@ -4,6 +4,7 @@
  */
 
 import { PKCEParams } from './types';
+import log from 'electron-log';
 
 export class PKCEService {
   /**
@@ -29,7 +30,7 @@ export class PKCEService {
         codeChallengeMethod: 'S256'
       };
 
-      console.log('Generated PKCE challenge:', { 
+      log.log('Generated PKCE challenge:', { 
         codeChallenge,
         codeChallengeMethod: 'S256',
         verifierLength: codeVerifier.length 
@@ -37,7 +38,7 @@ export class PKCEService {
 
       return result;
     } catch (error) {
-      console.error('Failed to generate PKCE challenge:', error);
+      log.error('Failed to generate PKCE challenge:', error);
       throw new Error('PKCE challenge generation failed');
     }
   }
@@ -57,11 +58,11 @@ export class PKCEService {
       const computedChallenge = this.base64URLEncode(new Uint8Array(hash));
 
       const isValid = computedChallenge === codeChallenge;
-      console.log('PKCE verification result:', { isValid });
+      log.log('PKCE verification result:', { isValid });
 
       return isValid;
     } catch (error) {
-      console.error('PKCE verification failed:', error);
+      log.error('PKCE verification failed:', error);
       return false;
     }
   }

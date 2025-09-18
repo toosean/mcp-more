@@ -359,7 +359,7 @@ export function useMcpManager() {
         description: i18n.t('mcpManager.messages.startedSuccess', { name: name ?? identifier }),
       });
     } catch (error) {
-      console.error(`useMcpManager.startMcp Failed to start MCP client: ${identifier}`, error);
+      window.logAPI.error(`useMcpManager.startMcp Failed to start MCP client: ${identifier}`, error);
       throw error;
     }
 
@@ -403,7 +403,7 @@ export function useMcpManager() {
     try {
       await window.mcpAPI.clearOAuthData(identifier);
     } catch (error) {
-      console.warn(`Failed to clear OAuth data for MCP ${identifier}:`, error);
+      window.logAPI.warn(`Failed to clear OAuth data for MCP ${identifier}:`, error);
       // 不要因为清除 OAuth 数据失败而终止卸载过程
     }
 
@@ -427,7 +427,7 @@ export function useMcpManager() {
   //   try {
   //     return await window.mcpAPI.triggerOAuthFlow(mcpIdentifier);
   //   } catch (error) {
-  //     console.error('Failed to trigger OAuth flow:', error);
+  //     log.error('Failed to trigger OAuth flow:', error);
   //     return {
   //       success: false,
   //       error: error instanceof Error ? error.message : 'Unknown error'
@@ -442,7 +442,7 @@ export function useMcpManager() {
   //   try {
   //     return await window.mcpAPI.completeOAuthFlow(mcpIdentifier, authorizationCode);
   //   } catch (error) {
-  //     console.error('Failed to complete OAuth flow:', error);
+  //     log.error('Failed to complete OAuth flow:', error);
   //     return {
   //       success: false,
   //       error: error instanceof Error ? error.message : 'Unknown error'
@@ -454,7 +454,7 @@ export function useMcpManager() {
   //   try {
   //     return await window.mcpAPI.getOAuthState(mcpIdentifier);
   //   } catch (error) {
-  //     console.error('Failed to get OAuth state:', error);
+  //     log.error('Failed to get OAuth state:', error);
   //     return null;
   //   }
   // };
@@ -463,7 +463,7 @@ export function useMcpManager() {
   //   try {
   //     await window.mcpAPI.clearOAuthData(mcpIdentifier);
   //   } catch (error) {
-  //     console.error('Failed to clear OAuth data:', error);
+  //     log.error('Failed to clear OAuth data:', error);
   //     throw error;
   //   }
   // };

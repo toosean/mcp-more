@@ -28,7 +28,7 @@ async function initializeI18n() {
       configuredLanguage = config.general.language || configuredLanguage;
     }
   } catch (error) {
-    console.warn('Failed to load language from config, using system default:', error);
+    window.logAPI.warn('Failed to load language from config, using system default:', error);
   }
 
   return i18n

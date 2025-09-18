@@ -5,6 +5,7 @@
 
 import { OAuthProtectedResourceMetadata } from '../../../config/types';
 import { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
+import log from 'electron-log';
 
 export class MetadataDiscoveryService {
   /**
@@ -17,19 +18,19 @@ export class MetadataDiscoveryService {
     const url = new URL('/.well-known/oauth-protected-resource', resourceUrl);
 
     try {
-      console.log(`Attempting to discover protected resource metadata from: ${url}`);
+      log.log(`Attempting to discover protected resource metadata from: ${url}`);
       const response = await fetch(url.toString());
       
       if (!response.ok) {
-        console.debug(`Protected resource metadata discovery failed: ${response.status} ${response.statusText}`);
+        log.debug(`Protected resource metadata discovery failed: ${response.status} ${response.statusText}`);
         return undefined;
       }
 
       const metadata = await response.json() as OAuthProtectedResourceMetadata;
-      console.log('Protected resource metadata discovered:', metadata);
+      log.log('Protected resource metadata discovered:', metadata);
       return metadata;
     } catch (error) {
-      console.debug('Failed to discover protected resource metadata:', error);
+      log.debug('Failed to discover protected resource metadata:', error);
       return undefined;
     }
   }
@@ -50,7 +51,7 @@ export class MetadataDiscoveryService {
     for (const path of discoveryPaths) {
       try {
         const url = new URL(path, authServerUrl);
-        console.log(`Attempting to discover authorization server metadata from: ${url}`);
+        log.log(`Attempting to discover authorization server metadata from: ${url}`);
         
         const response = await fetch(url.toString());
 
@@ -64,11 +65,11 @@ export class MetadataDiscoveryService {
             }
           }
 
-          console.log('Authorization server metadata discovered:', metadata);
+          log.log('Authorization server metadata discovered:', metadata);
           return metadata;
         }
       } catch (error) {
-        console.debug(`Failed to discover from ${path}:`, error);
+        log.debug(`Failed to discover from ${path}:`, error);
         continue;
       }
     }
@@ -104,7 +105,7 @@ export class MetadataDiscoveryService {
   }> {
     let authServerUrl = serverUrl;
 
-    console.log(`Starting metadata discovery for: ${serverUrl}`);
+    log.log(`Starting metadata discovery for: ${serverUrl}`);
 
     // 1. 尝试发现受保护资源元数据
     const resourceMetadata = await this.discoverProtectedResourceMetadata(serverUrl);
@@ -112,7 +113,7 @@ export class MetadataDiscoveryService {
     // 2. 从资源元数据获取授权服务器 URL
     if (resourceMetadata?.authorization_servers?.length) {
       authServerUrl = resourceMetadata.authorization_servers[0];
-      console.log(`Using authorization server from resource metadata: ${authServerUrl}`);
+      log.log(`Using authorization server from resource metadata: ${authServerUrl}`);
     }
 
     // 3. 发现授权服务器元数据
@@ -128,7 +129,7 @@ export class MetadataDiscoveryService {
       resourceUrl
     };
 
-    console.log('Metadata discovery completed:', result);
+    log.log('Metadata discovery completed:', result);
     return result;
   }
 
@@ -155,7 +156,7 @@ export class MetadataDiscoveryService {
       throw new Error('Authorization server does not support authorization code flow');
     }
 
-    console.log('Authorization server validation passed');
+    log.log('Authorization server validation passed');
   }
 
   /**

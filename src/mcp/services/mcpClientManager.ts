@@ -159,7 +159,6 @@ export class McpClientManager {
   ): Promise<void> {
 
     log.error(`Connecting MCP client: ${clientInstance.mcp.identifier}`);
-//    debugger;
     
     try {
       await clientInstance.client.connect(clientInstance.transport);
@@ -736,24 +735,6 @@ export class McpClientManager {
   //   }
   // }
 
-  /**
-   * 确定 OAuth 作用域
-   */
-  private determineScope(mcp: Mcp, resourceMetadata?: any): string | undefined {
-    // 1. 用户指定的作用域（最高优先级）
-    if (mcp.oauth?.scopes) {
-      return mcp.oauth.scopes;
-    }
-
-    // 2. 从资源元数据推断作用域
-    if (resourceMetadata?.scopes_supported?.length) {
-      // 使用第一个支持的作用域作为默认
-      return resourceMetadata.scopes_supported[0];
-    }
-
-    // 3. 没有指定作用域
-    return undefined;
-  }
 
   /**
    * 更新 MCP 配置
@@ -995,14 +976,15 @@ export class McpClientManager {
   }
 
   /**
-   * 检查 token 是否已过期
+   * 检查 token 是否已过期（提前 5 分钟）
    */
   private isTokenExpired(tokens: any): boolean {
     if (!tokens.expires_at) {
       return false;
     }
     const now = Math.floor(Date.now() / 1000);
-    return tokens.expires_at <= now;
+    // 提前 5 分钟（300 秒）判断 token 是否过期
+    return tokens.expires_at <= (now + 5 * 60);
   }
 
   /**

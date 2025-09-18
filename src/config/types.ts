@@ -1,3 +1,5 @@
+import log from 'electron-log';
+
 /**
  * MCP More 应用配置类型定义
  */
@@ -163,7 +165,7 @@ function getSystemDefaultLanguage(): string {
       return 'en-US';
     } catch (error) {
       // 如果获取失败，回退到默认值
-      console.warn('Failed to get system locale:', error);
+      log.warn('Failed to get system locale:', error);
     }
   }
 

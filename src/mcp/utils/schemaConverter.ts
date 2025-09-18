@@ -1,5 +1,6 @@
 import { z, ZodTypeAny, ZodRawShape, ZodIssueCode } from "zod";
 import type { JSONSchema7, JSONSchema7Definition } from "json-schema";
+import log from 'electron-log';
 
 /**
  * Converts a JSON Schema 7 definition to a Zod schema type
@@ -292,7 +293,7 @@ export function convertJsonSchema7ToZodRawShape(
     return { value: convertedSchema };
   } catch (error) {
     // Fallback to permissive schema on any error
-    console.warn("Failed to convert JSON Schema to Zod:", error);
+    log.warn("Failed to convert JSON Schema to Zod:", error);
     return { value: z.any() };
   }
 }

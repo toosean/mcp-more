@@ -4,7 +4,6 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js"
 import log from 'electron-log';
 import { sessionManager } from './sessionManager.js';
 import { toolRegistry } from './toolRegistry.js';
-import { mcpClientManager } from './mcpClientManager.js';
 import { windowManager } from '../../window/index.js';
 
 // 类型声明
@@ -37,9 +36,9 @@ export class McpServerManager {
     }
 
     public subscribeOAuthCallback(callback: (url: URL, res: Response) => void): void {
-        console.log('subscribeOAuthCallback: ', callback);
+        log.log('subscribeOAuthCallback: ', callback);
         this.oauthCallback?.push(callback);
-        console.log('oauthCallback length: ', this.oauthCallback?.length);
+        log.log('oauthCallback length: ', this.oauthCallback?.length);
     }
 
     /**
@@ -133,14 +132,14 @@ export class McpServerManager {
         try {
             const url = new URL(req.url!, `http://localhost:${this.port}`);
             
-            console.log(`OAuth callback received: ${req.method} ${url.pathname}${url.search}`);
+            log.log(`OAuth callback received: ${req.method} ${url.pathname}${url.search}`);
         
             if (url.pathname === '/oauth/callback') {
                 this.oauthCallback?.forEach(callback => callback(url, res));
             } 
             
         } catch (error) {
-            console.error('Error handling OAuth callback request:', error);
+            log.error('Error handling OAuth callback request:', error);
         }
     }
 
