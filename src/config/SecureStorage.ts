@@ -211,7 +211,7 @@ export class SecureStorage {
       const credentials = await keytar.findCredentials(SecureStorage.SERVICE_NAME);
       const mcpIdentifiers = new Set<string>();
 
-      credentials.forEach(credential => {
+      credentials.forEach((credential: any) => {
         const account = credential.account;
         if (account.startsWith('oauth-tokens-')) {
           mcpIdentifiers.add(account.replace('oauth-tokens-', ''));

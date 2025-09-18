@@ -412,6 +412,7 @@ debugger;
       if (mcp) {
         mcp.latestError = null;
         mcp.latestErrorDetail = null;
+        mcp.enabled = true;
         this.updateMcpConfig(mcpIdentifier, mcp);
       }
 
@@ -471,6 +472,7 @@ debugger;
       if (mcp) {
         mcp.latestError = null;
         mcp.latestErrorDetail = null;
+        mcp.enabled = false;
         this.updateMcpConfig(mcpIdentifier, mcp);
       }
 
