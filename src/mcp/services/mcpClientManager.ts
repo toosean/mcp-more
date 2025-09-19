@@ -74,6 +74,12 @@ export class McpClientManager {
     });
   }
 
+  private replaceHeaders(headers: Record<string, string>, values: Record<string, string>): Record<string, string> {
+    return Object.fromEntries(
+      Object.entries(headers).map(([key, value]) => [key, this.replacePlaceholders(value, values)])
+    );
+  }
+
   /**
    * 为单个 MCP 包创建客户端实例
    * @param mcp MCP 配置
@@ -86,18 +92,17 @@ export class McpClientManager {
       // 远程 MCP - 使用 URL 连接
       // 替换URL中的占位符
       const resolvedUrl = this.replacePlaceholders(mcp.config.url, mcp.inputValues || {});
-      log.debug(`MCP ${mcp.identifier}: Original URL: ${mcp.config.url}`);
-      log.debug(`MCP ${mcp.identifier}: Resolved URL: ${resolvedUrl}`);
-      if (mcp.inputValues && Object.keys(mcp.inputValues).length > 0) {
-        log.debug(`MCP ${mcp.identifier}: Input values: ${JSON.stringify(mcp.inputValues)}`);
-      }
       const url = new URL(resolvedUrl);
 
       // 获取最新的 MCP 配置（确保包含最新的 OAuth tokens）
       const latestMcp = this.getMcpByIdentifier(mcp.identifier) || mcp;
 
       // 准备 OAuth 头部（如果需要）
-      const headers: Record<string, string> = {};
+      let headers: Record<string, string> = {};
+
+      if (latestMcp.config.headers) {
+        headers = this.replaceHeaders(latestMcp.config.headers, mcp.inputValues || {});
+      }
 
       // 检查 token 是否过期，如果过期则尝试刷新
       let oauthTokens = await configManager.getOAuthTokens(latestMcp.identifier);
@@ -114,7 +119,7 @@ export class McpClientManager {
       if (oauthTokens?.access_token) {
         headers['Authorization'] = `Bearer ${oauthTokens.access_token}`;
         log.debug(`Adding OAuth authorization header for MCP: ${latestMcp.identifier}`);
-        log.debug(`Token: ${oauthTokens.access_token.substring(0, 20)}...`);
+        log.debug(`Token: ${oauthTokens.access_token.substring(0, 5)}...`);
       } else {
         log.debug(`No OAuth tokens found for MCP: ${mcp.identifier}`);
       }
@@ -327,6 +332,7 @@ export class McpClientManager {
     const scopedTools: {
       clientInstance: McpClientInstance;
       name: string;
+      wrapperName: string;
       title: string;
       description: string;
       inputSchema: JSONSchema7;
@@ -338,7 +344,8 @@ export class McpClientManager {
       clientTools.tools.forEach((tool) => {
         scopedTools.push({
           clientInstance,
-          name: `${clientInstance.mcp.code}__${tool.name}`,
+          name: tool.name,
+          wrapperName: `${clientInstance.mcp.code}__${tool.name}`,
           title: tool.title,
           description: tool.description,
           inputSchema: tool.inputSchema as JSONSchema7,
@@ -351,15 +358,15 @@ export class McpClientManager {
     // 统计每个工具名称出现的次数，并存储到一个 Map 中
     const toolNameCount: Map<string, number> = new Map();
     scopedTools.forEach(tool => {
-      const count = toolNameCount.get(tool.name) || 0;
-      toolNameCount.set(tool.name, count + 1);
+      const count = toolNameCount.get(tool.wrapperName) || 0;
+      toolNameCount.set(tool.wrapperName, count + 1);
     });
 
     for (const tool of scopedTools) {
 
 
-      const uniqueName = toolNameCount.get(tool.name) === 1
-        ? tool.name
+      const uniqueName = toolNameCount.get(tool.wrapperName) === 1
+        ? tool.wrapperName
         : `${tool.clientInstance.mcp.identifier.replace('/', '_')}__${tool.name}`;
 
       tools.push({

@@ -258,6 +258,7 @@ export function useMcpManager() {
       url: mcpServer.url || mcpServer.serverUrl,
       command: finalCommand,
       env: mcpServer.env,
+      headers: mcpServer.headers,
       json: mcpConfiguration
     };
   }
@@ -297,6 +298,7 @@ export function useMcpManager() {
         url: mcpConfig.url,
         command: mcpConfig.command,
         env: mcpConfig.env,
+        headers: mcpConfig.headers,
         json: mcpConfig.json,
       },
       inputs: installConfig.inputs,
