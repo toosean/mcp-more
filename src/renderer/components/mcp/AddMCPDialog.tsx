@@ -20,7 +20,7 @@ interface AddMCPDialogProps {
 
 export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, editingMCP }: AddMCPDialogProps) {
   const { t } = useI18n();
-  const { installMcpManually, triggerOAuthFlow, clearOAuthData } = useMcpManager();
+  const { installMcpManually } = useMcpManager();
   
   const isEditing = !!editingMCP;
   const isLocalMCP = editingMCP?.config?.command && editingMCP?.source !== 'json';
@@ -106,7 +106,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
       const result = await installMcpManually({
         name,
         command,
-        environment: mcpHelpers.parseEnvironmentVariables(envText),
+        env: mcpHelpers.parseEnvironmentVariables(envText),
         editingMCP
       });
 

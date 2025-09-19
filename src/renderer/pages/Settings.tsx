@@ -643,7 +643,7 @@ export default function Settings() {
                     <Button 
                       className="w-full" 
                       onClick={() => navigate('/form-test')}>
-                      <FileText className="h-4 w-4 mr-2" /> Dynamic Form Test
+                      <FileText className="h-4 w-4 mr-2" /> {t('navigation.formTest') || 'Dynamic Form Test'}
                     </Button>
                   </>
                 )}

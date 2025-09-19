@@ -4,9 +4,11 @@ import { Mcp } from '../../config/types';
 import { toast } from '@/hooks/use-toast';
 import { getMcpInstallConfiguration } from './marketApi';
 import i18n from '@/i18n';
+import { FormFieldConfig } from '@/components/DynamicForm';
 
 // Type for runtime installation handler
 export type RuntimeInstallHandler = (runtimeName: string) => Promise<boolean>;
+export type InputHandler = (inputs: FormFieldConfig[]) => Promise<false | Record<string, string>>;
 
 // Type for OAuth confirmation handler
 export type OAuthConfirmHandler = (mcpName: string) => Promise<boolean>;
@@ -22,12 +24,12 @@ export function useMcpManager() {
     command?: string;
     url?: string;
     json?: string;
-    environment?: Record<string, string>;
+    env?: Record<string, string>;
     oauth?: Partial<Mcp['oauth']>;
     editingMCP?: Mcp | null;
   }): Promise<{ success: boolean; mcpId: string; error?: string }> => {
     try {
-      const { name, command, url, json, environment, oauth, editingMCP } = mcpData;
+      const { name, command, url, json, env, oauth, editingMCP } = mcpData;
       const config = await getConfig();
       const existingMcps = config?.mcp?.installedMcps || [];
       
@@ -97,7 +99,7 @@ export function useMcpManager() {
             config: {
               url: mcpJsonData.url || null,
               command: finalCommand,
-              environment: mcpJsonData.env || mcpJsonData.environment || {},
+              env: mcpJsonData.env || mcpJsonData.environment || {},
               json: json
             }
           };
@@ -118,7 +120,7 @@ export function useMcpManager() {
             config: {
               url: mcpJsonData.url || null,
               command: finalCommand,
-              environment: mcpJsonData.env || mcpJsonData.environment || {},
+              env: mcpJsonData.env || mcpJsonData.environment || {},
               json: json
             }
           };
@@ -135,7 +137,7 @@ export function useMcpManager() {
               ...editingMCP.config,
               command: command || null,
               url: url || null,
-              environment: environment || null
+              env: env || null
             }
           };
         } else {
@@ -156,7 +158,7 @@ export function useMcpManager() {
             config: {
               url: url || null,
               command: command || null,
-              environment: environment || null,
+              env: env || null,
               json: null
             }
           };
@@ -255,12 +257,12 @@ export function useMcpManager() {
     return {
       url: mcpServer.url || mcpServer.serverUrl,
       command: finalCommand,
-      environment: mcpServer.env,
+      env: mcpServer.env,
       json: mcpConfiguration
     };
   }
 
-  const installMcp = async (mcp: MarketMcp | MarketMcpDetail, runtimeInstallHandler?: RuntimeInstallHandler, oauthConfirmHandler?: OAuthConfirmHandler): Promise<void> => {
+  const installMcp = async (mcp: MarketMcp | MarketMcpDetail, runtimeInstallHandler?: RuntimeInstallHandler, oauthConfirmHandler?: OAuthConfirmHandler, inputHandler?: InputHandler): Promise<void> => {
 
     const config = await getConfig();
 
@@ -294,12 +296,27 @@ export function useMcpManager() {
       config: {
         url: mcpConfig.url,
         command: mcpConfig.command,
-        environment: mcpConfig.environment,
+        env: mcpConfig.env,
         json: mcpConfig.json,
       },
+      inputs: installConfig.inputs,
+      inputValues: null as Record<string, string> | null,
       runtimes: installConfig.runtimes,
       authMethod: installConfig.authMethod,
     };
+
+    let shouldStartMcp = true;
+
+    if(installConfig.inputs && installConfig.inputs.length > 0) {
+      const inputValuesNow = await inputHandler(installConfig.inputs);
+      if(inputValuesNow !== false) {
+        newMcp.inputValues = inputValuesNow;
+      }else{
+        shouldStartMcp = false;
+      }
+    }
+
+    // update with inputValues
     installedMcps.push(newMcp);
     
     updateConfig({
@@ -308,9 +325,6 @@ export function useMcpManager() {
         installedMcps: installedMcps,
       },
     });
-    
-    // here we don't await it, let it work in the background
-    let shouldStartMcp = true;
 
     if(installConfig.runtimes && installConfig.runtimes.length > 0) {
       for(const runtimeName of installConfig.runtimes) {
@@ -339,6 +353,8 @@ export function useMcpManager() {
     }
 
     if(shouldStartMcp) {
+      // here we don't await it, let it work in the background
+      // because we dont need to wait for startMcp in a install process
       startMcp(newMcp.identifier, newMcp.name, true);
       // everything is happen too fast, let's wait for 2 seconds
       // make user feel the progress

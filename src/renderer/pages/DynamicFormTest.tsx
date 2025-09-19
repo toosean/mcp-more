@@ -1,36 +1,38 @@
-import React, { useState } from 'react';
-import DynamicForm, { FormFieldConfig } from '@/components/DynamicForm';
+import React, { useState, useRef } from 'react';
+import DynamicForm, { FormFieldConfig, DynamicFormRef } from '@/components/DynamicForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
+import { useI18n } from '@/hooks/use-i18n';
 
 export default function DynamicFormTest() {
+  const { t } = useI18n();
   const defaultConfig: FormFieldConfig[] = [
     {
       "type": "password",
-      "title": "Password for token",
+      "title": "GitHub Token",
       "id": "token",
-      "description": "GitHub Personal Access Token"
+      "description": "Your **GitHub Personal Access Token**. You can create one at [GitHub Settings](https://github.com/settings/tokens) with the following scopes:\n\n- `repo` - Full control of private repositories\n- `read:user` - Read access to profile information\n\n⚠️ **Important**: Keep this token secure and never share it publicly."
     },
     {
       "type": "string",
       "title": "Email Address",
       "id": "email",
-      "description": "Your email address for notifications"
+      "description": "Your email address for notifications. This will be used to:\n\n1. Send you important updates\n2. Notify you of errors\n3. Weekly summary reports\n\n*Example*: `user@example.com`"
     },
     {
       "type": "select",
       "id": "language",
-      "description": "Language",
+      "description": "**Preferred Language**\n\nSelect your preferred language for the interface. This affects:\n- UI language\n- Error messages\n- Documentation links",
       "options": [
         {
           "label": "English",
           "value": "en"
         },
         {
-          "label": "Chinese",
+          "label": "Chinese (中文)",
           "value": "zh"
         }
       ]
@@ -42,6 +44,7 @@ export default function DynamicFormTest() {
   const [jsonError, setJsonError] = useState<string>('');
   const [isResultDialogOpen, setIsResultDialogOpen] = useState<boolean>(false);
   const [formResult, setFormResult] = useState<Record<string, any>>({});
+  const formRef = useRef<DynamicFormRef>(null);
 
   const handleJsonChange = (value: string) => {
     setJsonText(value);
@@ -74,15 +77,15 @@ export default function DynamicFormTest() {
       setFormConfig(parsed);
       setJsonError('');
       toast({
-        title: "Configuration updated!",
-        description: "Form has been regenerated with the new configuration.",
+        title: t('dynamicFormTest.toast.configUpdated.title') || "Configuration updated!",
+        description: t('dynamicFormTest.toast.configUpdated.description') || "Form has been regenerated with the new configuration.",
         variant: "default",
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Invalid JSON format';
       setJsonError(errorMessage);
       toast({
-        title: "Configuration error",
+        title: t('dynamicFormTest.toast.configError.title') || "Configuration error",
         description: errorMessage,
         variant: "destructive",
       });
@@ -94,8 +97,8 @@ export default function DynamicFormTest() {
     setJsonText(JSON.stringify(defaultConfig, null, 2));
     setJsonError('');
     toast({
-      title: "Configuration reset",
-      description: "Form configuration has been reset to default.",
+      title: t('dynamicFormTest.toast.configReset.title') || "Configuration reset",
+      description: t('dynamicFormTest.toast.configReset.description') || "Form configuration has been reset to default.",
       variant: "default",
     });
   };
@@ -109,8 +112,8 @@ export default function DynamicFormTest() {
 
     // Show success toast
     toast({
-      title: "Form submitted successfully!",
-      description: `Configuration saved with ${Object.keys(data).length} fields.`,
+      title: t('dynamicFormTest.toast.formSubmitted.title') || "Form submitted successfully!",
+      description: t('dynamicFormTest.toast.formSubmitted.description', { count: Object.keys(data).length }) || `Configuration saved with ${Object.keys(data).length} fields.`,
       variant: "default",
     });
 
@@ -118,44 +121,53 @@ export default function DynamicFormTest() {
     console.log('Generated JSON:', JSON.stringify(data, null, 2));
   };
 
+  const handleSubmitClick = () => {
+    if (formRef.current) {
+      formRef.current.submit();
+    }
+  };
+
   return (
     <div className="flex-1 p-6 space-y-6 min-h-0">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dynamic Form Test</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('dynamicFormTest.title') || 'Dynamic Form Test'}</h1>
         <p className="text-muted-foreground">
-          Test the dynamic form component with JSON configuration
+          {t('dynamicFormTest.description') || 'Test the dynamic form component with JSON configuration'}
         </p>
       </div>
 
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Configuration Form</CardTitle>
+            <CardTitle>{t('dynamicFormTest.configurationForm.title') || 'Configuration Form'}</CardTitle>
             <CardDescription>
-              This form is generated dynamically from the JSON configuration below.
+              {t('dynamicFormTest.configurationForm.description') || 'This form is generated dynamically from the JSON configuration below.'}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <DynamicForm
+              ref={formRef}
               config={formConfig}
               onSubmit={handleFormSubmit}
-              submitButtonText="Save Configuration"
             />
+            <Button onClick={handleSubmitClick} className="w-full">
+              {t('dynamicFormTest.configurationForm.saveButton') || 'Save Configuration'}
+            </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>JSON Configuration</CardTitle>
+            <CardTitle>{t('dynamicFormTest.jsonConfiguration.title') || 'JSON Configuration'}</CardTitle>
             <CardDescription>
-              Edit the JSON configuration below and click "Apply" to regenerate the form:
+              {t('dynamicFormTest.jsonConfiguration.description') || 'Edit the JSON configuration below and click "Apply" to regenerate the form:'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
               value={jsonText}
               onChange={(e) => handleJsonChange(e.target.value)}
-              placeholder="Enter JSON configuration..."
+              placeholder={t('dynamicFormTest.jsonConfiguration.placeholder') || 'Enter JSON configuration...'}
               className="min-h-[300px] font-mono text-sm"
             />
             {jsonError && (
@@ -165,10 +177,10 @@ export default function DynamicFormTest() {
             )}
             <div className="flex gap-2">
               <Button onClick={handleApplyConfig} variant="default">
-                Apply Configuration
+                {t('dynamicFormTest.jsonConfiguration.applyButton') || 'Apply Configuration'}
               </Button>
               <Button onClick={handleResetConfig} variant="outline">
-                Reset to Default
+                {t('dynamicFormTest.jsonConfiguration.resetButton') || 'Reset to Default'}
               </Button>
             </div>
           </CardContent>
@@ -179,9 +191,9 @@ export default function DynamicFormTest() {
       <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Form Submission Result</DialogTitle>
+            <DialogTitle>{t('dynamicFormTest.resultDialog.title') || 'Form Submission Result'}</DialogTitle>
             <DialogDescription>
-              Here's the final JSON data generated from the form:
+              {t('dynamicFormTest.resultDialog.description') || "Here's the final JSON data generated from the form:"}
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
@@ -191,7 +203,7 @@ export default function DynamicFormTest() {
           </div>
           <div className="flex justify-end mt-4">
             <Button onClick={() => setIsResultDialogOpen(false)}>
-              Close
+              {t('common.close') || 'Close'}
             </Button>
           </div>
         </DialogContent>

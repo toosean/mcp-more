@@ -9,12 +9,70 @@
     "error": "Error",
     "success": "Success",
     "warning": "Warning",
-    "info": "Info"
+    "info": "Info",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "close": "Close"
   },
   "navigation": {
     "market": "Market",
     "installed": "Installed",
-    "settings": "Settings"
+    "settings": "Settings",
+    "formTest": "Form Test"
+  },
+  "dynamicForm": {
+    "validation": {
+      "required": "{{label}} is required",
+      "cannotBeEmpty": "{{label}} cannot be empty"
+    }
+  },
+  "dynamicFormTest": {
+    "title": "Dynamic Form Test",
+    "description": "Test the dynamic form component with JSON configuration",
+    "configurationForm": {
+      "title": "Configuration Form",
+      "description": "This form is generated dynamically from the JSON configuration below.",
+      "saveButton": "Save Configuration"
+    },
+    "jsonConfiguration": {
+      "title": "JSON Configuration",
+      "description": "Edit the JSON configuration below and click \"Apply\" to regenerate the form:",
+      "placeholder": "Enter JSON configuration...",
+      "applyButton": "Apply Configuration",
+      "resetButton": "Reset to Default"
+    },
+    "resultDialog": {
+      "title": "Form Submission Result",
+      "description": "Here's the final JSON data generated from the form:"
+    },
+    "toast": {
+      "configUpdated": {
+        "title": "Configuration updated!",
+        "description": "Form has been regenerated with the new configuration."
+      },
+      "configError": {
+        "title": "Configuration error"
+      },
+      "configReset": {
+        "title": "Configuration reset",
+        "description": "Form configuration has been reset to default."
+      },
+      "formSubmitted": {
+        "title": "Form submitted successfully!",
+        "description": "Configuration saved with {{count}} fields."
+      }
+    }
+  },
+  "mcpConfiguration": {
+    "install": {
+      "title": "Configure {{mcpName}}",
+      "description": "Please configure the following settings before installation.",
+      "notNow": "Not Now"
+    },
+    "configure": {
+      "title": "Configure {{mcpName}}",
+      "description": "Update the configuration settings for this MCP."
+    }
   },
   "settings": {
     "title": "Settings",
@@ -263,6 +321,20 @@
     "runtime": {
       "warning": "Runtime Warning:",
       "missingRuntimes": "Missing required runtime(s): {{runtimes}}"
+    },
+    "config": {
+      "noInputs": "No configuration needed",
+      "noInputsDesc": "{{name}} does not require configuration.",
+      "saveFailed": "Failed to save configuration"
+    },
+    "restart": {
+      "title": "Restart Required",
+      "description": "{{name}} is currently running. Configuration changes require a restart to take effect.",
+      "restartNow": "Restart Now",
+      "notNow": "Not Now",
+      "success": "MCP restarted",
+      "successDesc": "{{name}} has been restarted with new configuration.",
+      "failed": "Failed to restart MCP"
     }
   },
   "addMCP": {

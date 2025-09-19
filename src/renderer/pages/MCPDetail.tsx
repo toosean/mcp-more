@@ -29,10 +29,12 @@ import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
 import { MarketMcpDetail } from '../types/market';
 import { getMcpDetail } from '@/services/marketApi';
-import { McpInstallStatus, useMcpManager } from '@/services/mcpManager';
+import { McpInstallStatus, useMcpManager, InputHandler } from '@/services/mcpManager';
 import { useRuntimeInstallDialog } from '@/hooks/use-runtime-install-dialog';
 import { RuntimeInfo } from '@/types/global';
 import { useOAuthConfirmDialog } from '@/hooks/use-oauth-confirm-dialog';
+import MCPConfigurationDialog from '@/components/mcp/MCPConfigurationDialog';
+import { FormFieldConfig } from '@/components/DynamicForm';
 
 export default function MCPDetail() {
   const { org, id } = useParams<{ org: string, id: string }>();
@@ -44,11 +46,40 @@ export default function MCPDetail() {
   const [installedStatus, setInstalledStatus] = useState<McpInstallStatus | null>(null);
   const [installing, setInstalling] = useState(false);
   const [runtimeList, setRuntimeList] = useState<RuntimeInfo[]>([]);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [pendingInputs, setPendingInputs] = useState<FormFieldConfig[]>([]);
 
   // Runtime install dialog hook
   const { handleRuntimeInstall, RuntimeInstallDialog } = useRuntimeInstallDialog();
   const { handleOAuthConfirm, OAuthConfirmDialog } = useOAuthConfirmDialog();
   const { getMcpInstallStatus, installMcp, uninstallMcp, upgradeMcp } = useMcpManager();
+
+  // Input handler for MCP configuration
+  const handleInputs: InputHandler = async (inputs: FormFieldConfig[]) => {
+    return new Promise((resolve) => {
+      setPendingInputs(inputs);
+      setShowConfigDialog(true);
+
+      // Store resolve function to call it later
+      (window as any)._mcpConfigResolve = resolve;
+    });
+  };
+
+  const handleConfigSubmit = (values: Record<string, string>) => {
+    setShowConfigDialog(false);
+    if ((window as any)._mcpConfigResolve) {
+      (window as any)._mcpConfigResolve(values);
+      delete (window as any)._mcpConfigResolve;
+    }
+  };
+
+  const handleConfigSkip = () => {
+    setShowConfigDialog(false);
+    if ((window as any)._mcpConfigResolve) {
+      (window as any)._mcpConfigResolve(false);
+      delete (window as any)._mcpConfigResolve;
+    }
+  };
 
   useEffect(() => {
     if (org && id) {
@@ -198,7 +229,7 @@ export default function MCPDetail() {
         description: t('mcpDetail.toast.installingDesc', { name: mcp.name }),
       });
 
-      await installMcp(mcp, handleRuntimeInstall, handleOAuthConfirm);
+      await installMcp(mcp, handleRuntimeInstall, handleOAuthConfirm, handleInputs);
 
       await refreshInstalledStatus();
 
@@ -566,6 +597,17 @@ export default function MCPDetail() {
       </div>
 
       <RuntimeInstallDialog />
+      <OAuthConfirmDialog />
+
+      <MCPConfigurationDialog
+        isOpen={showConfigDialog}
+        onClose={() => setShowConfigDialog(false)}
+        mcpName={mcp?.name || ''}
+        inputs={pendingInputs}
+        onSubmit={handleConfigSubmit}
+        onSkip={handleConfigSkip}
+        mode="install"
+      />
     </div>
   );
 }

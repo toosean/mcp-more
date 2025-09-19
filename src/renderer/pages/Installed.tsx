@@ -23,8 +23,9 @@ import { Mcp } from '../../config/types';
 import { useMcpManager } from '@/services/mcpManager';
 import { RuntimeInfo } from '@/types/global';
 import { useConfirm } from '@/hooks/use-confirm';
-import { McpStartNeedsAuthError } from 'src/mcp/services/mcpClientManager';
 import { useOAuthConfirmDialog } from '@/hooks/use-oauth-confirm-dialog';
+import MCPConfigurationDialog from '@/components/mcp/MCPConfigurationDialog';
+import { FormFieldConfig } from '@/components/DynamicForm';
 
 interface DisplayMCP {
   identifier: string;
@@ -55,6 +56,12 @@ export default function Installed() {
   });
   const [runtimeList, setRuntimeList] = useState<RuntimeInfo[]>([]);
   const [runtimeLoading, setRuntimeLoading] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [configMcp, setConfigMcp] = useState<DisplayMCP | null>(null);
+  const [configInputs, setConfigInputs] = useState<FormFieldConfig[]>([]);
+  const [showRestartDialog, setShowRestartDialog] = useState(false);
+  const [restartMcp, setRestartMcp] = useState<DisplayMCP | null>(null);
+  const [mcpsWithInputs, setMcpsWithInputs] = useState<Set<string>>(new Set());
   const { t } = useI18n();
   const { updateConfig, getConfig } = useConfig();
   const { startMcp, stopMcp, uninstallMcp } = useMcpManager();
@@ -299,9 +306,19 @@ export default function Installed() {
         });
       
       setMcps(displayMcps);
+
+      // Track which MCPs have inputs for configuration
+      const mcpsWithInputsSet = new Set<string>();
+      config.mcp.installedMcps.forEach((mcp: Mcp) => {
+        if (mcp.inputs && mcp.inputs.length > 0) {
+          mcpsWithInputsSet.add(mcp.identifier);
+        }
+      });
+      setMcpsWithInputs(mcpsWithInputsSet);
     } catch (error) {
       console.error('Failed to load MCPs:', error);
       setMcps([]);
+      setMcpsWithInputs(new Set());
     }
   }, [getConfig, checkMissingRuntimes]);
 
@@ -496,6 +513,149 @@ export default function Installed() {
     if (mcpEdit && (mcpEdit.source === 'manual' || mcpEdit.source === 'json')) {
       setEditingMCP(mcpEdit);
     }
+  };
+
+  // Helper function to check if MCP has inputs
+  const mcpHasInputs = useCallback(async (mcpIdentifier: string): Promise<boolean> => {
+    try {
+      const currentConfig = await getConfig();
+      const fullMcp = currentConfig?.mcp?.installedMcps?.find(m => m.identifier === mcpIdentifier);
+      return !!(fullMcp && fullMcp.inputs && fullMcp.inputs.length > 0);
+    } catch (error) {
+      return false;
+    }
+  }, [getConfig]);
+
+  const handleConfigure = async (mcp: DisplayMCP) => {
+    // Get the full MCP data with inputs from config
+    const currentConfig = await getConfig();
+    const fullMcp = currentConfig?.mcp?.installedMcps?.find(m => m.identifier === mcp.identifier);
+
+    if (fullMcp && fullMcp.inputs && fullMcp.inputs.length > 0) {
+      // Pre-populate form with existing values if they exist
+      const inputsWithValues = fullMcp.inputs.map(input => ({
+        ...input,
+        // Set default value if it exists in inputValues
+        defaultValue: fullMcp.inputValues?.[input.id] || ''
+      }));
+
+      setConfigMcp(mcp);
+      setConfigInputs(inputsWithValues);
+      setShowConfigDialog(true);
+    } else {
+      toast({
+        title: t('installed.config.noInputs') || 'No configuration needed',
+        description: t('installed.config.noInputsDesc', { name: mcp.name }) || `${mcp.name} does not require configuration.`,
+        variant: 'default'
+      });
+    }
+  };
+
+  const handleConfigSubmit = async (values: Record<string, string>) => {
+    if (!configMcp) return;
+
+    try {
+      const currentConfig = await getConfig();
+      const updatedMcps = currentConfig.mcp.installedMcps.map(mcp => {
+        if (mcp.identifier === configMcp.identifier) {
+          return {
+            ...mcp,
+            inputValues: values
+          };
+        }
+        return mcp;
+      });
+
+      await updateConfig({
+        mcp: {
+          ...currentConfig.mcp,
+          installedMcps: updatedMcps
+        }
+      });
+
+      setShowConfigDialog(false);
+      setConfigInputs([]);
+
+      toast({
+        title: t('installed.config.saved') || 'Configuration saved',
+        description: t('installed.config.savedDesc', { name: configMcp.name }) || `Configuration for ${configMcp.name} has been saved.`,
+      });
+
+      // Refresh MCPs to show updated configuration
+      await loadMcps();
+
+      // Check if MCP is currently running and show restart dialog
+      if (configMcp.status === 'running') {
+        setRestartMcp(configMcp);
+        setShowRestartDialog(true);
+      }
+
+      setConfigMcp(null);
+    } catch (error) {
+      console.error('Failed to save MCP configuration:', error);
+      toast({
+        title: t('common.error') || 'Error',
+        description: t('installed.config.saveFailed') || 'Failed to save configuration',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleConfigCancel = () => {
+    setShowConfigDialog(false);
+    setConfigMcp(null);
+    setConfigInputs([]);
+  };
+
+  const handleRestartNow = async () => {
+    if (!restartMcp) return;
+
+    try {
+      setShowRestartDialog(false);
+
+      // Show restarting toast
+      toast({
+        title: t('installed.restart.restarting') || 'Restarting MCP',
+        description: t('installed.restart.restartingDesc', { name: restartMcp.name }) || `Restarting ${restartMcp.name} to apply configuration changes...`,
+      });
+
+      // Stop the MCP first
+      await stopMcp(restartMcp.identifier);
+
+      // Wait a moment for graceful shutdown
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Start the MCP again
+      await startMcp(restartMcp.identifier, restartMcp.name);
+
+      // Refresh MCPs to show updated status
+      await loadMcps();
+
+      toast({
+        title: t('installed.restart.success') || 'MCP restarted',
+        description: t('installed.restart.successDesc', { name: restartMcp.name }) || `${restartMcp.name} has been restarted with new configuration.`,
+      });
+
+    } catch (error) {
+      console.error('Failed to restart MCP:', error);
+      toast({
+        title: t('common.error') || 'Error',
+        description: t('installed.restart.failed') || 'Failed to restart MCP',
+        variant: 'destructive'
+      });
+    } finally {
+      setRestartMcp(null);
+    }
+  };
+
+  const handleRestartLater = () => {
+    setShowRestartDialog(false);
+    setRestartMcp(null);
+    toast({
+      title: t('installed.restart.postponed') || 'Restart postponed',
+      description: t('installed.restart.postponedDesc') || 'Configuration changes will take effect after the next restart.',
+      variant: 'default'
+    });
   };
 
 
@@ -876,14 +1036,16 @@ export default function Installed() {
                           {t('installed.buttons.edit')}
                         </Button>
                       )}
-                      {/* <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleConfigure(mcp.id)}
-                      >
-                        <Settings className="h-3 w-3 mr-1" />
-                        {t('installed.buttons.config')}
-                      </Button> */}
+                      {mcpsWithInputs.has(mcp.identifier) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleConfigure(mcp)}
+                        >
+                          <Settings className="h-3 w-3 mr-1" />
+                          {t('installed.buttons.config')}
+                        </Button>
+                      )}
                       <Button
                         variant="destructive"
                         size="sm"
@@ -937,6 +1099,47 @@ export default function Installed() {
       {/* Auth Retry Confirmation Dialog */}
       <ConfirmDialog />
       <OAuthConfirmDialog />
+
+      {/* MCP Configuration Dialog */}
+      {configMcp && (
+        <MCPConfigurationDialog
+          isOpen={showConfigDialog}
+          onClose={handleConfigCancel}
+          mcpName={configMcp.name}
+          inputs={configInputs}
+          onSubmit={handleConfigSubmit}
+          mode="configure"
+        />
+      )}
+
+      {/* Restart Confirmation Dialog */}
+      <AlertDialog
+        open={showRestartDialog}
+        onOpenChange={setShowRestartDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('installed.restartDialog.title') || 'Restart Required'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('installed.restartDialog.description', { name: restartMcp?.name || '' }) ||
+               `To apply the configuration changes, ${restartMcp?.name || 'this MCP'} needs to be restarted. Would you like to restart it now?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleRestartLater}>
+              {t('installed.restartDialog.notNow') || 'Not Now'}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRestartNow}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {t('installed.restartDialog.restart') || 'Restart Now'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -31,6 +31,7 @@ export interface OAuthProtectedResourceMetadata {
 
 // 导入SDK的AuthorizationServerMetadata类型
 import { AuthorizationServerMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
+import { FormFieldConfig } from '@/components/DynamicForm';
 
 export interface OAuthMetadata {
   resourceMetadata?: OAuthProtectedResourceMetadata;
@@ -74,9 +75,11 @@ export interface Mcp {
   config: {
     url: string | null;
     command: string | null;
-    environment: Record<string, string> | null;
+    env: Record<string, string> | null;
     json: string | null;
   },
+  inputs?: FormFieldConfig[] | null;
+  inputValues?: Record<string, string> | null;
   runtimes?: string[] | null;
   authMethod?: 'oauth'[] | null;
   

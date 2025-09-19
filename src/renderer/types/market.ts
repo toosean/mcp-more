@@ -2,6 +2,7 @@
  * 市场相关类型定义
  */
 
+import { FormFieldConfig } from '@/components/DynamicForm';
 import { Mcp } from '../../config/types';
 
 // 排序方式枚举
@@ -39,6 +40,8 @@ export interface MarketMcp {
   transport: string | null;
   /** 配置 */
   configuration: string | null;
+  /** 输入 */
+  inputs: FormFieldConfig[] | null;
   /** 是否已安装 */
   isInstalled?: boolean;
 }
@@ -176,6 +179,8 @@ export interface McpInstallConfiguration {
   transport: string | null;
   /** 配置 */
   configuration: string | null;
+  /** 输入 */
+  inputs: FormFieldConfig[] | null;
   /** Runtimes */
   runtimes: string[] | null;
   /** Auth Method */

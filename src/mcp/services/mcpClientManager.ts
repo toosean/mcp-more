@@ -57,6 +57,24 @@ export class McpClientManager {
   }
 
   /**
+   * 替换字符串中的占位符
+   * @param template 包含占位符的模板字符串
+   * @param values 替换值的映射
+   * @returns 替换后的字符串
+   */
+  private replacePlaceholders(template: string, values: Record<string, string>): string {
+    return template.replace(/\$\{\{(\w+)\}\}/g, (match, key) => {
+      const value = values[key];
+      if (value !== undefined) {
+        return value;
+      }
+      // 如果找不到对应的值，保留原始占位符并记录警告
+      log.warn(`Placeholder ${match} not found in input values, keeping original placeholder`);
+      return match;
+    });
+  }
+
+  /**
    * 为单个 MCP 包创建客户端实例
    * @param mcp MCP 配置
    * @returns MCP 客户端实例
@@ -66,7 +84,14 @@ export class McpClientManager {
 
     if (mcp.config.url) {
       // 远程 MCP - 使用 URL 连接
-      const url = new URL(mcp.config.url);
+      // 替换URL中的占位符
+      const resolvedUrl = this.replacePlaceholders(mcp.config.url, mcp.inputValues || {});
+      log.debug(`MCP ${mcp.identifier}: Original URL: ${mcp.config.url}`);
+      log.debug(`MCP ${mcp.identifier}: Resolved URL: ${resolvedUrl}`);
+      if (mcp.inputValues && Object.keys(mcp.inputValues).length > 0) {
+        log.debug(`MCP ${mcp.identifier}: Input values: ${JSON.stringify(mcp.inputValues)}`);
+      }
+      const url = new URL(resolvedUrl);
 
       // 获取最新的 MCP 配置（确保包含最新的 OAuth tokens）
       const latestMcp = this.getMcpByIdentifier(mcp.identifier) || mcp;
@@ -120,14 +145,32 @@ export class McpClientManager {
       }
     } else if (mcp.config.command) {
       // 本地 MCP - 使用命令行启动
-      const commandParts = mcp.config.command.split(' ');
+      // 替换命令中的占位符
+      const resolvedCommand = this.replacePlaceholders(mcp.config.command, mcp.inputValues || {});
+      log.debug(`MCP ${mcp.identifier}: Original command: ${mcp.config.command}`);
+      log.debug(`MCP ${mcp.identifier}: Resolved command: ${resolvedCommand}`);
+      if (mcp.inputValues && Object.keys(mcp.inputValues).length > 0) {
+        log.debug(`MCP ${mcp.identifier}: Input values: ${JSON.stringify(mcp.inputValues)}`);
+      }
+
+      const commandParts = resolvedCommand.split(' ');
       const command = commandParts[0];
       const args = commandParts.slice(1);
+
+      // 替换环境变量中的占位符
+      let resolvedEnvironment: Record<string, string> = {};
+      if (mcp.config.env) {
+        log.debug(`MCP ${mcp.identifier}: Original environment variables: ${JSON.stringify(mcp.config.env)}`);
+        for (const [key, value] of Object.entries(mcp.config.env)) {
+          resolvedEnvironment[key] = this.replacePlaceholders(value, mcp.inputValues || {});
+        }
+        log.debug(`MCP ${mcp.identifier}: Resolved environment variables: ${JSON.stringify(resolvedEnvironment)}`);
+      }
 
       transport = new StdioClientTransport({
         command,
         args,
-        env: mcp.config.environment || undefined
+        env: resolvedEnvironment
       });
     } else {
       throw new Error(`Invalid MCP package config: must provide url or command`);

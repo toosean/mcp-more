@@ -9,12 +9,70 @@
     "error": "错误",
     "success": "成功",
     "warning": "警告",
-    "info": "信息"
+    "info": "信息",
+    "submit": "提交",
+    "submitting": "提交中...",
+    "close": "关闭"
   },
   "navigation": {
     "market": "市场",
     "installed": "已安装",
-    "settings": "设置"
+    "settings": "设置",
+    "formTest": "表单测试"
+  },
+  "dynamicForm": {
+    "validation": {
+      "required": "{{label}} 是必填项",
+      "cannotBeEmpty": "{{label}} 不能为空"
+    }
+  },
+  "dynamicFormTest": {
+    "title": "动态表单测试",
+    "description": "使用 JSON 配置测试动态表单组件",
+    "configurationForm": {
+      "title": "配置表单",
+      "description": "此表单由下面的 JSON 配置动态生成。",
+      "saveButton": "保存配置"
+    },
+    "jsonConfiguration": {
+      "title": "JSON 配置",
+      "description": "编辑下面的 JSON 配置并点击\"应用\"来重新生成表单：",
+      "placeholder": "输入 JSON 配置...",
+      "applyButton": "应用配置",
+      "resetButton": "重置为默认"
+    },
+    "resultDialog": {
+      "title": "表单提交结果",
+      "description": "这是表单生成的最终 JSON 数据："
+    },
+    "toast": {
+      "configUpdated": {
+        "title": "配置已更新！",
+        "description": "表单已使用新配置重新生成。"
+      },
+      "configError": {
+        "title": "配置错误"
+      },
+      "configReset": {
+        "title": "配置已重置",
+        "description": "表单配置已重置为默认值。"
+      },
+      "formSubmitted": {
+        "title": "表单提交成功！",
+        "description": "配置已保存，包含 {{count}} 个字段。"
+      }
+    }
+  },
+  "mcpConfiguration": {
+    "install": {
+      "title": "配置 {{mcpName}}",
+      "description": "请在安装前配置以下设置。",
+      "notNow": "稍后处理"
+    },
+    "configure": {
+      "title": "配置 {{mcpName}}",
+      "description": "更新此 MCP 的配置设置。"
+    }
   },
   "settings": {
     "title": "设置",
@@ -263,6 +321,20 @@
     "runtime": {
       "warning": "运行时警告：",
       "missingRuntimes": "缺少必需的运行时环境：{{runtimes}}"
+    },
+    "config": {
+      "noInputs": "无需配置",
+      "noInputsDesc": "{{name}} 不需要配置。",
+      "saveFailed": "保存配置失败"
+    },
+    "restart": {
+      "title": "需要重启",
+      "description": "{{name}} 正在运行中。配置更改需要重启才能生效。",
+      "restartNow": "立即重启",
+      "notNow": "稍后处理",
+      "success": "MCP 已重启",
+      "successDesc": "{{name}} 已使用新配置重新启动。",
+      "failed": "重启 MCP 失败"
     }
   },
   "addMCP": {
