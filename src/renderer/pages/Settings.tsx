@@ -20,8 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Settings as SettingsIcon, 
   Zap, 
-  Download,
-  Upload,
+  FileText,
   RotateCcw,
   CheckCircle,
   Moon,
@@ -622,24 +621,31 @@ export default function Settings() {
                 
                 {/* 开发模式专用按钮 */}
                 {isDevMode && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-orange-500/50 text-orange-600 hover:bg-orange-500/10" 
-                    onClick={handleSimulateUpdate}
-                    disabled={simulatingUpdate}
-                  >
-                    {simulatingUpdate ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {t('settings.devMode.simulatingUpdate')}
-                      </>
-                    ) : (
-                      <>
-                        <Bug className="h-4 w-4 mr-2" />
-                        {t('settings.devMode.simulateUpdateDownload')}
-                      </>
-                    )}
-                  </Button>
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-orange-500/50 text-orange-600 hover:bg-orange-500/10" 
+                      onClick={handleSimulateUpdate}
+                      disabled={simulatingUpdate}
+                    >
+                      {simulatingUpdate ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {t('settings.devMode.simulatingUpdate')}
+                        </>
+                      ) : (
+                        <>
+                          <Bug className="h-4 w-4 mr-2" />
+                          {t('settings.devMode.simulateUpdateDownload')}
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => navigate('/form-test')}>
+                      <FileText className="h-4 w-4 mr-2" /> Dynamic Form Test
+                    </Button>
+                  </>
                 )}
               </div>
             </CardContent>

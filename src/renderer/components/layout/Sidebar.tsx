@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/use-i18n';
-import { 
-  Store, 
-  Package, 
-  Settings, 
+import {
+  Store,
+  Package,
+  Settings,
   Search,
   Code,
   Terminal,

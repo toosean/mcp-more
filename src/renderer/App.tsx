@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import SetupGuide from "./pages/SetupGuide";
 import MCPDetail from "./pages/MCPDetail";
 import NotFound from "./pages/NotFound";
+import DynamicFormTest from "./pages/DynamicFormTest";
 import { useUpdater } from "./hooks/use-updater";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => {
               <Route path="/installed" element={<Layout><Installed /></Layout>} />
               <Route path="/settings" element={<Layout><Settings /></Layout>} />
               <Route path="/setup-guide" element={<Layout><SetupGuide /></Layout>} />
+              <Route path="/form-test" element={<Layout><DynamicFormTest /></Layout>} />
               <Route path="/mcp/:org/:id" element={<Layout><MCPDetail /></Layout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
