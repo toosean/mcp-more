@@ -231,7 +231,13 @@ const mcpAPI: McpAPI = {
 
 // Shell API 实现
 const shellAPI: ShellAPI = {
-  openExternal: (url: string) => ipcRenderer.invoke('shell:open-external', url)
+  openExternal: async (url: string) => {
+    if(url.toLowerCase().startsWith('http://') || url.toLowerCase().startsWith('https://')) {
+      await ipcRenderer.invoke('shell:open-external', url);
+    } else {
+      console.warn(`Unsupported URL: ${url}`);
+    }
+  }
 };
 
 // 定义 Shell API 接口
