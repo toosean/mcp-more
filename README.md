@@ -29,6 +29,57 @@ A modern desktop application for managing **Model Context Protocol (MCP)** serve
 * **Node.js**: 16.x or higher
 * **NPM**: 7.x or higher
 
+
+## 📚 User Guide
+
+### 1. Browse MCP Market
+
+* Open the app; the default page is the marketplace
+* Browse available MCP packages
+* View package details, description, and tools
+
+### 2. Install MCP Packages
+
+* Click "Install" in the marketplace
+* Or manually add MCP packages in the "Browse" page
+* Configure connection parameters (URL or command)
+
+### 3. Manage Installed Packages
+
+* View all installed packages in the "Installed" page
+* Enable/disable packages
+* Monitor tool usage statistics
+
+### 4. Configure Application Settings
+
+* Adjust theme, language, etc., in the "Settings" page
+* Configure startup and system tray options
+* Manage telemetry and statistics
+
+## 🛠️ Developer Guide
+
+### Tech Stack
+
+* **Framework**: Electron + React
+* **Language**: TypeScript
+* **Build Tool**: Vite + Electron Forge
+* **UI Library**: Radix UI + Tailwind CSS
+* **Internationalization**: i18next
+* **Logging**: electron-log
+
+### Coding Standards
+
+* Use ESLint for code checks
+* Follow TypeScript strict mode
+* Functional programming style for components
+* IPC communication uses `invoke/handle` pattern
+
+### Debugging
+
+* Main process logs: output via `electron-log` to console and file
+* Renderer process: use Chrome DevTools
+* Configuration file location can be checked in the app's "Settings"
+
 ## 🚀 Getting Started
 
 ### Development Setup
@@ -156,56 +207,6 @@ Configuration is stored in platform-specific locations:
 * **Windows**: `%APPDATA%/mcp-more/config.json`
 * **macOS**: `~/Library/Preferences/mcp-more/config.json`
 * **Linux**: `~/.config/mcp-more/config.json`
-
-## 📚 User Guide
-
-### 1. Browse MCP Market
-
-* Open the app; the default page is the marketplace
-* Browse available MCP packages
-* View package details, description, and tools
-
-### 2. Install MCP Packages
-
-* Click "Install" in the marketplace
-* Or manually add MCP packages in the "Browse" page
-* Configure connection parameters (URL or command)
-
-### 3. Manage Installed Packages
-
-* View all installed packages in the "Installed" page
-* Enable/disable packages
-* Monitor tool usage statistics
-
-### 4. Configure Application Settings
-
-* Adjust theme, language, etc., in the "Settings" page
-* Configure startup and system tray options
-* Manage telemetry and statistics
-
-## 🛠️ Developer Guide
-
-### Tech Stack
-
-* **Framework**: Electron + React
-* **Language**: TypeScript
-* **Build Tool**: Vite + Electron Forge
-* **UI Library**: Radix UI + Tailwind CSS
-* **Internationalization**: i18next
-* **Logging**: electron-log
-
-### Coding Standards
-
-* Use ESLint for code checks
-* Follow TypeScript strict mode
-* Functional programming style for components
-* IPC communication uses `invoke/handle` pattern
-
-### Debugging
-
-* Main process logs: output via `electron-log` to console and file
-* Renderer process: use Chrome DevTools
-* Configuration file location can be checked in the app's "Settings"
 
 ## 🤝 Contributing
 

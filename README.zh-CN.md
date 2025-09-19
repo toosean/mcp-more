@@ -29,6 +29,52 @@
 - **Node.js**: 16.x 或更高版本
 - **NPM**: 7.x 或更高版本
 
+## 📚 使用指南
+
+### 1. 浏览 MCP 市场
+- 启动应用后默认进入市场页面
+- 浏览可用的 MCP 包
+- 查看包的详细信息、描述和工具
+
+### 2. 安装 MCP 包
+- 在市场中点击"安装"按钮
+- 或在"浏览"页面手动添加 MCP 包
+- 配置连接参数（URL 或命令）
+
+### 3. 管理已安装的包
+- 在"已安装"页面查看所有包
+- 启用/禁用包
+- 查看工具调用统计
+
+### 4. 配置应用设置
+- 在"设置"页面调整主题、语言等选项
+- 配置自启动和系统托盘选项
+- 管理遥测和统计设置
+
+## 🛠️ 开发指南
+
+### 技术栈
+
+- **框架**: Electron + React
+- **语言**: TypeScript
+- **构建工具**: Vite + Electron Forge
+- **UI 库**: Radix UI + Tailwind CSS
+- **国际化**: i18next
+- **日志**: electron-log
+
+### 代码规范
+
+- 使用 ESLint 进行代码检查
+- 遵循 TypeScript 严格模式
+- 组件使用函数式编程风格
+- IPC 通信采用 invoke/handle 模式
+
+### 调试
+
+- 主进程日志：`electron-log` 输出到控制台和文件
+- 渲染进程：使用 Chrome DevTools
+- 配置文件位置可通过应用内"设置"页面查看
+
 ## 🚀 快速开始
 
 ### 开发环境设置
@@ -149,52 +195,6 @@ MCP 包支持三种连接方式：
 - **Windows**: `%APPDATA%/mcp-more/config.json`
 - **macOS**: `~/Library/Preferences/mcp-more/config.json`
 - **Linux**: `~/.config/mcp-more/config.json`
-
-## 📚 使用指南
-
-### 1. 浏览 MCP 市场
-- 启动应用后默认进入市场页面
-- 浏览可用的 MCP 包
-- 查看包的详细信息、描述和工具
-
-### 2. 安装 MCP 包
-- 在市场中点击"安装"按钮
-- 或在"浏览"页面手动添加 MCP 包
-- 配置连接参数（URL 或命令）
-
-### 3. 管理已安装的包
-- 在"已安装"页面查看所有包
-- 启用/禁用包
-- 查看工具调用统计
-
-### 4. 配置应用设置
-- 在"设置"页面调整主题、语言等选项
-- 配置自启动和系统托盘选项
-- 管理遥测和统计设置
-
-## 🛠️ 开发指南
-
-### 技术栈
-
-- **框架**: Electron + React
-- **语言**: TypeScript
-- **构建工具**: Vite + Electron Forge
-- **UI 库**: Radix UI + Tailwind CSS
-- **国际化**: i18next
-- **日志**: electron-log
-
-### 代码规范
-
-- 使用 ESLint 进行代码检查
-- 遵循 TypeScript 严格模式
-- 组件使用函数式编程风格
-- IPC 通信采用 invoke/handle 模式
-
-### 调试
-
-- 主进程日志：`electron-log` 输出到控制台和文件
-- 渲染进程：使用 Chrome DevTools
-- 配置文件位置可通过应用内"设置"页面查看
 
 ## 🤝 贡献
 
