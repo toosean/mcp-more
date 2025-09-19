@@ -34,7 +34,7 @@ interface DisplayMCP {
   version: string | null;
   downloads: number | null;
   rating: number | null;
-  status: 'running' | 'stopped';
+  status: 'stopped' | 'starting' | 'running' | 'stopping';
   lastUpdated: string | null;
   installed: string | null;
   calls: number | null;
@@ -224,18 +224,18 @@ export default function Installed() {
         return;
       }
 
-      const displayMcps = config.mcp.installedMcps
-        .map((mcp: Mcp, index: number) => {
+      const displayMcpsUnsorted = await Promise.all(config.mcp.installedMcps
+        .map(async (mcp: Mcp, index: number) => {
           // Process dates and provide defaults if missing
           const now = new Date().toISOString();
           let installedDate = mcp.installed;
           let updatedDate = mcp.updated;
-          
+
           // If no installed date but package exists, use current time as fallback
           if (!installedDate && mcp.name) {
             installedDate = now;
           }
- 
+
           // Validate and normalize dates
           const validateDate = (dateString: string | null): string | null => {
             if (!dateString) return null;
@@ -246,8 +246,17 @@ export default function Installed() {
               return null;
             }
           };
-          
+
           const missingRuntimes = checkMissingRuntimes(mcp.runtimes);
+
+          // Get actual status from API
+          let status: 'stopped' | 'starting' | 'running' | 'stopping' = 'stopped';
+          try {
+            status = await window.mcpAPI.getMcpStatus(mcp.identifier);
+          } catch (error) {
+            // If we can't get status, fall back to enabled state
+            status = mcp.enabled ? 'running' : 'stopped';
+          }
 
           return {
             identifier: mcp.identifier,
@@ -257,7 +266,7 @@ export default function Installed() {
             version: mcp.version,
             downloads: null as number | null, // Not tracked for manual MCPs
             rating: null as number | null, // Not tracked for manual MCPs
-            status: mcp.enabled ? 'running' : 'stopped' as 'running' | 'stopped',
+            status: status,
             lastUpdated: validateDate(updatedDate),
             installed: validateDate(installedDate),
             calls: null as number | null,
@@ -265,7 +274,9 @@ export default function Installed() {
             runtimes: mcp.runtimes,
             missingRuntimes: missingRuntimes,
           };
-        })
+        }));
+
+      const displayMcps = displayMcpsUnsorted
         .sort((a: DisplayMCP, b: DisplayMCP) => {
           // Sort by installed date, latest first (null values go to the end)
           if (!a.installed && !b.installed) return 0;
@@ -298,6 +309,23 @@ export default function Installed() {
   useEffect(() => {
     loadMcps();
   }, [loadMcps]);
+
+  // Auto-refresh MCPs every 2 seconds to update status when there are transitioning MCPs
+  useEffect(() => {
+    const hasTransitioningMcps = mcps.some(mcp =>
+      mcp.status === 'starting' || mcp.status === 'stopping'
+    );
+
+    if (!hasTransitioningMcps) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      loadMcps();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [loadMcps, mcps]);
 
   const showDeleteConfirmation = (id: string) => {
     const mcp = mcps.find(m => m.identifier === id);
@@ -353,6 +381,15 @@ export default function Installed() {
       const currentConfig = await getConfig();
       if (!currentConfig?.mcp?.installedMcps) return;
 
+      const currentMcp = currentConfig.mcp.installedMcps.find(m => m.identifier === id);
+      currentMcp.enabled = mcp.status === 'running' ? false : true;
+      window.configAPI.setConfig({
+        mcp: {
+          ...currentConfig.mcp,
+          installedMcps: currentConfig.mcp.installedMcps.map(m => m.identifier === id ? currentMcp : m)
+        }
+      });
+
       if (mcp.status === 'running') {
         // 停止客户端
         await stopMcp(mcp.identifier);
@@ -360,7 +397,7 @@ export default function Installed() {
           title: t('installed.toast.stopped'),
           description: t('installed.toast.stoppedDesc', { name: mcp.name }),
         });
-      } else {
+      } else if (mcp.status === 'stopped') {
         // 启动客户端
         try{
 
@@ -411,29 +448,6 @@ export default function Installed() {
 
           }
       }
-
-      const status = await window.mcpAPI.getMcpStatus(mcp.identifier);
-      const enabled = status === 'running';
-
-      // 更新配置中的enabled状态
-      const updatedMcps = currentConfig.mcp.installedMcps.map((mcp) => {
-        const pkgId = mcp.identifier;
-        if (pkgId === id) {
-          return {
-            ...mcp,
-            enabled: enabled
-          };
-        }
-        return mcp;
-      });
-
-      await updateConfig({
-        mcp: {
-          ...currentConfig.mcp,
-          installedMcps: updatedMcps
-        }
-      });
-
       // Refresh MCPs
       await loadMcps();
 
@@ -451,6 +465,7 @@ export default function Installed() {
   };
 
   const runningCount = mcps.filter(mcp => mcp.status === 'running').length;
+  const activeCount = mcps.filter(mcp => mcp.status === 'running' || mcp.status === 'starting').length;
   const [totalCalls, setTotalCalls] = useState(0);
   
   // Load total calls
@@ -495,6 +510,10 @@ export default function Installed() {
     // 重新加载MCPs
     await loadMcps();
     setEditingMCP(null);
+  }, [loadMcps]);
+
+  const refreshMcpStatus = useCallback(async () => {
+    await loadMcps();
   }, [loadMcps]);
 
   const handleStartAll = async () => {
@@ -750,7 +769,18 @@ export default function Installed() {
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-3">
                         <h3 className="text-lg font-semibold">{mcp.name}</h3>
-                        <Badge variant={mcp.status === 'running' ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            mcp.status === 'running' ? 'default' :
+                            mcp.status === 'starting' || mcp.status === 'stopping' ? 'secondary' :
+                            'outline'
+                          }
+                          className={
+                            mcp.status === 'starting' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                            mcp.status === 'stopping' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
+                            ''
+                          }
+                        >
                           {t(`installed.status.${mcp.status}`)}
                         </Badge>
                         {mcp.version && <Badge variant="outline" className="text-xs">
@@ -803,16 +833,18 @@ export default function Installed() {
                         variant={mcp.status === 'running' ? 'destructive' : 'default'}
                         size="sm"
                         onClick={() => toggleStatus(mcp.identifier)}
-                        disabled={loadingStates[mcp.identifier]}
-                        className={mcp.status === 'running' 
-                          ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                        disabled={loadingStates[mcp.identifier] || mcp.status === 'starting' || mcp.status === 'stopping'}
+                        className={mcp.status === 'running'
+                          ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
                           : 'bg-green-600 hover:bg-green-700 text-white'
                         }
                       >
-                        {loadingStates[mcp.identifier] ? (
+                        {loadingStates[mcp.identifier] || mcp.status === 'starting' || mcp.status === 'stopping' ? (
                           <>
                             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            {mcp.status === 'running' ? t('installed.status.stopping') : t('installed.status.starting')}
+                            {mcp.status === 'starting' ? t('installed.status.startingAction') :
+                             mcp.status === 'stopping' ? t('installed.status.stoppingAction') :
+                             mcp.status === 'running' ? t('installed.status.stoppingAction') : t('installed.status.startingAction')}
                           </>
                         ) : mcp.status === 'running' ? (
                           <>

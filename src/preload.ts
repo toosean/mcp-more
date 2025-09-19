@@ -164,7 +164,7 @@ interface RuntimeAPI {
 interface McpAPI {
   startMcp(mcpId: string, autoOAuth: boolean): Promise<void>;
   stopMcp(mcpId: string): Promise<void>;
-  getMcpStatus(mcpId: string): Promise<'running' | 'stopped' | 'error'>;
+  getMcpStatus(mcpId: string): Promise<'stopped' | 'starting' | 'running' | 'stopping'>;
   getServerStatus(): Promise<McpServerStatus>;
   // triggerOAuthFlow(mcpId: string): Promise<{
   //   success: boolean;

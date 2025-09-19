@@ -400,6 +400,10 @@ export class McpClientManager {
         throw new Error(`MCP not found: ${mcpIdentifier}`);
       }
 
+      // 设置状态为 starting
+      mcp.status = 'starting';
+      this.updateMcpConfig(mcpIdentifier, mcp);
+
       // 先检查客户端是否已存在且已连接
       let client = this.getClientInstance(mcp);
 
@@ -425,6 +429,7 @@ export class McpClientManager {
         mcp.latestError = null;
         mcp.latestErrorDetail = null;
         mcp.enabled = true;
+        mcp.status = 'running';
         this.updateMcpConfig(mcpIdentifier, mcp);
         this.scheduleTokenRefresh(mcpIdentifier);
       }
@@ -433,13 +438,17 @@ export class McpClientManager {
 
       this.clients = this.clients.filter(client => client.mcp.identifier !== mcpIdentifier);
 
-      if (error instanceof McpStartNeedsAuthError) {
-        const mcp = this.getMcpByIdentifier(mcpIdentifier);
-        if (mcp) {
+      const mcp = this.getMcpByIdentifier(mcpIdentifier);
+      if (mcp) {
+        mcp.status = 'stopped';
+        if (error instanceof McpStartNeedsAuthError) {
           mcp.latestError = 'auth';
           mcp.latestErrorDetail = error.message;
-          this.updateMcpConfig(mcpIdentifier, mcp);
+        } else {
+          mcp.latestError = 'unknown';
+          mcp.latestErrorDetail = error instanceof Error ? error.message : 'Unknown error';
         }
+        this.updateMcpConfig(mcpIdentifier, mcp);
       }
 
       log.error(`McpClientManager.startMcp Failed to start MCP client: ${mcpIdentifier}`, error);
@@ -452,23 +461,25 @@ export class McpClientManager {
    * @param mcpIdentifier MCP 标识符
    */
   async stopMcp(mcpIdentifier: string): Promise<void> {
-    
+
     const mcp = this.getMcpByIdentifier(mcpIdentifier);
-    if (mcp && mcp.enabled) {
-      mcp.enabled = false;
-      this.updateMcpConfig(mcpIdentifier, mcp);
+    if (!mcp) {
+      throw new Error(`MCP not found: ${mcpIdentifier}`);
     }
+
+    // 设置状态为 stopping
+    mcp.status = 'stopping';
+    mcp.enabled = false;
+    this.updateMcpConfig(mcpIdentifier, mcp);
 
     try {
       const client = this.getClientInstance(mcp);
 
       if (!client) {
         log.debug(`MCP client not found: ${mcp.identifier}`);
-        return;
-      }
-
-      if (!client) {
-        log.debug(`MCP client already disconnected: ${mcp.identifier}`);
+        // 即使客户端不存在，也要更新状态为 stopped
+        mcp.status = 'stopped';
+        this.updateMcpConfig(mcpIdentifier, mcp);
         return;
       }
 
@@ -489,6 +500,7 @@ export class McpClientManager {
         mcp.latestError = null;
         mcp.latestErrorDetail = null;
         mcp.enabled = false;
+        mcp.status = 'stopped';
         this.updateMcpConfig(mcpIdentifier, mcp);
       }
 
@@ -498,6 +510,7 @@ export class McpClientManager {
       if(mcp) {
         mcp.latestError = 'unknown';
         mcp.latestErrorDetail = error instanceof Error ? error.message : 'Unknown error';
+        mcp.status = 'stopped';
         this.updateMcpConfig(mcpIdentifier, mcp);
       }
 
@@ -516,6 +529,12 @@ export class McpClientManager {
       throw new Error(`MCP not found: ${mcpIdentifier}`);
     }
 
+    // 如果MCP配置中有状态，优先返回配置中的状态
+    if (mcp.status) {
+      return mcp.status;
+    }
+
+    // 否则根据客户端连接状态判断
     const client = this.getClientInstance(mcp);
     if (!client) {
       log.debug(`MCP client not connected: ${mcp.identifier}`);

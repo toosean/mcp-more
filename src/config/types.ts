@@ -68,6 +68,7 @@ export interface Mcp {
   license: string | null;
   installed: string | null;
   enabled: boolean;
+  status?: 'stopped' | 'starting' | 'running' | 'stopping';
   latestError?: 'auth' | 'unknown' | null;
   latestErrorDetail?: string | null;
   config: {

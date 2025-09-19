@@ -114,6 +114,7 @@ export function useMcpManager() {
             license: mcpJsonData.license || null,
             installed: new Date().toISOString(),
             enabled: mcpJsonData.enabled !== false,
+            status: 'stopped' as const,
             config: {
               url: mcpJsonData.url || null,
               command: finalCommand,
@@ -150,6 +151,7 @@ export function useMcpManager() {
             license: null,
             installed: new Date().toISOString(),
             enabled: true,
+            status: 'stopped' as const,
             oauth: oauth,
             config: {
               url: url || null,
@@ -288,6 +290,7 @@ export function useMcpManager() {
       license: mcp.license,
       installed: new Date().toISOString(),
       enabled: false,
+      status: 'stopped' as const,
       config: {
         url: mcpConfig.url,
         command: mcpConfig.command,

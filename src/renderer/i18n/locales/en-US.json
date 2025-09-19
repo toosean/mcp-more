@@ -179,6 +179,7 @@
     "stats": {
       "totalCalls": "Total Calls",
       "currentlyRunning": "Currently Running",
+      "currentlyActive": "Currently Active",
       "totalInstalled": "Total Installed"
     },
     "actions": {
@@ -189,10 +190,13 @@
     "status": {
       "running": "running",
       "stopped": "stopped",
+      "starting": "starting",
+      "stopping": "stopping",
       "start": "Start",
       "stop": "Stop",
-      "starting": "Starting...",
-      "stopping": "Stopping..."
+      "startingAction": "Starting...",
+      "stoppingAction": "Stopping...",
+      "transitioning": "transitioning"
     },
     "buttons": {
       "detail": "Detail",
