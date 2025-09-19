@@ -22,6 +22,7 @@ export function useMcpManager() {
   const installMcpManually = async (mcpData: {
     name: string;
     command?: string;
+    args?: string[];
     url?: string;
     json?: string;
     env?: Record<string, string>;
@@ -29,7 +30,7 @@ export function useMcpManager() {
     editingMCP?: Mcp | null;
   }): Promise<{ success: boolean; mcpId: string; error?: string }> => {
     try {
-      const { name, command, url, json, env, oauth, editingMCP } = mcpData;
+      const { name, command, args, url, json, env, oauth, editingMCP } = mcpData;
       const config = await getConfig();
       const existingMcps = config?.mcp?.installedMcps || [];
       
@@ -82,9 +83,7 @@ export function useMcpManager() {
           };
         }
         
-        const [key, mcpJsonData] = mcpEntries[0];
-        const finalCommand = mergeCommandAndArgs(mcpJsonData.command, mcpJsonData.args);
-        
+        const [key, mcpJsonData] = mcpEntries[0];        
         if (isEditing && editingMCP) {
           updatedMCP = {
             ...editingMCP,
@@ -98,7 +97,8 @@ export function useMcpManager() {
             enabled: mcpJsonData.enabled !== false,
             config: {
               url: mcpJsonData.url || null,
-              command: finalCommand,
+              command: mcpJsonData.command,
+              args: mcpJsonData.args,
               env: mcpJsonData.env || mcpJsonData.environment || {},
               json: json
             }
@@ -119,7 +119,8 @@ export function useMcpManager() {
             status: 'stopped' as const,
             config: {
               url: mcpJsonData.url || null,
-              command: finalCommand,
+              command: mcpJsonData.command,
+              args: mcpJsonData.args,
               env: mcpJsonData.env || mcpJsonData.environment || {},
               json: json
             }
@@ -158,6 +159,7 @@ export function useMcpManager() {
             config: {
               url: url || null,
               command: command || null,
+              args: args || null,
               env: env || null,
               json: null
             }
@@ -236,27 +238,15 @@ export function useMcpManager() {
 
   }
 
-  const mergeCommandAndArgs = (command: string | null, args: string[] | null): string | null => {
-    if (!command) return null;
-    if (args && Array.isArray(args) && args.length > 0) {
-      return `${command} ${args.join(' ')}`;
-    }
-    return command;
-  };
-
   const parseMcpJson = async (mcpConfiguration: string) => {
     
     const json = JSON.parse(mcpConfiguration);
     const mcpServer = json.mcpServers[Object.keys(json.mcpServers)[0]];
 
-    let finalCommand = null;
-    if(mcpServer.command) {
-      finalCommand = mergeCommandAndArgs(mcpServer.command, mcpServer.args);
-    }
-
     return {
       url: mcpServer.url || mcpServer.serverUrl,
-      command: finalCommand,
+      command: mcpServer.command,
+      args: mcpServer.args,
       env: mcpServer.env,
       headers: mcpServer.headers,
       json: mcpConfiguration
@@ -297,6 +287,7 @@ export function useMcpManager() {
       config: {
         url: mcpConfig.url,
         command: mcpConfig.command,
+        args: mcpConfig.args,
         env: mcpConfig.env,
         headers: mcpConfig.headers,
         json: mcpConfig.json,

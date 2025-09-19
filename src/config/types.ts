@@ -75,6 +75,7 @@ export interface Mcp {
   config: {
     url: string | null;
     command: string | null;
+    args: string[] | null;
     env: Record<string, string> | null;
     headers?: Record<string, string> | null;
     json: string | null;

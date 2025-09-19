@@ -152,29 +152,21 @@ export class McpClientManager {
       // 本地 MCP - 使用命令行启动
       // 替换命令中的占位符
       const resolvedCommand = this.replacePlaceholders(mcp.config.command, mcp.inputValues || {});
-      log.debug(`MCP ${mcp.identifier}: Original command: ${mcp.config.command}`);
-      log.debug(`MCP ${mcp.identifier}: Resolved command: ${resolvedCommand}`);
-      if (mcp.inputValues && Object.keys(mcp.inputValues).length > 0) {
-        log.debug(`MCP ${mcp.identifier}: Input values: ${JSON.stringify(mcp.inputValues)}`);
-      }
-
-      const commandParts = resolvedCommand.split(' ');
-      const command = commandParts[0];
-      const args = commandParts.slice(1);
+      const resolvedArgs = mcp.config.args ?
+        mcp.config.args.map(arg => this.replacePlaceholders(arg, mcp.inputValues || {})) :
+        [];
 
       // 替换环境变量中的占位符
       let resolvedEnvironment: Record<string, string> = {};
       if (mcp.config.env) {
-        log.debug(`MCP ${mcp.identifier}: Original environment variables: ${JSON.stringify(mcp.config.env)}`);
         for (const [key, value] of Object.entries(mcp.config.env)) {
           resolvedEnvironment[key] = this.replacePlaceholders(value, mcp.inputValues || {});
         }
-        log.debug(`MCP ${mcp.identifier}: Resolved environment variables: ${JSON.stringify(resolvedEnvironment)}`);
       }
 
       transport = new StdioClientTransport({
-        command,
-        args,
+        command: resolvedCommand,
+        args: resolvedArgs,
         env: resolvedEnvironment
       });
     } else {

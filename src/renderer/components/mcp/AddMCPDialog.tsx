@@ -348,7 +348,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
                   name="local-env"
                   placeholder={`KEY1=value1
 KEY2=value2`}
-                  defaultValue={isEditing && isLocalMCP ? mcpHelpers.serializeEnvironmentVariables(editingMCP?.config?.environment) : ''}
+                  defaultValue={isEditing && isLocalMCP ? mcpHelpers.serializeEnvironmentVariables(editingMCP?.config?.env) : ''}
                   rows={3}
                 />
               </div>
