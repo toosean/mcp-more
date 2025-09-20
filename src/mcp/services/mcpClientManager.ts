@@ -65,15 +65,20 @@ export class McpClientManager {
    */
   private replacePlaceholders(template: string, inputs: FormFieldConfig[], values: Record<string, string>): string {
     return template.replace(/\$\{\{([\w\-_]+)\}\}/g, (match, key) => {
+      
       const value = values[key];
-      if (value !== undefined) {
+
+      if (value !== undefined && value !== null && value !== '') {
         const input = inputs.find(input => input.id === key);
         const wrapper = input?.wrapper;
         if (wrapper) {
           return wrapper.replace('${{value}}', value);
         }
         return value;
+      } else {
+        return '';
       }
+
       // 如果找不到对应的值，保留原始占位符并记录警告
       log.warn(`Placeholder ${match} not found in input values, keeping original placeholder`);
       return match;
