@@ -3,27 +3,35 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import DynamicForm, { FormFieldConfig, DynamicFormRef } from '@/components/DynamicForm';
 import { useI18n } from '@/hooks/use-i18n';
+import { useConfig } from '@/hooks/use-config';
+import { toast } from '@/hooks/use-toast';
+import { DisplayMCP } from '@/types/mcp';
 
 interface MCPConfigurationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  mcpName: string;
+  mcp: DisplayMCP;
   inputs: FormFieldConfig[];
-  onSubmit: (values: Record<string, string>) => void;
+  onSubmit?: (values: Record<string, string>) => void; // Optional for install mode
   onSkip?: () => void; // Optional for installation flow
+  onSuccess?: (needsRestart: boolean) => void; // Called after successful config save
+  onReloadMcps?: () => Promise<void>; // Function to reload MCPs list
   mode: 'install' | 'configure'; // Different modes for different contexts
 }
 
 export default function MCPConfigurationDialog({
   isOpen,
   onClose,
-  mcpName,
+  mcp,
   inputs,
   onSubmit,
   onSkip,
+  onSuccess,
+  onReloadMcps,
   mode
 }: MCPConfigurationDialogProps) {
   const { t } = useI18n();
+  const { updateConfig, getConfig } = useConfig();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<DynamicFormRef>(null);
 
@@ -36,11 +44,59 @@ export default function MCPConfigurationDialog({
         return acc;
       }, {} as Record<string, string>);
 
-      onSubmit(stringValues);
+      if (mode === 'install' && onSubmit) {
+        // For install mode, use the original onSubmit callback
+        onSubmit(stringValues);
+      } else if (mode === 'configure') {
+        // For configure mode, handle the config submission internally
+        await handleConfigureSubmit(stringValues);
+      }
     } catch (error) {
       console.error('Failed to submit MCP configuration:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleConfigureSubmit = async (values: Record<string, string>) => {
+    try {
+      const currentConfig = await getConfig();
+      const updatedMcps = currentConfig.mcp.installedMcps.map(mcpItem => {
+        if (mcpItem.identifier === mcp.identifier) {
+          return {
+            ...mcpItem,
+            inputValues: values
+          };
+        }
+        return mcpItem;
+      });
+
+      await updateConfig({
+        mcp: {
+          ...currentConfig.mcp,
+          installedMcps: updatedMcps
+        }
+      });
+
+      // Close dialog and reload MCPs
+      onClose();
+      if (onReloadMcps) {
+        await onReloadMcps();
+      }
+
+      // Check if restart is needed and notify parent
+      const needsRestart = mcp.status === 'running';
+      if (onSuccess) {
+        onSuccess(needsRestart);
+      }
+
+    } catch (error) {
+      console.error('Failed to save MCP configuration:', error);
+      toast({
+        title: t('common.error') || 'Error',
+        description: t('installed.config.saveFailed') || 'Failed to save configuration',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -67,8 +123,8 @@ export default function MCPConfigurationDialog({
         <DialogHeader>
           <DialogTitle>
             {mode === 'install'
-              ? (t('mcpConfiguration.install.title', { mcpName }) || `Configure ${mcpName}`)
-              : (t('mcpConfiguration.configure.title', { mcpName }) || `Configure ${mcpName}`)
+              ? (t('mcpConfiguration.install.title', { mcpName: mcp.name }) || `Configure ${mcp.name}`)
+              : (t('mcpConfiguration.configure.title', { mcpName: mcp.name }) || `Configure ${mcp.name}`)
             }
           </DialogTitle>
           <DialogDescription>

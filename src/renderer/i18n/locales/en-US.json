@@ -337,6 +337,12 @@
       "successDesc": "{{name}} has been restarted with new configuration.",
       "failed": "Failed to restart MCP"
     },
+    "restartDialog": {
+      "title": "Restart Required",
+      "description": "To apply the configuration changes, {{name}} needs to be restarted. Would you like to restart it now?",
+      "notNow": "Not Now",
+      "restart": "Restart Now"
+    },
     "inspect": {
       "title": "Inspect MCP Tools",
       "description": "View available tools, their descriptions, and required parameters for this MCP.",

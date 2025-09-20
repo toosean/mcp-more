@@ -257,52 +257,13 @@ export default function Installed() {
     }
   };
 
-  const handleConfigSubmit = async (values: Record<string, string>) => {
-    if (!configMcp) return;
-
-    try {
-      const currentConfig = await getConfig();
-      const updatedMcps = currentConfig.mcp.installedMcps.map(mcp => {
-        if (mcp.identifier === configMcp.identifier) {
-          return {
-            ...mcp,
-            inputValues: values
-          };
-        }
-        return mcp;
-      });
-
-      await updateConfig({
-        mcp: {
-          ...currentConfig.mcp,
-          installedMcps: updatedMcps
-        }
-      });
-
-      setShowConfigDialog(false);
-      setConfigInputs([]);
-
-      toast({
-        title: t('installed.config.saved') || 'Configuration saved',
-        description: t('installed.config.savedDesc', { name: configMcp.name }) || `Configuration for ${configMcp.name} has been saved.`,
-      });
-
-      await loadMcps();
-
-      if (configMcp.status === 'running') {
-        setRestartMcp(configMcp);
-        setShowRestartDialog(true);
-      }
-
-      setConfigMcp(null);
-    } catch (error) {
-      console.error('Failed to save MCP configuration:', error);
-      toast({
-        title: t('common.error') || 'Error',
-        description: t('installed.config.saveFailed') || 'Failed to save configuration',
-        variant: 'destructive'
-      });
+  const handleConfigSuccess = (needsRestart: boolean) => {
+    if (needsRestart && configMcp) {
+      setRestartMcp(configMcp);
+      setShowRestartDialog(true);
     }
+    setConfigMcp(null);
+    setConfigInputs([]);
   };
 
   const handleConfigCancel = () => {
@@ -609,9 +570,10 @@ export default function Installed() {
         <MCPConfigurationDialog
           isOpen={showConfigDialog}
           onClose={handleConfigCancel}
-          mcpName={configMcp.name}
+          mcp={configMcp}
           inputs={configInputs}
-          onSubmit={handleConfigSubmit}
+          onSuccess={handleConfigSuccess}
+          onReloadMcps={loadMcps}
           mode="configure"
         />
       )}

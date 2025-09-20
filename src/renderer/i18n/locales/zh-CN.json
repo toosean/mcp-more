@@ -337,6 +337,12 @@
       "successDesc": "{{name}} 已使用新配置重新启动。",
       "failed": "重启 MCP 失败"
     },
+    "restartDialog": {
+      "title": "需要重启",
+      "description": "为了应用配置更改，需要重启 {{name}}。您想现在重启吗？",
+      "notNow": "稍后处理",
+      "restart": "立即重启"
+    },
     "inspect": {
       "title": "检查 MCP 工具",
       "description": "查看此 MCP 可用的工具、描述和所需参数。",
