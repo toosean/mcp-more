@@ -294,7 +294,7 @@ export default function MCPCard({
       <MCPConfigurationDialog
         isOpen={showConfigDialog}
         onClose={() => setShowConfigDialog(false)}
-        mcpName={mcp.name}
+        mcpIdentifier={mcp.identifier}
         inputs={pendingInputs}
         onSubmit={handleConfigSubmit}
         onSkip={handleConfigSkip}

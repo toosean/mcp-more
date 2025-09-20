@@ -1,17 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import DynamicForm, { FormFieldConfig, DynamicFormRef } from '@/components/DynamicForm';
 import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
 import { toast } from '@/hooks/use-toast';
-import { DisplayMCP } from '@/types/mcp';
+import { Mcp } from 'src/config/types';
 
 interface MCPConfigurationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  mcp: DisplayMCP;
-  inputs: FormFieldConfig[];
+  mcpIdentifier: string;
+  inputs?: FormFieldConfig[]; // Optional, will be fetched if not provided
   onSubmit?: (values: Record<string, string>) => void; // Optional for install mode
   onSkip?: () => void; // Optional for installation flow
   onSuccess?: (needsRestart: boolean) => void; // Called after successful config save
@@ -22,8 +22,8 @@ interface MCPConfigurationDialogProps {
 export default function MCPConfigurationDialog({
   isOpen,
   onClose,
-  mcp,
-  inputs,
+  mcpIdentifier,
+  inputs: providedInputs,
   onSubmit,
   onSkip,
   onSuccess,
@@ -33,7 +33,56 @@ export default function MCPConfigurationDialog({
   const { t } = useI18n();
   const { updateConfig, getConfig } = useConfig();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fullMcp, setFullMcp] = useState<Mcp | null>(null);
+  const [inputs, setInputs] = useState<FormFieldConfig[]>([]);
+  const [loading, setLoading] = useState(false);
   const formRef = useRef<DynamicFormRef>(null);
+
+  // Fetch MCP data when dialog opens or identifier changes
+  useEffect(() => {
+    if (isOpen && mcpIdentifier) {
+      loadMcpData();
+    }
+  }, [isOpen, mcpIdentifier]);
+
+  // Use provided inputs or fetched inputs
+  useEffect(() => {
+    if (providedInputs) {
+      setInputs(providedInputs);
+    } else if (fullMcp?.inputs) {
+      const inputsWithValues = fullMcp.inputs.map(input => ({
+        ...input,
+        defaultValue: fullMcp.inputValues?.[input.id] || ''
+      }));
+      setInputs(inputsWithValues);
+    }
+  }, [providedInputs, fullMcp]);
+
+  const loadMcpData = async () => {
+    if (!mcpIdentifier) return;
+
+    try {
+      setLoading(true);
+      const config = await getConfig();
+
+      // Find MCP in installed list (for configure mode)
+      if (mode === 'configure') {
+        const installedMcp = config?.mcp?.installedMcps?.find(m => m.identifier === mcpIdentifier);
+        if (installedMcp) {
+          setFullMcp(installedMcp);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load MCP data:', error);
+      toast({
+        title: t('common.error') || 'Error',
+        description: 'Failed to load MCP configuration',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFormSubmit = async (data: Record<string, any>) => {
     setIsSubmitting(true);
@@ -59,10 +108,12 @@ export default function MCPConfigurationDialog({
   };
 
   const handleConfigureSubmit = async (values: Record<string, string>) => {
+    if (!fullMcp) return;
+
     try {
       const currentConfig = await getConfig();
       const updatedMcps = currentConfig.mcp.installedMcps.map(mcpItem => {
-        if (mcpItem.identifier === mcp.identifier) {
+        if (mcpItem.identifier === fullMcp.identifier) {
           return {
             ...mcpItem,
             inputValues: values
@@ -85,7 +136,7 @@ export default function MCPConfigurationDialog({
       }
 
       // Check if restart is needed and notify parent
-      const needsRestart = mcp.status === 'running';
+      const needsRestart = fullMcp.status === 'running';
       if (onSuccess) {
         onSuccess(needsRestart);
       }
@@ -123,8 +174,8 @@ export default function MCPConfigurationDialog({
         <DialogHeader>
           <DialogTitle>
             {mode === 'install'
-              ? (t('mcpConfiguration.install.title', { mcpName: mcp.name }) || `Configure ${mcp.name}`)
-              : (t('mcpConfiguration.configure.title', { mcpName: mcp.name }) || `Configure ${mcp.name}`)
+              ? (t('mcpConfiguration.install.title', { mcpName: fullMcp?.name || mcpIdentifier }) || `Configure ${fullMcp?.name || mcpIdentifier}`)
+              : (t('mcpConfiguration.configure.title', { mcpName: fullMcp?.name || mcpIdentifier }) || `Configure ${fullMcp?.name || mcpIdentifier}`)
             }
           </DialogTitle>
           <DialogDescription>
@@ -136,11 +187,21 @@ export default function MCPConfigurationDialog({
         </DialogHeader>
 
         <div className="mt-4">
-          <DynamicForm
-            ref={formRef}
-            config={inputs}
-            onSubmit={handleFormSubmit}
-          />
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-sm text-muted-foreground">Loading configuration...</div>
+            </div>
+          ) : inputs.length > 0 ? (
+            <DynamicForm
+              ref={formRef}
+              config={inputs}
+              onSubmit={handleFormSubmit}
+            />
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-sm text-muted-foreground">No configuration needed</div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 mt-6 pt-4 border-t">

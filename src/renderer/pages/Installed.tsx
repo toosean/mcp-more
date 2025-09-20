@@ -308,11 +308,6 @@ export default function Installed() {
   const handleRestartLater = () => {
     setShowRestartDialog(false);
     setRestartMcp(null);
-    toast({
-      title: t('installed.restart.postponed') || 'Restart postponed',
-      description: t('installed.restart.postponedDesc') || 'Configuration changes will take effect after the next restart.',
-      variant: 'default'
-    });
   };
 
   const handleDialogClose = useCallback((open: boolean) => {
@@ -570,8 +565,7 @@ export default function Installed() {
         <MCPConfigurationDialog
           isOpen={showConfigDialog}
           onClose={handleConfigCancel}
-          mcp={configMcp}
-          inputs={configInputs}
+          mcpIdentifier={configMcp.identifier}
           onSuccess={handleConfigSuccess}
           onReloadMcps={loadMcps}
           mode="configure"
