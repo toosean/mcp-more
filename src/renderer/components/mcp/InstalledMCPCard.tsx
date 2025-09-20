@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Play, Square, Edit, Folder, Globe, Loader2, AlertTriangle, Package } from 'lucide-react';
+import { Play, Square, Edit, Settings, Folder, Globe, Loader2, AlertTriangle, Package } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
 import { DisplayMCP } from '@/types/mcp';
 import MCPActionsDropdown from './MCPActionsDropdown';
@@ -227,13 +227,22 @@ export default function InstalledMCPCard({
               </Button>
             )}
 
+            {(mcpsWithInputs?.has(mcp.identifier)) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onConfigure(mcp)}
+              >
+                <Settings className="h-3 w-3 mr-1" />
+                {t('installed.buttons.config')}
+              </Button>
+            )}
+
             <MCPActionsDropdown
               mcp={mcp}
               onDetail={onDetail}
               onInspect={onInspect}
-              onConfigure={onConfigure}
               onDelete={onDelete}
-              mcpsWithInputs={mcpsWithInputs}
             />
           </div>
         </div>

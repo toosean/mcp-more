@@ -387,6 +387,7 @@
       "name": "MCP 名称",
       "command": "命令",
       "envVars": "环境变量（可选）",
+      "args": "参数（可选）",
       "url": "URL",
       "jsonConfig": "MCP 配置 (JSON)"
     },

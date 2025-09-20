@@ -387,6 +387,7 @@
       "name": "MCP Name",
       "command": "Command",
       "envVars": "Environment Variables (optional)",
+      "args": "Arguments (optional)",
       "url": "URL",
       "jsonConfig": "MCP Configuration (JSON)"
     },

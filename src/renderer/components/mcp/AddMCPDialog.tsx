@@ -41,7 +41,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     const parseEnvironmentVariables = (envText: string): Record<string, string> => {
       const env: Record<string, string> = {};
       if (!envText.trim()) return env;
-      
+
       const lines = envText.split('\n');
       for (const line of lines) {
         const trimmedLine = line.trim();
@@ -56,6 +56,12 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
       return env;
     };
 
+    const parseArguments = (argsText: string): string[] => {
+      if (!argsText.trim()) return [];
+
+      return argsText.split('\n');
+    };
+
     const serializeEnvironmentVariables = (env: Record<string, string> | null): string => {
       if (!env) return '';
       return Object.entries(env)
@@ -63,7 +69,12 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
         .join('\n');
     };
 
-    return { generateMCPId, parseEnvironmentVariables, serializeEnvironmentVariables };
+    const serializeArguments = (args: string[] | null): string => {
+      if (!args) return '';
+      return args.join('\n');
+    };
+
+    return { generateMCPId, parseEnvironmentVariables, serializeEnvironmentVariables, parseArguments, serializeArguments };
   }, []);
 
   // Common form validation
@@ -81,6 +92,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
     const name = formData.get('local-name') as string;
     const command = formData.get('local-path') as string;
     const envText = formData.get('local-env') as string || '';
+    const argsText = formData.get('local-args') as string || '';
 
     // Validate form
     const validation = validateForm({ name, command });
@@ -107,6 +119,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
         name,
         command,
         env: mcpHelpers.parseEnvironmentVariables(envText),
+        args: mcpHelpers.parseArguments(argsText),
         editingMCP
       });
 
@@ -342,6 +355,18 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="local-args">{t('addMCP.fields.args') || 'Arguments (optional)'}</Label>
+                <Textarea
+                  id="local-args"
+                  name="local-args"
+                  placeholder={`--arg1
+--flag
+value1`}
+                  defaultValue={isEditing && isLocalMCP ? mcpHelpers.serializeArguments(editingMCP?.config?.args) : ''}
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="local-env">{t('addMCP.fields.envVars')}</Label>
                 <Textarea
                   id="local-env"
@@ -349,7 +374,7 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
                   placeholder={`KEY1=value1
 KEY2=value2`}
                   defaultValue={isEditing && isLocalMCP ? mcpHelpers.serializeEnvironmentVariables(editingMCP?.config?.env) : ''}
-                  rows={3}
+                  rows={2}
                 />
               </div>
               <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">

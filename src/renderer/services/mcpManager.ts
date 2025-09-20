@@ -138,6 +138,7 @@ export function useMcpManager() {
               ...editingMCP.config,
               command: command || null,
               url: url || null,
+              args: args || null,
               env: env || null
             }
           };
