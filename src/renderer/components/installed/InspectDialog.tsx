@@ -245,6 +245,7 @@ export default function InspectDialog({
                         )}
 
                         {/* Parameters summary */}
+                        {/*
                         {tool.inputSchema && tool.inputSchema.properties && Object.keys(tool.inputSchema.properties).length > 0 ? (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span className="font-medium">{t('installed.inspect.parameters') || 'Parameters'}:</span>
@@ -264,6 +265,12 @@ export default function InspectDialog({
                             )}
                           </div>
                         ) : (
+                          <p className="text-xs text-muted-foreground italic">
+                            {t('installed.inspect.noParameters') || 'No parameters required'}
+                          </p>
+                        )}
+                        */}
+                        {(!tool.inputSchema || !tool.inputSchema.properties || Object.keys(tool.inputSchema.properties).length === 0) && (
                           <p className="text-xs text-muted-foreground italic">
                             {t('installed.inspect.noParameters') || 'No parameters required'}
                           </p>
