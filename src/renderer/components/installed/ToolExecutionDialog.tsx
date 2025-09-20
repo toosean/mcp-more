@@ -188,6 +188,36 @@ export default function ToolExecutionDialog({
             </div>
           )}
 
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+              {t('common.close') || 'Close'}
+            </Button>
+
+            <Button
+              onClick={() => {
+                if (hasParameters) {
+                  formRef.current?.submit();
+                } else {
+                  handleExecuteTool({});
+                }
+              }}
+              disabled={isExecuting}
+              className="min-w-[100px]"
+            >
+              {isExecuting ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                  {t('installed.toolExecution.executing') || 'Executing...'}
+                </>
+              ) : (
+                <>
+                  <Play className="h-3 w-3 mr-2" />
+                  {t('installed.toolExecution.execute') || 'Execute'}
+                </>
+              )}
+            </Button>
+          </div>
+
           {/* Execution Results */}
           {hasExecuted && (
             <>
@@ -243,7 +273,6 @@ export default function ToolExecutionDialog({
                     <JsonView
                       src={executionResult}
                       theme="default"
-                      collapsed={2}
                       enableClipboard={true}
                       style={{
                         fontSize: '13px',
@@ -257,35 +286,6 @@ export default function ToolExecutionDialog({
           )}
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            {t('common.close') || 'Close'}
-          </Button>
-
-          <Button
-            onClick={() => {
-              if (hasParameters) {
-                formRef.current?.submit();
-              } else {
-                handleExecuteTool({});
-              }
-            }}
-            disabled={isExecuting}
-            className="min-w-[100px]"
-          >
-            {isExecuting ? (
-              <>
-                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                {t('installed.toolExecution.executing') || 'Executing...'}
-              </>
-            ) : (
-              <>
-                <Play className="h-3 w-3 mr-2" />
-                {t('installed.toolExecution.execute') || 'Execute'}
-              </>
-            )}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
