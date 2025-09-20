@@ -3,17 +3,21 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useI18n } from '@/hooks/use-i18n';
 
 export interface FormFieldConfig {
-  type: 'string' | 'password' | 'select';
+  type: 'string' | 'password' | 'select' | 'checkbox';
   id: string;
   title?: string;
   description: string;
   defaultValue?: string;
+  required?: boolean;
+  wrapper?: string;
+  checkedValue?: string;
   options?: Array<{
     label: string;
     value: string;
@@ -110,12 +114,12 @@ const DynamicForm = forwardRef<DynamicFormRef, DynamicFormProps>(({ config, onSu
         control={form.control}
         name={id}
         rules={{
-          required: {
+          required: fieldConfig.required !== false && type !== 'checkbox' ? {
             value: true,
             message: t('dynamicForm.validation.required', { label: displayLabel }) || `${displayLabel} is required`
-          },
+          } : false,
           validate: (value) => {
-            if (!value || (typeof value === 'string' && value.trim() === '')) {
+            if (fieldConfig.required !== false && type !== 'checkbox' && (!value || (typeof value === 'string' && value.trim() === ''))) {
               return t('dynamicForm.validation.cannotBeEmpty', { label: displayLabel }) || `${displayLabel} cannot be empty`;
             }
             return true;
@@ -124,7 +128,7 @@ const DynamicForm = forwardRef<DynamicFormRef, DynamicFormProps>(({ config, onSu
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-1">
-              {displayLabel}
+              {(type === 'checkbox') ? '' : displayLabel}
             </FormLabel>
             <FormControl>
               {type === 'password' ? (
@@ -152,6 +156,22 @@ const DynamicForm = forwardRef<DynamicFormRef, DynamicFormProps>(({ config, onSu
                     ))}
                   </SelectContent>
                 </Select>
+              ) : type === 'checkbox' ? (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id={id}
+                    checked={field.value === fieldConfig.checkedValue}
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked ? fieldConfig.checkedValue : null);
+                    }}
+                  />
+                  <label
+                    htmlFor={id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {displayLabel}
+                  </label>
+                </div>
               ) : null}
             </FormControl>
             <FormDescription>

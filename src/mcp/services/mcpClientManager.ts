@@ -15,6 +15,7 @@ import { OAuthStateMachine } from './oauth/oauth-state-machine';
 import { is401Error } from './oauth/oauthUtils';
 import { JSONSchema7 } from "json-schema";
 import { ToolAnnotations } from "@modelcontextprotocol/sdk/types";
+import { FormFieldConfig } from "@/components/DynamicForm";
 
 export class McpStartNeedsAuthError extends Error{
   constructor(message: string) {
@@ -62,10 +63,15 @@ export class McpClientManager {
    * @param values 替换值的映射
    * @returns 替换后的字符串
    */
-  private replacePlaceholders(template: string, values: Record<string, string>): string {
-    return template.replace(/\$\{\{(\w+)\}\}/g, (match, key) => {
+  private replacePlaceholders(template: string, inputs: FormFieldConfig[], values: Record<string, string>): string {
+    return template.replace(/\$\{\{([\w\-_]+)\}\}/g, (match, key) => {
       const value = values[key];
       if (value !== undefined) {
+        const input = inputs.find(input => input.id === key);
+        const wrapper = input?.wrapper;
+        if (wrapper) {
+          return wrapper.replace('${{value}}', value);
+        }
         return value;
       }
       // 如果找不到对应的值，保留原始占位符并记录警告
@@ -74,9 +80,9 @@ export class McpClientManager {
     });
   }
 
-  private replaceHeaders(headers: Record<string, string>, values: Record<string, string>): Record<string, string> {
+  private replaceHeaders(headers: Record<string, string>, inputs: FormFieldConfig[], values: Record<string, string>): Record<string, string> {
     return Object.fromEntries(
-      Object.entries(headers).map(([key, value]) => [key, this.replacePlaceholders(value, values)])
+      Object.entries(headers).map(([key, value]) => [key, this.replacePlaceholders(value, inputs, values)])
     );
   }
 
@@ -91,7 +97,7 @@ export class McpClientManager {
     if (mcp.config.url) {
       // 远程 MCP - 使用 URL 连接
       // 替换URL中的占位符
-      const resolvedUrl = this.replacePlaceholders(mcp.config.url, mcp.inputValues || {});
+      const resolvedUrl = this.replacePlaceholders(mcp.config.url, mcp.inputs || [], mcp.inputValues || {});
       const url = new URL(resolvedUrl);
 
       // 获取最新的 MCP 配置（确保包含最新的 OAuth tokens）
@@ -101,7 +107,7 @@ export class McpClientManager {
       let headers: Record<string, string> = {};
 
       if (latestMcp.config.headers) {
-        headers = this.replaceHeaders(latestMcp.config.headers, mcp.inputValues || {});
+        headers = this.replaceHeaders(latestMcp.config.headers, mcp.inputs || [], mcp.inputValues || {});
       }
 
       // 检查 token 是否过期，如果过期则尝试刷新
@@ -151,22 +157,22 @@ export class McpClientManager {
     } else if (mcp.config.command) {
       // 本地 MCP - 使用命令行启动
       // 替换命令中的占位符
-      const resolvedCommand = this.replacePlaceholders(mcp.config.command, mcp.inputValues || {});
+      const resolvedCommand = this.replacePlaceholders(mcp.config.command, mcp.inputs || [], mcp.inputValues || {});
       const resolvedArgs = mcp.config.args ?
-        mcp.config.args.map(arg => this.replacePlaceholders(arg, mcp.inputValues || {})) :
+        mcp.config.args.map(arg => this.replacePlaceholders(arg, mcp.inputs || [], mcp.inputValues || {})) :
         [];
 
       // 替换环境变量中的占位符
       let resolvedEnvironment: Record<string, string> = {};
       if (mcp.config.env) {
         for (const [key, value] of Object.entries(mcp.config.env)) {
-          resolvedEnvironment[key] = this.replacePlaceholders(value, mcp.inputValues || {});
+          resolvedEnvironment[key] = this.replacePlaceholders(value, mcp.inputs || [], mcp.inputValues || {});
         }
       }
 
       transport = new StdioClientTransport({
         command: resolvedCommand,
-        args: resolvedArgs,
+        args: resolvedArgs.filter(arg => arg !== null && arg !== undefined && arg.trim() !== ''),
         env: resolvedEnvironment
       });
     } else {
