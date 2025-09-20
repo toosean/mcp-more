@@ -1000,6 +1000,110 @@ export class McpClientManager {
   }
 
   /**
+   * 获取指定MCP的工具列表
+   * @param mcpIdentifier MCP标识符
+   * @returns 工具列表结果，包含成功状态、工具数据和错误信息
+   */
+  async getMcpTools(mcpIdentifier: string): Promise<{
+    success: boolean;
+    tools?: Array<{
+      name: string;
+      description: string;
+      inputSchema: any;
+    }>;
+    error?: string;
+    status?: string;
+  }> {
+    try {
+      const mcp = this.getMcpByIdentifier(mcpIdentifier);
+      if (!mcp) {
+        return {
+          success: false,
+          error: `MCP not found: ${mcpIdentifier}`,
+          status: 'not_found'
+        };
+      }
+
+      // 获取 MCP 状态
+      const mcpStatus = await this.getMcpStatus(mcpIdentifier);
+
+      // 如果 MCP 没有运行，返回相应的错误信息
+      if (mcpStatus !== 'running') {
+        return {
+          success: false,
+          error: `MCP is not running (status: ${mcpStatus})`,
+          status: mcpStatus,
+          tools: []
+        };
+      }
+
+      // 从缓存中获取该 MCP 的工具
+      const cachedTools = await this.getCachedTools();
+      const mcpTools = cachedTools.filter(tool =>
+        tool.clientInstance.mcp.identifier === mcpIdentifier
+      );
+
+      // 返回工具信息，包含名称、描述和输入schema
+      const formattedTools = mcpTools.map(tool => ({
+        name: tool.name,
+        description: tool.description,
+        inputSchema: tool.inputSchema
+      }));
+
+      return {
+        success: true,
+        tools: formattedTools,
+        status: mcpStatus
+      };
+
+    } catch (error) {
+      log.error(`Failed to get tools for MCP ${mcpIdentifier}:`, error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        status: 'error',
+        tools: []
+      };
+    }
+  }
+
+  /**
+   * 调用MCP工具
+   * @param mcpIdentifier MCP标识符
+   * @param toolName 工具名称
+   * @param parameters 工具参数
+   * @returns 工具执行结果
+   */
+  async callToolByIdentifier(mcpIdentifier: string, toolName: string, parameters: any = {}): Promise<any> {
+    try {
+      const mcp = this.getMcpByIdentifier(mcpIdentifier);
+      if (!mcp) {
+        throw new Error(`MCP not found: ${mcpIdentifier}`);
+      }
+
+      // 检查MCP客户端是否连接
+      const clientInstance = this.getClientInstance(mcp);
+      if (!clientInstance) {
+        throw new Error(`MCP client not connected: ${mcpIdentifier}`);
+      }
+
+      // 调用工具
+      log.debug(`Calling tool ${toolName} with parameters:`, parameters);
+      const result = await clientInstance.client.callTool({
+        name: toolName,
+        arguments: parameters
+      });
+
+      log.debug(`Tool ${toolName} execution result:`, result);
+      return result;
+
+    } catch (error) {
+      log.error(`Failed to call tool ${toolName} for MCP ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * 清除 OAuth 数据
    */
   async clearOAuthData(mcpIdentifier: string): Promise<void> {

@@ -257,9 +257,10 @@
       "transitioning": "transitioning"
     },
     "buttons": {
-      "detail": "Detail",
+      "detail": "View in Store",
       "config": "Config",
-      "edit": "Edit"
+      "edit": "Edit",
+      "inspect": "Inspect"
     },
     "sections": {
       "yourMCPs": "Your MCPs"
@@ -335,6 +336,43 @@
       "success": "MCP restarted",
       "successDesc": "{{name}} has been restarted with new configuration.",
       "failed": "Failed to restart MCP"
+    },
+    "inspect": {
+      "title": "Inspect MCP Tools",
+      "description": "View available tools, their descriptions, and required parameters for this MCP.",
+      "loading": "Loading MCP tools...",
+      "noTools": "No tools available for this MCP",
+      "noToolsHint": "This MCP may not provide any tools, or it might need to be restarted.",
+      "toolsList": "Available Tools",
+      "tool": "tool",
+      "tools": "tools",
+      "toolBadge": "Tool",
+      "parameters": "Parameters",
+      "parameter": "parameter",
+      "noParameters": "No parameters required",
+      "viewParameters": "View parameter details",
+      "required": "Required",
+      "allowedValues": "Allowed values:",
+      "loadFailed": "Failed to load MCP tools information",
+      "mcpNotRunning": "MCP is not running. Please start the MCP first to view its tools.",
+      "mcpStarting": "MCP is starting up. Please wait a moment and try again.",
+      "mcpStopping": "MCP is stopping. Please wait a moment and try again.",
+      "mcpNotFound": "MCP configuration not found.",
+      "searchPlaceholder": "Search tools by name or description...",
+      "noSearchResults": "No tools found matching your search.",
+      "noSearchResultsHint": "Try adjusting your search terms or clear the search to view all tools."
+    },
+    "toolExecution": {
+      "title": "Execute Tool",
+      "description": "Configure parameters and execute this tool.",
+      "parameters": "Parameters",
+      "results": "Execution Results",
+      "execute": "Execute",
+      "executing": "Executing...",
+      "success": "Tool executed successfully",
+      "failed": "Tool execution failed",
+      "copy": "Copy",
+      "copied": "Copied!"
     }
   },
   "addMCP": {

@@ -89,6 +89,17 @@ declare global {
       stopMcp(mcpId: string): Promise<void>;
       getMcpStatus(mcpId: string): Promise<'stopped' | 'starting' | 'running' | 'stopping'>;
       getServerStatus(): Promise<McpServerStatus>;
+      getMcpTools(mcpId: string): Promise<{
+        success: boolean;
+        tools?: Array<{
+          name: string;
+          description: string;
+          inputSchema: any;
+        }>;
+        error?: string;
+        status?: string;
+      }>;
+      callTool(mcpId: string, toolName: string, parameters: any): Promise<any>;
       // triggerOAuthFlow(mcpId: string): Promise<boolean>;
       clearOAuthData(mcpId: string): Promise<void>;
     };

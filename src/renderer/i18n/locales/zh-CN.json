@@ -257,9 +257,10 @@
       "transitioning": "状态转换中"
     },
     "buttons": {
-      "detail": "详情",
+      "detail": "在商店中查看",
       "config": "配置",
-      "edit": "编辑"
+      "edit": "编辑",
+      "inspect": "检查"
     },
     "sections": {
       "yourMCPs": "您的 MCP"
@@ -335,6 +336,43 @@
       "success": "MCP 已重启",
       "successDesc": "{{name}} 已使用新配置重新启动。",
       "failed": "重启 MCP 失败"
+    },
+    "inspect": {
+      "title": "检查 MCP 工具",
+      "description": "查看此 MCP 可用的工具、描述和所需参数。",
+      "loading": "正在加载 MCP 工具...",
+      "noTools": "此 MCP 没有可用的工具",
+      "noToolsHint": "此 MCP 可能没有提供任何工具，或者需要重新启动。",
+      "toolsList": "可用工具",
+      "tool": "个工具",
+      "tools": "个工具",
+      "toolBadge": "工具",
+      "parameters": "参数",
+      "parameter": "个参数",
+      "noParameters": "无需参数",
+      "viewParameters": "查看参数详情",
+      "required": "必需",
+      "allowedValues": "允许的值：",
+      "loadFailed": "加载 MCP 工具信息失败",
+      "mcpNotRunning": "MCP 未运行。请先启动 MCP 以查看其工具。",
+      "mcpStarting": "MCP 正在启动中。请稍等片刻后重试。",
+      "mcpStopping": "MCP 正在停止中。请稍等片刻后重试。",
+      "mcpNotFound": "未找到 MCP 配置。",
+      "searchPlaceholder": "按名称或描述搜索工具...",
+      "noSearchResults": "未找到匹配您搜索的工具。",
+      "noSearchResultsHint": "请尝试调整搜索条件或清除搜索以查看所有工具。"
+    },
+    "toolExecution": {
+      "title": "执行工具",
+      "description": "配置参数并执行此工具。",
+      "parameters": "参数",
+      "results": "执行结果",
+      "execute": "执行",
+      "executing": "执行中...",
+      "success": "工具执行成功",
+      "failed": "工具执行失败",
+      "copy": "复制",
+      "copied": "已复制！"
     }
   },
   "addMCP": {

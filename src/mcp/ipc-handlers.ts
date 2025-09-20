@@ -108,5 +108,31 @@ export function setupMCPIpcHandlers(): void {
     }
   });
 
+  // 获取MCP工具列表
+  ipcMain.handle('mcp:get-mcp-tools', async (event, mcpIdentifier: string) => {
+    try {
+      log.debug(`Getting MCP tools for: ${mcpIdentifier}`);
+      const tools = await mcpClientManager.getMcpTools(mcpIdentifier);
+      log.debug(`Retrieved ${tools.tools?.length} tools for MCP: ${mcpIdentifier}`);
+      return tools;
+    } catch (error) {
+      log.error(`Failed to get MCP tools for ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  });
+
+  // 调用MCP工具
+  ipcMain.handle('mcp:call-tool', async (event, mcpIdentifier: string, toolName: string, parameters: any) => {
+    try {
+      log.info(`Calling MCP tool: ${toolName} for ${mcpIdentifier}`, parameters);
+      const result = await mcpClientManager.callToolByIdentifier(mcpIdentifier, toolName, parameters);
+      log.info(`MCP tool call completed: ${toolName} for ${mcpIdentifier}`);
+      return result;
+    } catch (error) {
+      log.error(`Failed to call MCP tool ${toolName} for ${mcpIdentifier}:`, error);
+      throw error;
+    }
+  });
+
   log.info('MCP IPC handlers set up');
 }

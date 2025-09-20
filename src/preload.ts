@@ -166,6 +166,17 @@ interface McpAPI {
   stopMcp(mcpId: string): Promise<void>;
   getMcpStatus(mcpId: string): Promise<'stopped' | 'starting' | 'running' | 'stopping'>;
   getServerStatus(): Promise<McpServerStatus>;
+  getMcpTools(mcpId: string): Promise<{
+    success: boolean;
+    tools?: Array<{
+      name: string;
+      description: string;
+      inputSchema: any;
+    }>;
+    error?: string;
+    status?: string;
+  }>;
+  callTool(mcpId: string, toolName: string, parameters: any): Promise<any>;
   // triggerOAuthFlow(mcpId: string): Promise<{
   //   success: boolean;
   //   authorizationUrl?: string;
@@ -222,6 +233,8 @@ const mcpAPI: McpAPI = {
   stopMcp: (mcpId: string) => ipcRenderer.invoke('mcp:stop-mcp', mcpId),
   getMcpStatus: (mcpId: string) => ipcRenderer.invoke('mcp:get-mcp-status', mcpId),
   getServerStatus: () => ipcRenderer.invoke('mcp:get-server-status'),
+  getMcpTools: (mcpId: string) => ipcRenderer.invoke('mcp:get-mcp-tools', mcpId),
+  callTool: (mcpId: string, toolName: string, parameters: any) => ipcRenderer.invoke('mcp:call-tool', mcpId, toolName, parameters),
   // triggerOAuthFlow: (mcpId: string) => ipcRenderer.invoke('mcp:trigger-oauth-flow', mcpId),
   // completeOAuthFlow: (mcpId: string, authorizationCode: string) =>
   //   ipcRenderer.invoke('mcp:complete-oauth-flow', mcpId, authorizationCode),
