@@ -11,7 +11,7 @@ import {
   Code,
   Terminal,
   Wrench,
-  Users
+  FileStack
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -27,7 +27,7 @@ const getNavigation = (t: any, enableProfile: boolean = false) => {
   ];
 
   if (enableProfile) {
-    baseNavigation.push({ name: t('navigation.profiles'), href: '/profiles', icon: Users });
+    baseNavigation.push({ name: t('navigation.profiles'), href: '/profiles', icon: FileStack });
   }
 
   baseNavigation.push({ name: t('navigation.settings'), href: '/settings', icon: Settings });
