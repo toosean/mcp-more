@@ -102,7 +102,7 @@ const ICON_NAMES = Object.keys(AVAILABLE_ICONS) as (keyof typeof AVAILABLE_ICONS
 // 获取图标组件
 const getIconComponent = (iconName?: string) => {
   if (!iconName || !(iconName in AVAILABLE_ICONS)) {
-    return User; // Default icon
+    return Settings; // Default icon
   }
   return AVAILABLE_ICONS[iconName as keyof typeof AVAILABLE_ICONS];
 };
@@ -124,7 +124,6 @@ export default function Profiles() {
   } = useProfiles();
 
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -174,11 +173,8 @@ export default function Profiles() {
     }
   }, [profiles, selectedProfile]);
 
-  // 过滤 profiles
-  const filteredProfiles = profiles.filter(profile =>
-    profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (profile.description && profile.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+
+
 
 
   // 生成有效的Profile ID
@@ -431,15 +427,6 @@ export default function Profiles() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search profiles..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
 
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -527,11 +514,11 @@ export default function Profiles() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                {t('profiles.title')} ({filteredProfiles.length})
+                {t('profiles.title')} ({profiles.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {filteredProfiles.map((profile) => (
+              {profiles.map((profile) => (
                 <div
                   key={profile.id}
                   className={`cursor-pointer transition-all duration-200 hover:shadow-md border-t ${
@@ -572,7 +559,7 @@ export default function Profiles() {
                 </div>
               ))}
 
-              {filteredProfiles.length === 0 && (
+              {profiles.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>{t('profiles.noProfiles')}</p>
