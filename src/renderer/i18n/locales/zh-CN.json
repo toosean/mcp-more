@@ -12,7 +12,8 @@
     "info": "信息",
     "submit": "提交",
     "submitting": "提交中...",
-    "close": "关闭"
+    "close": "关闭",
+    "noDescription": "暂无描述"
   },
   "navigation": {
     "market": "市场",
@@ -684,7 +685,8 @@
       "cancel": "取消",
       "delete": "删除",
       "activate": "激活",
-      "edit": "编辑"
+      "edit": "编辑",
+      "copy": "复制"
     },
     "sections": {
       "mcpAssignment": "MCP 服务器分配",
@@ -701,6 +703,9 @@
       "create": {
         "title": "创建新配置档案",
         "description": "创建新配置档案来组织您的 MCP 服务器。"
+      },
+      "edit": {
+        "description": "更新您的配置档案信息和设置。"
       },
       "delete": {
         "title": "删除配置档案",
@@ -744,7 +749,28 @@
       "activateFailed": {
         "title": "激活配置档案失败",
         "description": "激活配置档案时发生错误。"
+      },
+      "urlCopied": {
+        "title": "URL 已复制",
+        "description": "配置档案 URL 已复制到剪贴板：{{url}}"
+      },
+      "copyFailed": {
+        "title": "复制失败",
+        "description": "复制 URL 到剪贴板失败"
+      },
+      "updateMcpFailed": {
+        "description": "更新 MCP 分配失败"
       }
-    }
+    },
+    "info": {
+      "profileUrl": "配置档案 URL"
+    },
+    "labels": {
+      "selected": "已选择",
+      "mcpCount": "{{count}} 个 MCP",
+      "mcpCountPlural": "{{count}} 个 MCP"
+    },
+    "noMcpServers": "未安装 MCP 服务器",
+    "noMcpServersHint": "请先从市场安装 MCP 服务器"
   }
 }

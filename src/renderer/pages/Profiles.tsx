@@ -68,7 +68,7 @@ import { useProfiles } from '@/hooks/use-profiles';
 import { useConfig } from '@/hooks/use-config';
 import { Mcp, Profile } from 'src/config/types';
 
-// 可用的图标映射
+// Available icon mapping
 const AVAILABLE_ICONS = {
   Settings,
   User,
@@ -96,13 +96,13 @@ const AVAILABLE_ICONS = {
   Package,
 };
 
-// 图标名称数组
+// Icon names array
 const ICON_NAMES = Object.keys(AVAILABLE_ICONS) as (keyof typeof AVAILABLE_ICONS)[];
 
 // 获取图标组件
 const getIconComponent = (iconName?: string) => {
   if (!iconName || !(iconName in AVAILABLE_ICONS)) {
-    return User; // 默认图标
+    return User; // Default icon
   }
   return AVAILABLE_ICONS[iconName as keyof typeof AVAILABLE_ICONS];
 };
@@ -331,13 +331,13 @@ export default function Profiles() {
     try {
       await navigator.clipboard.writeText(url);
       toast({
-        title: 'URL Copied',
-        description: `Profile URL has been copied to clipboard: ${url}`,
+        title: t('profiles.toast.urlCopied.title'),
+        description: t('profiles.toast.urlCopied.description', { url }),
       });
     } catch (err) {
       toast({
-        title: 'Copy Failed',
-        description: 'Failed to copy URL to clipboard',
+        title: t('profiles.toast.copyFailed.title'),
+        description: t('profiles.toast.copyFailed.description'),
         variant: 'destructive',
       });
     }
@@ -384,8 +384,8 @@ export default function Profiles() {
       }
     } catch (err) {
       toast({
-        title: 'Error',
-        description: 'Failed to update MCP assignment',
+        title: t('common.error'),
+        description: t('profiles.toast.updateMcpFailed.description'),
         variant: 'destructive',
       });
     }
@@ -445,21 +445,21 @@ export default function Profiles() {
             <DialogTrigger asChild>
               <Button className="bg-gradient-primary hover:opacity-90">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Profile
+                {t('profiles.createProfile')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Create New Profile</DialogTitle>
+                <DialogTitle>{t('profiles.dialogs.create.title')}</DialogTitle>
                 <DialogDescription>
-                  Create a new profile to organize your MCP servers.
+                  {t('profiles.dialogs.create.description')}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">
 
                 <div className="space-y-2">
-                  <Label>Icon</Label>
+                  <Label>{t('profiles.fields.icon')}</Label>
                   <div className="grid grid-cols-8 gap-2 max-h-32 overflow-y-auto border rounded-md p-2">
                     {ICON_NAMES.map((iconName) => {
                       const IconComponent = AVAILABLE_ICONS[iconName];
@@ -479,27 +479,27 @@ export default function Profiles() {
                     })}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Selected: {editingProfile.icon || ICON_NAMES[0]}
+                    {t('profiles.labels.selected')}: {editingProfile.icon || ICON_NAMES[0]}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Profile Name</Label>
+                  <Label htmlFor="name">{t('profiles.fields.name')}</Label>
                   <Input
                     id="name"
                     value={editingProfile.name || ''}
                     onChange={(e) => setEditingProfile(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter profile name..."
+                    placeholder={t('profiles.placeholders.name')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t('profiles.fields.description')}</Label>
                   <Textarea
                     id="description"
                     value={editingProfile.description || ''}
                     onChange={(e) => setEditingProfile(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter profile description..."
+                    placeholder={t('profiles.placeholders.description')}
                     rows={3}
                   />
                 </div>
@@ -508,10 +508,10 @@ export default function Profiles() {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleCreateProfile}>
-                  Create Profile
+                  {t('profiles.createProfile')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -527,7 +527,7 @@ export default function Profiles() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Profiles ({filteredProfiles.length})
+                {t('profiles.title')} ({filteredProfiles.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -551,7 +551,7 @@ export default function Profiles() {
                         <h3 className="font-semibold">{profile.name}</h3>
                       </div>
                       <Badge variant="outline">
-                        {profile.mcpIdentifiers.length} MCP{profile.mcpIdentifiers.length !== 1 ? 's' : ''}
+                        {profile.mcpIdentifiers.length === 1 ? t('profiles.labels.mcpCount', { count: profile.mcpIdentifiers.length }) : t('profiles.labels.mcpCountPlural', { count: profile.mcpIdentifiers.length })}
                       </Badge>
                     </div>
 
@@ -575,8 +575,8 @@ export default function Profiles() {
               {filteredProfiles.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No profiles found</p>
-                  <p className="text-sm">Create your first profile to get started</p>
+                  <p>{t('profiles.noProfiles')}</p>
+                  <p className="text-sm">{t('profiles.noProfilesHint')}</p>
                 </div>
               )}
             </CardContent>
@@ -612,7 +612,7 @@ export default function Profiles() {
                         }}
                       >
                         <Edit className="h-4 w-4 mr-1" />
-                        Edit
+                        {t('common.edit')}
                       </Button>
 
                       <Button
@@ -633,7 +633,7 @@ export default function Profiles() {
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div>
-                      <Label className="text-muted-foreground">Profile URL</Label>
+                      <Label className="text-muted-foreground">{t('profiles.info.profileUrl')}</Label>
                       <div className="flex items-center gap-2 mt-1">
                         <code className="text-sm bg-muted p-2 rounded flex-1">
                           http://localhost:{portNumber}/{selectedProfile.id}/mcp
@@ -643,7 +643,7 @@ export default function Profiles() {
                           variant="outline"
                           onClick={() => handleCopyProfileUrl(selectedProfile)}
                         >
-                          📋
+                          {t('profiles.actions.copy')}
                         </Button>
                       </div>
                     </div>
@@ -718,10 +718,10 @@ export default function Profiles() {
                                 </div>
                                 <div>
                                   <h4 className="font-medium">{mcp.name}</h4>
-                                  <p className="text-sm text-muted-foreground" title={mcp.description || '暂无描述'}>
+                                  <p className="text-sm text-muted-foreground" title={mcp.description || t('common.noDescription')}>
                                     {(mcp.description && mcp.description.length > 40)
                                       ? mcp.description.slice(0, 40) + '...'
-                                      : (mcp.description || '暂无描述')}
+                                      : (mcp.description || t('common.noDescription'))}
                                   </p>
                                 </div>
                               </div>
@@ -734,8 +734,8 @@ export default function Profiles() {
                   {availableMcps.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
                       <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>No MCP servers installed</p>
-                      <p className="text-sm">Install MCP servers from the Market first</p>
+                      <p>{t('profiles.noMcpServers')}</p>
+                      <p className="text-sm">{t('profiles.noMcpServersHint')}</p>
                     </div>
                   )}
                 </CardContent>
@@ -745,9 +745,9 @@ export default function Profiles() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Users className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Profile Selected</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('profiles.noProfileSelected')}</h3>
                 <p className="text-muted-foreground text-center">
-                  Select a profile from the list to view and edit its configuration
+                  {t('profiles.noProfileSelectedHint')}
                 </p>
               </CardContent>
             </Card>
@@ -759,15 +759,15 @@ export default function Profiles() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle>{t('profiles.editProfile')}</DialogTitle>
             <DialogDescription>
-              Update your profile information and settings.
+              {t('profiles.dialogs.edit.description')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Icon</Label>
+              <Label>{t('profiles.fields.icon')}</Label>
               <div className="grid grid-cols-8 gap-2 max-h-32 overflow-y-auto border rounded-md p-2">
                 {ICON_NAMES.map((iconName) => {
                   const IconComponent = AVAILABLE_ICONS[iconName];
@@ -787,27 +787,27 @@ export default function Profiles() {
                 })}
               </div>
               <p className="text-xs text-muted-foreground">
-                Selected: {editingProfile.icon || ICON_NAMES[0]}
+                {t('profiles.labels.selected')}: {editingProfile.icon || ICON_NAMES[0]}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Profile Name</Label>
+              <Label htmlFor="edit-name">{t('profiles.fields.name')}</Label>
               <Input
                 id="edit-name"
                 value={editingProfile.name || ''}
                 onChange={(e) => setEditingProfile(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter profile name..."
+                placeholder={t('profiles.placeholders.name')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">{t('profiles.fields.description')}</Label>
               <Textarea
                 id="edit-description"
                 value={editingProfile.description || ''}
                 onChange={(e) => setEditingProfile(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter profile description..."
+                placeholder={t('profiles.placeholders.description')}
                 rows={3}
               />
             </div>
@@ -818,10 +818,10 @@ export default function Profiles() {
               setIsEditDialogOpen(false);
               setEditingProfile({});
             }}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleUpdateProfile}>
-              Save Changes
+              {t('profiles.actions.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -831,19 +831,18 @@ export default function Profiles() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Profile</AlertDialogTitle>
+            <AlertDialogTitle>{t('profiles.dialogs.delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the profile "{profileToDelete?.name}"?
-              This action cannot be undone.
+              {t('profiles.dialogs.delete.description', { name: profileToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteProfile}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -12,7 +12,8 @@
     "info": "Info",
     "submit": "Submit",
     "submitting": "Submitting...",
-    "close": "Close"
+    "close": "Close",
+    "noDescription": "No description available"
   },
   "navigation": {
     "market": "Market",
@@ -651,7 +652,8 @@
       "cancel": "Cancel",
       "delete": "Delete",
       "activate": "Activate",
-      "edit": "Edit"
+      "edit": "Edit",
+      "copy": "Copy"
     },
     "sections": {
       "mcpAssignment": "MCP Server Assignment",
@@ -668,6 +670,9 @@
       "create": {
         "title": "Create New Profile",
         "description": "Create a new profile to organize your MCP servers."
+      },
+      "edit": {
+        "description": "Update your profile information and settings."
       },
       "delete": {
         "title": "Delete Profile",
@@ -711,8 +716,29 @@
       "activateFailed": {
         "title": "Failed to Activate Profile",
         "description": "An error occurred while activating the profile."
+      },
+      "urlCopied": {
+        "title": "URL Copied",
+        "description": "Profile URL has been copied to clipboard: {{url}}"
+      },
+      "copyFailed": {
+        "title": "Copy Failed",
+        "description": "Failed to copy URL to clipboard"
+      },
+      "updateMcpFailed": {
+        "description": "Failed to update MCP assignment"
       }
-    }
+    },
+    "info": {
+      "profileUrl": "Profile URL"
+    },
+    "labels": {
+      "selected": "Selected",
+      "mcpCount": "{{count}} MCP",
+      "mcpCountPlural": "{{count}} MCPs"
+    },
+    "noMcpServers": "No MCP servers installed",
+    "noMcpServersHint": "Install MCP servers from the Market first"
   },
   "mcpManager": {
     "errors": {
