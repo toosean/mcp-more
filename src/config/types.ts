@@ -54,6 +54,8 @@ export interface GeneralSettings {
   minimizeOnStartup: boolean;
   /** 端口号 */
   portNumber: number;
+  /** 启用Profile功能 */
+  enableProfile: boolean;
 }
 
 // MCP 包
@@ -116,6 +118,26 @@ export interface MarketConfig {
   defaultPageSize: number;
 }
 
+// Profile 配置
+export interface Profile {
+  /** Profile 唯一标识符（用作 URL 路径） */
+  id: string;
+  /** Profile 名称 */
+  name: string;
+  /** Profile 描述 */
+  description?: string;
+  /** Profile 图标 */
+  icon?: string;
+  /** 分配给此 Profile 的 MCP 标识符列表 */
+  mcpIdentifiers: string[];
+  /** 创建时间 */
+  createdAt: string;
+  /** 最后更新时间 */
+  updatedAt: string;
+  /** 最后使用时间 */
+  lastUsed?: string;
+}
+
 // MCP 相关设置
 export interface MCPSettings {
   /** 已安装的 MCP 包 */
@@ -126,6 +148,8 @@ export interface MCPSettings {
   statistics: McpStatistics;
   /** 市场配置 */
   market: MarketConfig;
+  /** Profile 配置 */
+  profiles: Profile[];
 }
 
 // 应用配置的完整类型
@@ -192,6 +216,7 @@ export function createDefaultConfig(): AppConfig {
       language: getSystemDefaultLanguage(),
       minimizeOnStartup: false,
       portNumber: 7195,
+      enableProfile: false,
     },
     mcp: {
       installedMcps: [],
@@ -203,7 +228,8 @@ export function createDefaultConfig(): AppConfig {
       market: {
         apiBaseUrl: 'https://api.mcp-registry.org',
         defaultPageSize: 20
-      }
+      },
+      profiles: []
     },
     configVersion: '1.0.0',
     lastSaved: new Date().toISOString(),

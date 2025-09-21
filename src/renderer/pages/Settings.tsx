@@ -432,9 +432,24 @@ export default function Settings() {
                   {t('settings.general.minimizeOnStartup.description')}
                 </p>
               </div>
-              <Switch 
-                checked={localGeneral.minimizeOnStartup || false} 
-                onCheckedChange={(checked) => autoSave('minimizeOnStartup', checked)} 
+              <Switch
+                checked={localGeneral.minimizeOnStartup || false}
+                onCheckedChange={(checked) => autoSave('minimizeOnStartup', checked)}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label>{t('settings.general.enableProfile.label')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.general.enableProfile.description')}
+                </p>
+              </div>
+              <Switch
+                checked={localGeneral.enableProfile || false}
+                onCheckedChange={(checked) => autoSave('enableProfile', checked)}
               />
             </div>
 

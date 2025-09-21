@@ -5,6 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { 
   ArrowLeft, 
   BookOpen, 
   Copy,
@@ -14,10 +21,31 @@ import {
   Settings,
   CheckCircle,
   Bot,
-  Zap
+  Zap,
+  User,
+  UserCheck,
+  UserCog,
+  UserX,
+  Briefcase,
+  Monitor,
+  Laptop,
+  Smartphone,
+  Tablet,
+  Server,
+  Database,
+  Globe,
+  Star,
+  Heart,
+  Home,
+  Building,
+  Car,
+  Plane,
+  Rocket,
+  Package
 } from 'lucide-react';
 import { useI18n } from '@/hooks/use-i18n';
 import { useConfig } from '@/hooks/use-config';
+import { useProfiles } from '@/hooks/use-profiles';
 import { toast } from '@/hooks/use-toast';
 
 import ClaudeDesktopLogo from '@/assets/client-logos/ClaudeDesktop.png';
@@ -25,6 +53,42 @@ import ClaudeCodeLogo from '@/assets/client-logos/ClaudeCode.png';
 import CursorLogo from '@/assets/client-logos/Cursor.png';
 import VSCodeLogo from '@/assets/client-logos/VSCode.png';
 import AugmentCodeLogo from '@/assets/client-logos/Augment.png';
+
+// 可用的图标映射（与 Profiles.tsx 保持一致）
+const AVAILABLE_ICONS = {
+  Settings,
+  User,
+  UserCheck,
+  UserCog,
+  UserX,
+  Briefcase,
+  Monitor,
+  Laptop,
+  Smartphone,
+  Tablet,
+  Server,
+  Database,
+  Globe,
+  Code,
+  Terminal,
+  Zap,
+  Star,
+  Heart,
+  Home,
+  Building,
+  Car,
+  Plane,
+  Rocket,
+  Package,
+};
+
+// 获取图标组件
+const getIconComponent = (iconName?: string) => {
+  if (!iconName || !(iconName in AVAILABLE_ICONS)) {
+    return User; // 默认图标
+  }
+  return AVAILABLE_ICONS[iconName as keyof typeof AVAILABLE_ICONS];
+};
 
 // 客户端 LOGO 组件
 const ClientLogo = ({ client, className = "" }: { client: string; className?: string }) => {
@@ -78,19 +142,27 @@ export default function SetupGuide() {
   const navigate = useNavigate();
   const { currentLanguage } = useI18n();
   const { getConfig } = useConfig();
+  const { profiles, loading: profilesLoading } = useProfiles();
   const [copiedConfig, setCopiedConfig] = useState<string | null>(null);
   const [portNumber, setPortNumber] = useState<number>(7195);
+  const [selectedProfileId, setSelectedProfileId] = useState<string>('none');
+  const [enableProfile, setEnableProfile] = useState<boolean>(false);
 
-  // 读取端口配置
+  // 读取配置
   useEffect(() => {
-    const loadPort = async () => {
+    const loadConfig = async () => {
       const config = await getConfig();
       if (config?.general?.portNumber) {
         setPortNumber(config.general.portNumber);
       }
+      if (config?.general?.enableProfile !== undefined) {
+        setEnableProfile(config.general.enableProfile);
+      }
     };
-    loadPort();
+    loadConfig();
   }, [getConfig]);
+
+  // 不再自动设置默认 profile，允许用户不选择
 
   const handleBack = () => {
     navigate('/settings');
@@ -108,11 +180,28 @@ export default function SetupGuide() {
   };
 
   const mcpMoreAlias = "x";
+  const selectedProfile = profiles.find(p => p.id === selectedProfileId);
+
+  // 生成基于 profile 的 URL
+  const generateMcpUrl = (profileId?: string): string => {
+    // 如果 profile 功能未启用，始终使用默认 URL
+    if (!enableProfile) {
+      return `http://localhost:${portNumber}/mcp`;
+    }
+    
+    if (profileId && profileId !== 'none') {
+      // 特定 Profile：使用 /{profileId}/mcp 路径
+      return `http://localhost:${portNumber}/${profileId}/mcp`;
+    } else {
+      // 默认：使用 /mcp 路径
+      return `http://localhost:${portNumber}/mcp`;
+    }
+  };
 
   const mcpConfigurationJson = {
     "mcpServers": {
       [mcpMoreAlias]: {
-        "url": `http://localhost:${portNumber}/mcp`
+        "url": generateMcpUrl(selectedProfileId)
       }
     }
   };
@@ -123,6 +212,13 @@ export default function SetupGuide() {
     'zh-CN': {
       title: 'MCP 客户端设置向导',
       subtitle: '选择您的 MCP 客户端，按照指引完成配置',
+      profileSelector: {
+        placeholder: '选择 Profile',
+        loading: '加载中...',
+        title: '选择 Profile（可选）',
+        description: '选择一个 Profile 来生成个性化的 MCP 服务器 URL，或留空使用默认配置',
+        noProfile: '不使用 Profile'
+      },
       tabs: {
         claude: 'Claude Desktop',
         claudecode: 'Claude Code',
@@ -169,7 +265,7 @@ export default function SetupGuide() {
             title: '1. 使用命令行添加 MCP 服务器',
             content: '使用 Claude Code CLI 添加 MCP More 服务器：',
             config: `claude mcp add-json ${mcpMoreAlias} '${JSON.stringify({
-              "url": `http://localhost:${portNumber}/mcp`
+              "url": "${generateMcpUrl(selectedProfileId)}"
             })}'`
           },
           {
@@ -188,7 +284,7 @@ export default function SetupGuide() {
             config: `{
   "mcpServers": {
     "${mcpMoreAlias}": {
-      "url": "http://localhost:${portNumber}/mcp"
+      "url": "${generateMcpUrl(selectedProfileId)}"
     }
   }
 }`
@@ -234,7 +330,7 @@ export default function SetupGuide() {
             config: `{
   "mcp.servers": {
     "${mcpMoreAlias}": {
-      "url": "http://localhost:${portNumber}/mcp"
+      "url": "${generateMcpUrl(selectedProfileId)}"
     }
   },
   "mcp.enableAutoStart": true
@@ -287,7 +383,7 @@ export default function SetupGuide() {
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const transport = new StreamableHTTPClientTransport("http://localhost:${portNumber}/mcp");
+const transport = new StreamableHTTPClientTransport("${generateMcpUrl(selectedProfileId)}");
 
 const client = new Client({
   name: "my-client",
@@ -302,6 +398,13 @@ await client.connect(transport);`
     'en-US': {
       title: 'MCP Client Setup Guide',
       subtitle: 'Choose your MCP client and follow the guide to complete the configuration',
+      profileSelector: {
+        placeholder: 'Select Profile',
+        loading: 'Loading...',
+        title: 'Select Profile (Optional)',
+        description: 'Select a profile to generate a personalized MCP server URL, or leave empty for default configuration',
+        noProfile: 'No Profile'
+      },
       tabs: {
         claude: 'Claude Desktop',
         claudecode: 'Claude Code',
@@ -348,7 +451,7 @@ await client.connect(transport);`
             title: '1. Add MCP Server via Command Line',
             content: 'Use Claude Code CLI to add MCP More server:',
             config: `claude mcp add-json ${mcpMoreAlias} '${JSON.stringify({
-              "url": `http://localhost:${portNumber}/mcp`
+              "url": "${generateMcpUrl(selectedProfileId)}"
             })}'`
           },
           {
@@ -367,7 +470,7 @@ await client.connect(transport);`
             config: `{
   "mcpServers": {
     "${mcpMoreAlias}": {
-      "url": "http://localhost:${portNumber}/mcp"
+      "url": "${generateMcpUrl(selectedProfileId)}"
     }
   }
 }`
@@ -413,7 +516,7 @@ await client.connect(transport);`
             config: `{
   "mcp.servers": {
     "${mcpMoreAlias}": {
-      "url": "http://localhost:${portNumber}/mcp"
+      "url": "${generateMcpUrl(selectedProfileId)}"
     }
   },
   "mcp.enableAutoStart": true
@@ -466,7 +569,7 @@ await client.connect(transport);`
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const transport = new StreamableHTTPClientTransport("http://localhost:${portNumber}/mcp");
+const transport = new StreamableHTTPClientTransport("${generateMcpUrl(selectedProfileId)}");
 
 const client = new Client({
   name: "my-client",
@@ -529,6 +632,49 @@ await client.connect(transport);`
               <span className="text-xs">{data.tabs.others}</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* Profile 选择器 - 仅在启用 Profile 功能时显示 */}
+          {enableProfile && (
+            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-muted-foreground" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-sm mb-1">
+                    {data.profileSelector.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {data.profileSelector.description}
+                  </p>
+                </div>
+                <Select value={selectedProfileId} onValueChange={setSelectedProfileId} disabled={profilesLoading}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue placeholder={profilesLoading ? data.profileSelector.loading : data.profileSelector.placeholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded bg-muted flex items-center justify-center">
+                          <span className="text-xs">—</span>
+                        </div>
+                        <span>{data.profileSelector.noProfile}</span>
+                      </div>
+                    </SelectItem>
+                    {profiles.map((profile) => {
+                      const IconComponent = getIconComponent(profile.icon);
+                      return (
+                        <SelectItem key={profile.id} value={profile.id}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent className="h-4 w-4 text-primary" />
+                            <span>{profile.name}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
 
           <TabsContent value="claude" className="space-y-6 mt-6">
             <Card>

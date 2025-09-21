@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/hooks/use-i18n';
+import { useConfigSection } from '@/hooks/use-config';
 import {
   Store,
   Package,
@@ -9,7 +10,8 @@ import {
   Search,
   Code,
   Terminal,
-  Wrench
+  Wrench,
+  Users
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
@@ -18,11 +20,20 @@ import logoDev from '@/assets/logo-dev.png';
 
 const logo = process.env.NODE_ENV === 'development' ? logoDev : logoProd;
 
-const getNavigation = (t: any) => [
-  { name: t('navigation.market'), href: '/', icon: Store },
-  { name: t('navigation.installed'), href: '/installed', icon: Package },
-  { name: t('navigation.settings'), href: '/settings', icon: Settings },
-];
+const getNavigation = (t: any, enableProfile: boolean = false) => {
+  const baseNavigation = [
+    { name: t('navigation.market'), href: '/', icon: Store },
+    { name: t('navigation.installed'), href: '/installed', icon: Package },
+  ];
+
+  if (enableProfile) {
+    baseNavigation.push({ name: t('navigation.profiles'), href: '/profiles', icon: Users });
+  }
+
+  baseNavigation.push({ name: t('navigation.settings'), href: '/settings', icon: Settings });
+
+  return baseNavigation;
+};
 
 const getQuickSetupItems = (t: any) => [
   { name: t('sidebar.quickSetup.claudeCode'), icon: Code },
@@ -35,8 +46,11 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { t } = useI18n();
-  
-  const navigation = getNavigation(t);
+  const { data: generalConfig } = useConfigSection('general');
+
+  const enableProfile = generalConfig?.enableProfile || false;
+
+  const navigation = getNavigation(t, enableProfile);
   const quickSetupItems = getQuickSetupItems(t);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -97,10 +111,11 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
-          const isActive = location.pathname === item.href || 
+          const isActive = location.pathname === item.href ||
             (item.href === '/' && location.pathname === '/browse') ||
             (item.href === "/" && location.pathname.startsWith('/mcp/')) ||
-            (item.href === "/settings" && location.pathname === "/setup-guide");
+            (item.href === "/settings" && location.pathname === "/setup-guide") ||
+            (item.href === "/profiles" && location.pathname.startsWith('/profiles'));
           return (
             <Link
               key={item.name}

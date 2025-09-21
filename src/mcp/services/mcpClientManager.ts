@@ -53,8 +53,11 @@ export class McpClientManager {
   private getEnabledMcps(): Mcp[] {
     const installedMcps = this.getAllMcps();
 
-    // 数组结构，只返回已启用的包
-    return installedMcps.filter(mcp => mcp.enabled && mcp.installed !== null);
+    // 过滤已启用且已安装的 MCP
+    const enabledMcps = installedMcps.filter(mcp => mcp.enabled && mcp.installed !== null);
+
+    log.debug(`Found ${enabledMcps.length} enabled MCPs`);
+    return enabledMcps;
   }
 
   /**

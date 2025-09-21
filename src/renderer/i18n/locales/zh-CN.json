@@ -17,6 +17,7 @@
   "navigation": {
     "market": "市场",
     "installed": "已安装",
+    "profiles": "配置档案",
     "settings": "设置",
     "formTest": "表单测试"
   },
@@ -110,6 +111,10 @@
       "minimizeOnStartup": {
         "label": "启动时最小化",
         "description": "应用启动时自动最小化到系统托盘"
+      },
+      "enableProfile": {
+        "label": "启用Profile功能",
+        "description": "启用多配置文件功能，允许为不同客户端配置独立的MCP服务器"
       },
       "portNumber": {
         "label": "端口号",
@@ -628,6 +633,118 @@
       "oauthConfirmRequired": "{{name}} 需要OAuth身份验证以访问外部服务。是否要开始OAuth验证？",
       "startOAuth": "继续",
       "notNow": "稍后处理"
+    }
+  },
+  "profiles": {
+    "title": "配置档案管理",
+    "description": "管理您的 MCP 服务器配置档案",
+    "searchPlaceholder": "搜索配置档案...",
+    "createProfile": "创建配置档案",
+    "editProfile": "编辑配置档案",
+    "deleteProfile": "删除配置档案",
+    "activateProfile": "激活",
+    "profileCount": "{{count}} 个配置档案",
+    "profileCountPlural": "{{count}} 个配置档案",
+    "noProfiles": "未找到配置档案",
+    "noProfilesHint": "创建您的第一个配置档案以开始使用",
+    "noProfileSelected": "未选择配置档案",
+    "noProfileSelectedHint": "从列表中选择一个配置档案以查看和编辑其配置",
+    "status": {
+      "active": "激活",
+      "inactive": "未激活"
+    },
+    "info": {
+      "created": "创建时间",
+      "lastUpdated": "最后更新",
+      "lastUsed": "最后使用",
+      "icon": "图标",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "mcpCount": "{{count}} 个 MCP 服务器",
+      "mcpCountPlural": "{{count}} 个 MCP 服务器",
+      "activeClients": "{{count}} 个活跃客户端",
+      "activeClientsPlural": "{{count}} 个活跃客户端"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "hoursAgo": "{{hours}} 小时前",
+      "daysAgo": "{{days}} 天前"
+    },
+    "fields": {
+      "name": "配置档案名称",
+      "description": "描述",
+      "icon": "图标"
+    },
+    "placeholders": {
+      "name": "输入配置档案名称...",
+      "description": "输入配置档案描述..."
+    },
+    "actions": {
+      "save": "保存更改",
+      "cancel": "取消",
+      "delete": "删除",
+      "activate": "激活",
+      "edit": "编辑"
+    },
+    "sections": {
+      "mcpAssignment": "MCP 服务器分配",
+      "mcpAssignmentHint": "选择此配置档案中应可用的 MCP 服务器",
+      "availableServers": "可用的 MCP 服务器",
+      "assignedServers": "分配给此配置档案"
+    },
+    "categories": {
+      "developmentTools": "开发工具",
+      "webApi": "Web 和 API",
+      "databaseStorage": "数据库和存储"
+    },
+    "dialogs": {
+      "create": {
+        "title": "创建新配置档案",
+        "description": "创建新配置档案来组织您的 MCP 服务器。"
+      },
+      "delete": {
+        "title": "删除配置档案",
+        "description": "确定要删除配置档案 \"{{name}}\" 吗？此操作无法撤销。"
+      }
+    },
+    "validation": {
+      "nameRequired": "请输入配置档案名称",
+      "nameExists": "配置档案名称已存在",
+      "nameExistsDescription": "请使用不同的配置档案名称"
+    },
+    "toast": {
+      "created": {
+        "title": "配置档案已创建",
+        "description": "配置档案 \"{{name}}\" 已成功创建。"
+      },
+      "updated": {
+        "title": "配置档案已更新",
+        "description": "配置档案 \"{{name}}\" 已成功更新。"
+      },
+      "deleted": {
+        "title": "配置档案已删除",
+        "description": "配置档案 \"{{name}}\" 已被删除。"
+      },
+      "activated": {
+        "title": "配置档案已激活",
+        "description": "配置档案 \"{{name}}\" 现已激活。"
+      },
+      "createFailed": {
+        "title": "创建配置档案失败",
+        "description": "创建配置档案时发生错误。"
+      },
+      "updateFailed": {
+        "title": "更新配置档案失败",
+        "description": "更新配置档案时发生错误。"
+      },
+      "deleteFailed": {
+        "title": "删除配置档案失败",
+        "description": "删除配置档案时发生错误。"
+      },
+      "activateFailed": {
+        "title": "激活配置档案失败",
+        "description": "激活配置档案时发生错误。"
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import log from 'electron-log';
 import { McpToolRegister, McpToolInstance, ToolCallRecord } from '../interfaces/types.js';
 import { convertJsonSchema7ToZodRawShape } from '../utils/schemaConverter.js';
@@ -14,35 +14,54 @@ import { mcpServerManager } from "./mcpServer.js";
  */
 export class ToolRegistry {
     private toolRegisters: McpToolRegister[] = [];
+    private toolRegistersProfileMap: Map<string, McpToolRegister[]> = new Map();
 
-    /**
-     * 刷新工具注册
-     */
-    async refreshToolRegisters(): Promise<void> {
+    private async refreshToolRegistersWithHolder(toolRegisterHolder: McpToolRegister[], profileId?: string): Promise<McpToolRegister[]> {
 
-        log.debug('Refreshing tool registers');
+        log.debug(`Refreshing tool registers for profile: ${profileId}`);
 
         const cachedToolInstances = await mcpClientManager.getCachedTools();
-
-        const toolRegisterHolder = this.toolRegisters;
-
+        let holder = toolRegisterHolder;
+        
         // 检查已经注册的工具是否已经删除了，如果删除了，则需要删除注册
-        for (const toolRegister of toolRegisterHolder) {
+        for (const toolRegister of holder) {
             if (!cachedToolInstances.some(toolInstance => toolRegister.wrapperName === toolInstance.wrapperName)) {
                 toolRegister.toolRegister.remove();
-                this.toolRegisters = this.toolRegisters.filter(tr => tr !== toolRegister);
+                holder = holder.filter(tr => tr !== toolRegister);
             }
         }
 
         // 检查是否存在未注册的工具，如果存在，则需要注册
         for (const toolInstance of cachedToolInstances) {
-            if (!toolRegisterHolder.some(toolRegister => toolRegister.wrapperName === toolInstance.wrapperName)) {
+            if (!holder.some(toolRegister => toolRegister.wrapperName === toolInstance.wrapperName)) {
                 for (const server of mcpServerManager.getAllMcpServers()) {
-                    this.registerTool(server, toolInstance);
+                    const toolRegister = this.registerTool(server, toolInstance);
+                    holder.push({
+                        server,
+                        wrapperName: toolInstance.wrapperName,
+                        toolRegister: toolRegister
+                    });
                 }
             }
         }
 
+        return holder;
+
+    }
+
+    /**
+     * 刷新工具注册
+     */
+    async refreshToolRegisters(): Promise<void> {
+        this.toolRegisters = await this.refreshToolRegistersWithHolder(this.toolRegisters);
+    }
+
+    /**
+     * 为指定 Profile 刷新工具注册
+     * @param profileId Profile ID
+     */
+    async refreshToolRegistersForProfile(profileId: string): Promise<void> {
+        this.toolRegistersProfileMap.set(profileId, await this.refreshToolRegistersWithHolder(this.toolRegistersProfileMap.get(profileId) || [], profileId));
     }
     
     /**
@@ -50,16 +69,45 @@ export class ToolRegistry {
      * @param server MCP 服务器实例
      */
     async registerAllTools(server: McpServer): Promise<void> {
-        log.debug('Start to register tools');
-        
+        log.debug('Start to register all tools');
+
         const toolInstances = await mcpClientManager.getCachedTools();
-        this.toolRegisters = []; // 清空现有注册
 
         toolInstances.forEach(toolInstance => {
             this.registerTool(server, toolInstance);
         });
 
-        log.info(`Registered ${this.toolRegisters.length} tools`);
+        log.info(`Registered ${this.toolRegisters.length} tools for all profiles`);
+    }
+
+    /**
+     * 为特定 Profile 的 MCP 服务器注册工具
+     * @param server MCP 服务器实例
+     * @param profileId Profile ID
+     */
+    async registerToolsForProfile(server: McpServer, profileId: string): Promise<void> {
+        log.debug(`Start to register tools for profile: ${profileId}`);
+
+        // 获取指定 Profile
+        const profile = configManager.getProfile(profileId);
+        if (!profile) {
+            log.warn(`Profile not found: ${profileId}`);
+            return;
+        }
+
+        // 获取所有工具实例
+        const allToolInstances = await mcpClientManager.getCachedTools();
+
+        // 过滤出属于该 Profile 的工具
+        const profileToolInstances = allToolInstances.filter(toolInstance =>
+            profile.mcpIdentifiers.includes(toolInstance.clientInstance.mcp.identifier)
+        );
+
+        profileToolInstances.forEach(toolInstance => {
+            this.registerTool(server, toolInstance);
+        });
+
+        log.info(`Registered ${this.toolRegisters.length} tools for profile: ${profileId} (${profile.name})`);
     }
 
     /**
@@ -70,7 +118,7 @@ export class ToolRegistry {
     private registerTool(
         server: McpServer, 
         toolInstance: McpToolInstance
-    ): void {
+    ): RegisteredTool {
         log.debug(`Register tool: ${toolInstance.name} -> ${toolInstance.wrapperName}`);
         
         const wrapperName = toolInstance.wrapperName;
@@ -86,11 +134,7 @@ export class ToolRegistry {
             }
         );
 
-        this.toolRegisters.push({
-            wrapperName,
-            server,
-            toolRegister
-        });
+        return toolRegister;
     }
 
     /**

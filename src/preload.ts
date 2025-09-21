@@ -3,7 +3,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import log from 'electron-log/renderer';
-import { AppConfig, PartialAppConfig } from './config/types';
+import { AppConfig, PartialAppConfig, Profile } from './config/types';
 import { RuntimeInfo } from './runtime/RuntimeManager';
 
 // 配置渲染进程的 electron-log
@@ -53,6 +53,20 @@ interface ConfigAPI {
   
   // 监听统计信息更新
   onStatisticsUpdate(callback: (statistics: any) => void): () => void;
+
+  // Profile 相关方法
+  getProfiles(): Promise<Profile[]>;
+  getProfile(profileId: string): Promise<Profile | undefined>;
+  getProfileById(profileId: string): Promise<Profile | undefined>;
+  createProfile(profile: Omit<Profile, 'createdAt' | 'updatedAt'>): Promise<Profile>;
+  updateProfile(profileId: string, updates: Partial<Omit<Profile, 'id' | 'createdAt'>>): Promise<Profile | null>;
+  deleteProfile(profileId: string): Promise<boolean>;
+  updateProfileLastUsed(profileId: string): Promise<boolean>;
+  assignMcpToProfile(profileId: string, mcpIdentifier: string): Promise<boolean>;
+  removeMcpFromProfile(profileId: string, mcpIdentifier: string): Promise<boolean>;
+  getProfileMcpIdentifiers(profileId: string): Promise<string[]>;
+  isMcpAssignedToProfile(profileId: string, mcpIdentifier: string): Promise<boolean>;
+  getProfileMcpIdentifiersList(profileId: string): Promise<string[]>;
 }
 
 // 配置 API 实现
@@ -94,6 +108,20 @@ const configAPI: ConfigAPI = {
       ipcRenderer.removeAllListeners('statistics:updated');
     };
   },
+
+  // Profile 相关方法实现
+  getProfiles: () => ipcRenderer.invoke('config:get-profiles'),
+  getProfile: (profileId: string) => ipcRenderer.invoke('config:get-profile', profileId),
+  getProfileById: (profileId: string) => ipcRenderer.invoke('config:get-profile-by-id', profileId),
+  createProfile: (profile: Omit<Profile, 'createdAt' | 'updatedAt'>) => ipcRenderer.invoke('config:create-profile', profile),
+  updateProfile: (profileId: string, updates: Partial<Omit<Profile, 'id' | 'createdAt'>>) => ipcRenderer.invoke('config:update-profile', profileId, updates),
+  deleteProfile: (profileId: string) => ipcRenderer.invoke('config:delete-profile', profileId),
+  updateProfileLastUsed: (profileId: string) => ipcRenderer.invoke('config:update-profile-last-used', profileId),
+  assignMcpToProfile: (profileId: string, mcpIdentifier: string) => ipcRenderer.invoke('config:assign-mcp-to-profile', profileId, mcpIdentifier),
+  removeMcpFromProfile: (profileId: string, mcpIdentifier: string) => ipcRenderer.invoke('config:remove-mcp-from-profile', profileId, mcpIdentifier),
+  getProfileMcpIdentifiers: (profileId: string) => ipcRenderer.invoke('config:get-profile-mcp-identifiers', profileId),
+  isMcpAssignedToProfile: (profileId: string, mcpIdentifier: string) => ipcRenderer.invoke('config:is-mcp-assigned-to-profile', profileId, mcpIdentifier),
+  getProfileMcpIdentifiersList: (profileId: string) => ipcRenderer.invoke('config:get-profile-mcp-identifiers-list', profileId),
 };
 
 // 应用信息 API 实现
@@ -239,7 +267,7 @@ const mcpAPI: McpAPI = {
   // completeOAuthFlow: (mcpId: string, authorizationCode: string) =>
   //   ipcRenderer.invoke('mcp:complete-oauth-flow', mcpId, authorizationCode),
   // getOAuthState: (mcpId: string) => ipcRenderer.invoke('mcp:get-oauth-state', mcpId),
-  clearOAuthData: (mcpId: string) => ipcRenderer.invoke('mcp:clear-oauth-data', mcpId)
+  clearOAuthData: (mcpId: string) => ipcRenderer.invoke('mcp:clear-oauth-data', mcpId),
 };
 
 // Shell API 实现

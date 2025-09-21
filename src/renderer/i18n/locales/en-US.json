@@ -17,6 +17,7 @@
   "navigation": {
     "market": "Market",
     "installed": "Installed",
+    "profiles": "Profiles",
     "settings": "Settings",
     "formTest": "Form Test"
   },
@@ -110,6 +111,10 @@
       "minimizeOnStartup": {
         "label": "Minimize on Startup",
         "description": "Automatically minimize to system tray on startup"
+      },
+      "enableProfile": {
+        "label": "Enable Profile Feature",
+        "description": "Enable multi-profile functionality for configuring independent MCP servers for different clients"
       },
       "portNumber": {
         "label": "Port Number",
@@ -595,6 +600,118 @@
     "runtime": {
       "notInstalled": "Runtime {{name}} not installed",
       "check": "Check"
+    }
+  },
+  "profiles": {
+    "title": "Profile Management",
+    "description": "Manage your MCP server profiles and configurations",
+    "searchPlaceholder": "Search profiles...",
+    "createProfile": "Create Profile",
+    "editProfile": "Edit Profile",
+    "deleteProfile": "Delete Profile",
+    "activateProfile": "Activate",
+    "profileCount": "{{count}} profile",
+    "profileCountPlural": "{{count}} profiles",
+    "noProfiles": "No profiles found",
+    "noProfilesHint": "Create your first profile to get started",
+    "noProfileSelected": "No Profile Selected",
+    "noProfileSelectedHint": "Select a profile from the list to view and edit its configuration",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "info": {
+      "created": "Created",
+      "lastUpdated": "Last Updated",
+      "lastUsed": "Last Used",
+      "icon": "Icon",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "mcpCount": "{{count}} MCP server",
+      "mcpCountPlural": "{{count}} MCP servers",
+      "activeClients": "{{count}} active client",
+      "activeClientsPlural": "{{count}} active clients"
+    },
+    "time": {
+      "justNow": "Just now",
+      "hoursAgo": "{{hours}}h ago",
+      "daysAgo": "{{days}}d ago"
+    },
+    "fields": {
+      "name": "Profile Name",
+      "description": "Description",
+      "icon": "Icon"
+    },
+    "placeholders": {
+      "name": "Enter profile name...",
+      "description": "Enter profile description..."
+    },
+    "actions": {
+      "save": "Save Changes",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "activate": "Activate",
+      "edit": "Edit"
+    },
+    "sections": {
+      "mcpAssignment": "MCP Server Assignment",
+      "mcpAssignmentHint": "Select which MCP servers should be available in this profile",
+      "availableServers": "Available MCP Servers",
+      "assignedServers": "Assigned to this Profile"
+    },
+    "categories": {
+      "developmentTools": "Development Tools",
+      "webApi": "Web & API",
+      "databaseStorage": "Database & Storage"
+    },
+    "dialogs": {
+      "create": {
+        "title": "Create New Profile",
+        "description": "Create a new profile to organize your MCP servers."
+      },
+      "delete": {
+        "title": "Delete Profile",
+        "description": "Are you sure you want to delete the profile \"{{name}}\"? This action cannot be undone."
+      }
+    },
+    "validation": {
+      "nameRequired": "Profile name is required",
+      "nameExists": "Profile name already exists",
+      "nameExistsDescription": "Please use a different profile name"
+    },
+    "toast": {
+      "created": {
+        "title": "Profile Created",
+        "description": "Profile \"{{name}}\" has been created successfully."
+      },
+      "updated": {
+        "title": "Profile Updated",
+        "description": "Profile \"{{name}}\" has been updated successfully."
+      },
+      "deleted": {
+        "title": "Profile Deleted",
+        "description": "Profile \"{{name}}\" has been deleted."
+      },
+      "activated": {
+        "title": "Profile Activated",
+        "description": "Profile \"{{name}}\" is now active."
+      },
+      "createFailed": {
+        "title": "Failed to Create Profile",
+        "description": "An error occurred while creating the profile."
+      },
+      "updateFailed": {
+        "title": "Failed to Update Profile",
+        "description": "An error occurred while updating the profile."
+      },
+      "deleteFailed": {
+        "title": "Failed to Delete Profile",
+        "description": "An error occurred while deleting the profile."
+      },
+      "activateFailed": {
+        "title": "Failed to Activate Profile",
+        "description": "An error occurred while activating the profile."
+      }
     }
   },
   "mcpManager": {

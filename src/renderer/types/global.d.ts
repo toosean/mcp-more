@@ -64,6 +64,20 @@ declare global {
       
       // 监听统计信息更新
       onStatisticsUpdate(callback: (statistics: any) => void): () => void;
+
+      // Profile 相关方法
+      getProfiles(): Promise<Profile[]>;
+      getProfile(profileId: string): Promise<Profile | undefined>;
+      getProfileById(profileId: string): Promise<Profile | undefined>;
+      createProfile(profile: Omit<Profile, 'createdAt' | 'updatedAt'> & { id?: string }): Promise<Profile>;
+      updateProfile(profileId: string, updates: Partial<Omit<Profile, 'id' | 'createdAt'>>): Promise<Profile | null>;
+      deleteProfile(profileId: string): Promise<boolean>;
+      updateProfileLastUsed(profileId: string): Promise<boolean>;
+      assignMcpToProfile(profileId: string, mcpIdentifier: string): Promise<boolean>;
+      removeMcpFromProfile(profileId: string, mcpIdentifier: string): Promise<boolean>;
+      getProfileMcpIdentifiers(profileId: string): Promise<string[]>;
+      isMcpAssignedToProfile(profileId: string, mcpIdentifier: string): Promise<boolean>;
+      getProfileMcpIdentifiersList(profileId: string): Promise<string[]>;
     };
     logAPI: {
       info(message: any, ...params: any[]): void;

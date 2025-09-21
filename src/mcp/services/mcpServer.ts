@@ -5,6 +5,8 @@ import log from 'electron-log';
 import { sessionManager } from './sessionManager.js';
 import { toolRegistry } from './toolRegistry.js';
 import { windowManager } from '../../window/index.js';
+import { configManager } from '../../config/ConfigManager.js';
+import { profileValidator } from './profileValidator.js';
 
 // 类型声明
 import type { Application, Request, Response } from 'express';
@@ -45,24 +47,53 @@ export class McpServerManager {
      * 设置路由
      */
     private setupRoutes(): void {
-        // Handle POST requests for client-to-server communication
+        // Handle POST requests for client-to-server communication (default profile)
         this.app.post('/mcp', this.handleMCPRequest.bind(this));
 
-        // Handle GET requests for server-to-client notifications via SSE
+        // Handle GET requests for server-to-client notifications via SSE (default profile)
         this.app.get('/mcp', this.handleSessionRequest.bind(this));
 
-        // Handle DELETE requests for session termination
+        // Handle DELETE requests for session termination (default profile)
         this.app.delete('/mcp', this.handleSessionRequest.bind(this));
+
+        // 动态设置Profile相关路由
+        this.setupProfileRoutes();
 
         // Handle GET requests for OAuth callback
         this.app.get('/oauth/callback', this.handleOAuthCallback.bind(this));
     }
 
     /**
+     * 设置Profile相关路由
+     */
+    private setupProfileRoutes(): void {
+        // 总是注册Profile路由，但在处理函数中检查配置状态
+        // Handle POST requests for client-to-server communication (specific profile)
+        this.app.post('/:profileId/mcp', this.handleMCPRequest.bind(this));
+
+        // Handle GET requests for server-to-client notifications via SSE (specific profile)
+        this.app.get('/:profileId/mcp', this.handleSessionRequest.bind(this));
+
+        // Handle DELETE requests for session termination (specific profile)
+        this.app.delete('/:profileId/mcp', this.handleSessionRequest.bind(this));
+
+        log.info('Profile routes registered (will check enableProfile at runtime)');
+    }
+
+
+    /**
      * 处理 MCP 请求
      */
     private async handleMCPRequest(req: Request, res: Response): Promise<void> {
         const sessionId = req.headers['mcp-session-id'] as string | undefined;
+        const profileId = req.params.profileId; // 从路径参数获取 profileId
+
+        // 验证 Profile 请求
+        const isValid = await profileValidator.validateAndHandle(req, res);
+        if (!isValid) {
+            return;
+        }
+
         let transport;
 
         if (sessionId && sessionManager.hasSession(sessionId)) {
@@ -80,8 +111,16 @@ export class McpServerManager {
 
             this.mcpServers.push(mcpServer);
 
-            // 注册所有工具到服务器
-            await toolRegistry.registerAllTools(mcpServer);
+            // 根据 Profile 注册工具到服务器
+            if (profileId) {
+                // 特定 Profile：只注册该 Profile 中的 MCP 工具
+                await toolRegistry.registerToolsForProfile(mcpServer, profileId);
+                log.info(`MCP Server initialized for profile: ${profileId}`);
+            } else {
+                // 默认：注册所有工具
+                await toolRegistry.registerAllTools(mcpServer);
+                log.info('MCP Server initialized with all tools (default profile)');
+            }
 
             // 连接到预初始化的 MCP 服务器
             await mcpServer.connect(transport);
@@ -114,6 +153,14 @@ export class McpServerManager {
      * 处理会话请求 (GET/DELETE)
      */
     private async handleSessionRequest(req: Request, res: Response): Promise<void> {
+        const profileId = req.params.profileId; // 从路径参数获取 profileId
+
+        // 验证 Profile 请求
+        const isValid = await profileValidator.validateAndHandle(req, res);
+        if (!isValid) {
+            return;
+        }
+
         const sessionId = req.headers['mcp-session-id'] as string | undefined;
 
         if (!sessionId || !sessionManager.hasSession(sessionId)) {

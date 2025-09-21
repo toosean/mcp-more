@@ -12,6 +12,7 @@ import Layout from "./components/layout/Layout";
 import Market from "./pages/Market";
 import Browse from "./pages/Browse";
 import Installed from "./pages/Installed";
+import Profiles from "./pages/Profiles";
 import Settings from "./pages/Settings";
 import SetupGuide from "./pages/SetupGuide";
 import MCPDetail from "./pages/MCPDetail";
@@ -52,6 +53,7 @@ const App = () => {
               <Route path="/" element={<Layout><Market /></Layout>} />
               <Route path="/browse" element={<Layout><Browse /></Layout>} />
               <Route path="/installed" element={<Layout><Installed /></Layout>} />
+              <Route path="/profiles" element={<Layout><Profiles /></Layout>} />
               <Route path="/settings" element={<Layout><Settings /></Layout>} />
               <Route path="/setup-guide" element={<Layout><SetupGuide /></Layout>} />
               <Route path="/form-test" element={<Layout><DynamicFormTest /></Layout>} />

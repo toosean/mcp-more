@@ -1,7 +1,7 @@
 import Store from 'electron-store';
 import log from 'electron-log';
 import { app } from 'electron';
-import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig, OAuthTokens, OAuthClientInfo } from './types';
+import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig, OAuthTokens, OAuthClientInfo, Profile } from './types';
 import { secureStorage } from './SecureStorage';
 
 /**
@@ -389,6 +389,209 @@ export class ConfigManager {
   }
 
   /**
+   * Profile 管理方法
+   */
+
+  /**
+   * 获取所有 Profiles
+   */
+  getProfiles(): Profile[] {
+    const mcpConfig = this.getSection('mcp');
+    return mcpConfig.profiles || [];
+  }
+
+  /**
+   * 根据 ID 获取 Profile
+   */
+  getProfile(profileId: string): Profile | undefined {
+    const profiles = this.getProfiles();
+    return profiles.find(p => p.id === profileId);
+  }
+
+  /**
+   * 根据 Profile ID 获取 Profile（替代原来的 getActiveProfile）
+   */
+  getProfileById(profileId: string): Profile | undefined {
+    return this.getProfile(profileId);
+  }
+
+  /**
+   * 创建新 Profile
+   */
+  createProfile(profile: Omit<Profile, 'createdAt' | 'updatedAt'> & { id?: string }): Profile {
+    const newProfile: Profile = {
+      ...profile,
+      id: profile.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const profiles = this.getProfiles();
+    const updatedProfiles = [...profiles, newProfile];
+
+    this.setSection('mcp', {
+      ...this.getSection('mcp'),
+      profiles: updatedProfiles,
+    });
+
+    log.info(`Profile created: ${newProfile.name} (${newProfile.id})`);
+    return newProfile;
+  }
+
+  /**
+   * 更新 Profile
+   */
+  updateProfile(profileId: string, updates: Partial<Omit<Profile, 'id' | 'createdAt'>>): Profile | null {
+    const profiles = this.getProfiles();
+    const profileIndex = profiles.findIndex(p => p.id === profileId);
+
+    if (profileIndex === -1) {
+      log.warn(`Profile not found: ${profileId}`);
+      return null;
+    }
+
+    const updatedProfile: Profile = {
+      ...profiles[profileIndex],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedProfiles = [...profiles];
+    updatedProfiles[profileIndex] = updatedProfile;
+
+    this.setSection('mcp', {
+      ...this.getSection('mcp'),
+      profiles: updatedProfiles,
+    });
+
+    log.info(`Profile updated: ${updatedProfile.name} (${profileId})`);
+    return updatedProfile;
+  }
+
+  /**
+   * 删除 Profile
+   */
+  deleteProfile(profileId: string): boolean {
+    const profiles = this.getProfiles();
+    const profileIndex = profiles.findIndex(p => p.id === profileId);
+
+    if (profileIndex === -1) {
+      log.warn(`Profile not found: ${profileId}`);
+      return false;
+    }
+
+    const profileToDelete = profiles[profileIndex];
+    const updatedProfiles = profiles.filter(p => p.id !== profileId);
+
+    this.setSection('mcp', {
+      ...this.getSection('mcp'),
+      profiles: updatedProfiles,
+    });
+
+    log.info(`Profile deleted: ${profileToDelete.name} (${profileId})`);
+    return true;
+  }
+
+  /**
+   * 更新 Profile 最后使用时间
+   */
+  updateProfileLastUsed(profileId: string): boolean {
+    const profile = this.getProfile(profileId);
+    if (!profile) {
+      log.warn(`Profile not found: ${profileId}`);
+      return false;
+    }
+
+    const updatedProfile = {
+      ...profile,
+      lastUsed: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const profiles = this.getProfiles();
+    const updatedProfiles = profiles.map(p => p.id === profileId ? updatedProfile : p);
+
+    this.setSection('mcp', {
+      ...this.getSection('mcp'),
+      profiles: updatedProfiles,
+    });
+
+    log.info(`Profile last used time updated: ${profile.name} (${profileId})`);
+    return true;
+  }
+
+  /**
+   * 获取 Profile 中分配的 MCP 标识符列表
+   */
+  getProfileMcpIdentifiers(profileId: string): string[] {
+    const profile = this.getProfile(profileId);
+    return profile?.mcpIdentifiers || [];
+  }
+
+  /**
+   * 向 Profile 分配 MCP
+   */
+  assignMcpToProfile(profileId: string, mcpIdentifier: string): boolean {
+    const profile = this.getProfile(profileId);
+    if (!profile) {
+      log.warn(`Profile not found: ${profileId}`);
+      return false;
+    }
+
+    if (profile.mcpIdentifiers.includes(mcpIdentifier)) {
+      log.debug(`MCP ${mcpIdentifier} already assigned to profile ${profileId}`);
+      return true;
+    }
+
+    const updatedProfile = {
+      ...profile,
+      mcpIdentifiers: [...profile.mcpIdentifiers, mcpIdentifier],
+      updatedAt: new Date().toISOString(),
+    };
+
+    return this.updateProfile(profileId, updatedProfile) !== null;
+  }
+
+  /**
+   * 从 Profile 中移除 MCP
+   */
+  removeMcpFromProfile(profileId: string, mcpIdentifier: string): boolean {
+    const profile = this.getProfile(profileId);
+    if (!profile) {
+      log.warn(`Profile not found: ${profileId}`);
+      return false;
+    }
+
+    const updatedProfile = {
+      ...profile,
+      mcpIdentifiers: profile.mcpIdentifiers.filter(id => id !== mcpIdentifier),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return this.updateProfile(profileId, updatedProfile) !== null;
+  }
+
+  /**
+   * 检查 MCP 是否分配给指定的 Profile
+   */
+  isMcpAssignedToProfile(profileId: string, mcpIdentifier: string): boolean {
+    const profile = this.getProfile(profileId);
+    if (!profile) {
+      return false;
+    }
+
+    return profile.mcpIdentifiers.includes(mcpIdentifier);
+  }
+
+  /**
+   * 获取指定 Profile 的 MCP 标识符列表
+   */
+  getProfileMcpIdentifiersList(profileId: string): string[] {
+    const profile = this.getProfile(profileId);
+    return profile?.mcpIdentifiers || [];
+  }
+
+  /**
    * 更新系统自启动设置
    */
   private updateAutoStartSetting(autoStart: boolean): void {
@@ -400,7 +603,7 @@ export class ConfigManager {
     try {
       if (process.platform === 'win32' || process.platform === 'darwin' || process.platform === 'linux') {
         const currentAutoStart = app.getLoginItemSettings().openAtLogin;
-        
+
         if (autoStart !== currentAutoStart) {
           app.setLoginItemSettings({
             openAtLogin: autoStart,
