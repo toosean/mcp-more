@@ -638,7 +638,7 @@
   },
   "profiles": {
     "title": "配置档案管理",
-    "description": "管理您的 MCP 服务器配置档案",
+    "description": "管理您的 MCP 客户端配置档案",
     "searchPlaceholder": "搜索配置档案...",
     "createProfile": "创建配置档案",
     "editProfile": "编辑配置档案",

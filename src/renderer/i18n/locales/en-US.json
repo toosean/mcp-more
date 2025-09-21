@@ -605,7 +605,7 @@
   },
   "profiles": {
     "title": "Profile Management",
-    "description": "Manage your MCP server profiles and configurations",
+    "description": "Manage your MCP client profiles and configurations",
     "searchPlaceholder": "Search profiles...",
     "createProfile": "Create Profile",
     "editProfile": "Edit Profile",
