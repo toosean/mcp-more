@@ -3,6 +3,7 @@ import log from 'electron-log';
 import { app } from 'electron';
 import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig, OAuthTokens, OAuthClientInfo, Profile } from './types';
 import { secureStorage } from './SecureStorage';
+import { mcpClientManager } from '../mcp/services/mcpClientManager';
 
 /**
  * 配置管理器类
@@ -531,7 +532,7 @@ export class ConfigManager {
   /**
    * 向 Profile 分配 MCP
    */
-  assignMcpToProfile(profileId: string, mcpIdentifier: string): boolean {
+  async assignMcpToProfile(profileId: string, mcpIdentifier: string): Promise<boolean> {
     const profile = this.getProfile(profileId);
     if (!profile) {
       log.warn(`Profile not found: ${profileId}`);
@@ -549,13 +550,16 @@ export class ConfigManager {
       updatedAt: new Date().toISOString(),
     };
 
-    return this.updateProfile(profileId, updatedProfile) !== null;
+    const result = this.updateProfile(profileId, updatedProfile) !== null;
+
+    await mcpClientManager.toggleProfileMcpAssignment(profileId);
+    return result;
   }
 
   /**
    * 从 Profile 中移除 MCP
    */
-  removeMcpFromProfile(profileId: string, mcpIdentifier: string): boolean {
+  async removeMcpFromProfile(profileId: string, mcpIdentifier: string): Promise<boolean> {
     const profile = this.getProfile(profileId);
     if (!profile) {
       log.warn(`Profile not found: ${profileId}`);
@@ -568,7 +572,10 @@ export class ConfigManager {
       updatedAt: new Date().toISOString(),
     };
 
-    return this.updateProfile(profileId, updatedProfile) !== null;
+    const result = this.updateProfile(profileId, updatedProfile) !== null;
+
+    await mcpClientManager.toggleProfileMcpAssignment(profileId);
+    return result;
   }
 
   /**

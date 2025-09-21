@@ -157,12 +157,12 @@ export function setupConfigIpcHandlers(): void {
   });
 
   // 向 Profile 分配 MCP
-  ipcMain.handle('config:assign-mcp-to-profile', (_, profileId: string, mcpIdentifier: string): boolean => {
+  ipcMain.handle('config:assign-mcp-to-profile', (_, profileId: string, mcpIdentifier: string): Promise<boolean> => {
     return configManager.assignMcpToProfile(profileId, mcpIdentifier);
   });
 
   // 从 Profile 移除 MCP
-  ipcMain.handle('config:remove-mcp-from-profile', (_, profileId: string, mcpIdentifier: string): boolean => {
+  ipcMain.handle('config:remove-mcp-from-profile', (_, profileId: string, mcpIdentifier: string): Promise<boolean> => {
     return configManager.removeMcpFromProfile(profileId, mcpIdentifier);
   });
 

@@ -446,6 +446,15 @@ export class McpClientManager {
   }
 
   /**
+   * 切换 MCP 分配
+   * @param profileId Profile ID
+   */
+  async toggleProfileMcpAssignment(profileId: string): Promise<void> {
+    log.debug(`Toggling MCP assignment for profile: ${profileId}`);
+    await toolRegistry.refreshToolRegistersForProfile(profileId);
+  }
+
+  /**
    * 启动指定 MCP 客户端
    * @param mcpIdentifier MCP 标识符
    */

@@ -19,15 +19,30 @@ export class ToolRegistry {
     private async refreshToolRegistersWithHolder(toolRegisterHolder: McpToolRegister[], profileId?: string): Promise<McpToolRegister[]> {
 
         log.debug(`Refreshing tool registers for profile: ${profileId}`);
+        log.debug(`Current toolRegisterHolder content:`, toolRegisterHolder.map(tr => tr.wrapperName));
 
-        const cachedToolInstances = await mcpClientManager.getCachedTools();
+        let cachedToolInstances = await mcpClientManager.getCachedTools();
         let holder = toolRegisterHolder;
+        
+        if(profileId) {
+            const profile = configManager.getProfile(profileId);
+            if (!profile) {
+                log.warn(`Profile not found: ${profileId}`);
+                return [];
+            }
+
+            cachedToolInstances = cachedToolInstances.filter(toolInstance => profile.mcpIdentifiers.includes(toolInstance.clientInstance.mcp.identifier));
+            log.debug(`Filtered cached tool instances for profile: ${profileId}`, cachedToolInstances.map(toolInstance => toolInstance.wrapperName));
+        } else{
+            log.debug(`No profile id provided, using all cached tool instances`);
+        }
         
         // 检查已经注册的工具是否已经删除了，如果删除了，则需要删除注册
         for (const toolRegister of holder) {
             if (!cachedToolInstances.some(toolInstance => toolRegister.wrapperName === toolInstance.wrapperName)) {
                 toolRegister.toolRegister.remove();
                 holder = holder.filter(tr => tr !== toolRegister);
+                log.debug(`Removed tool register: ${toolRegister.wrapperName} for profile: ${profileId}`);
             }
         }
 
@@ -41,9 +56,12 @@ export class ToolRegistry {
                         wrapperName: toolInstance.wrapperName,
                         toolRegister: toolRegister
                     });
+                    log.debug(`Registered tool register: ${toolInstance.wrapperName} for profile: ${profileId}`);
                 }
             }
         }
+
+        log.debug(`Final toolRegisterHolder content:`, holder.map(tr => tr.wrapperName));
 
         return holder;
 
@@ -61,7 +79,8 @@ export class ToolRegistry {
      * @param profileId Profile ID
      */
     async refreshToolRegistersForProfile(profileId: string): Promise<void> {
-        this.toolRegistersProfileMap.set(profileId, await this.refreshToolRegistersWithHolder(this.toolRegistersProfileMap.get(profileId) || [], profileId));
+        const toolRegisters = await this.refreshToolRegistersWithHolder(this.toolRegistersProfileMap.get(profileId) || [], profileId);
+        this.toolRegistersProfileMap.set(profileId, toolRegisters);
     }
     
     /**
@@ -74,7 +93,13 @@ export class ToolRegistry {
         const toolInstances = await mcpClientManager.getCachedTools();
 
         toolInstances.forEach(toolInstance => {
-            this.registerTool(server, toolInstance);
+            const toolRegister = this.registerTool(server, toolInstance);
+            this.toolRegisters.push({
+                server,
+                wrapperName: toolInstance.wrapperName,
+                toolRegister: toolRegister
+            });
+
         });
 
         log.info(`Registered ${this.toolRegisters.length} tools for all profiles`);
@@ -104,10 +129,15 @@ export class ToolRegistry {
         );
 
         profileToolInstances.forEach(toolInstance => {
-            this.registerTool(server, toolInstance);
+            const toolRegister = this.registerTool(server, toolInstance);
+            this.toolRegistersProfileMap.set(profileId, [...(this.toolRegistersProfileMap.get(profileId) || []), {
+                server,
+                wrapperName: toolInstance.wrapperName,
+                toolRegister: toolRegister
+            }]);
         });
 
-        log.info(`Registered ${this.toolRegisters.length} tools for profile: ${profileId} (${profile.name})`);
+        log.info(`Registered ${profileToolInstances.length} tools for profile: ${profileId} (${profile.name})`);
     }
 
     /**
