@@ -1,8 +1,11 @@
 # MCP More
 
-<img src="./assets/icon.png" alt="MCP More 图标" width="128" height="128" />
+<img src="./assets/icon.png" alt="MCP More 图标" width="256" height="256" />
 
 一个用于管理模型上下文协议（MCP）服务器的现代化桌面应用程序。
+
+也许您平时在用 Claude Desktop、Codex、Gemini 这些 MCP 客户端的时候，每次发现个很棒的 MCP，都要在各个客户端里重复配置一遍，改 .json 文件、管理 Token、登录状态，真是又麻烦又浪费时间。有了 MCP More，只需要配置一次，所有客户端都能直接用，简单高效。
+
 
 [English](./README.md) | [简体中文 (Chinese)](./README.zh-CN.md)
 
@@ -17,39 +20,24 @@
 
 ## ✨ 特性
 
-- 🔍 **MCP 市场浏览**: 从内置市场发现和安装 MCP 包
-- 📦 **包管理**: 轻松安装、启用/禁用和配置 MCP 包
-- 🔧 **多种连接方式**: 支持 WebSocket、HTTP/SSE 和本地进程连接
+- 🔍 **MCP 市场浏览**: 我们精选了很多优秀的 MCP，点一下就能直接用。
+- 📦 **MCP 管理**: 如果你和我们一样经常使用各种 MCP 来提升工作效率，那你一定需要个地方来统一管理它们。
+- 👤 **Profile 管理**: 支持多 Profile 切换，为不同场景配置不同的 MCP，避免太多 MCP 把你的上下文挤爆。
 - 🌗 **主题支持**: 深色/浅色/系统主题自动切换
 - 🌍 **国际化**: 支持多语言界面
 
-## 📋 系统要求
-
-- **操作系统**: Windows 10/11, macOS 10.15+, Linux (Ubuntu 18.04+)
-- **Node.js**: 16.x 或更高版本
-- **NPM**: 7.x 或更高版本
 
 ## 📚 使用指南
 
+使用 MCP More 安装 MCP 有两种方式：
+
 ### 1. 浏览 MCP 市场
-- 启动应用后默认进入市场页面
-- 浏览可用的 MCP 包
-- 查看包的详细信息、描述和工具
 
-### 2. 安装 MCP 包
-- 在市场中点击"安装"按钮
-- 或在"浏览"页面手动添加 MCP 包
-- 配置连接参数（URL 或命令）
+我们收集了市面上很多热门的 MCP，并把安装方式都内置到应用里了。看到喜欢的 MCP，点个"安装"就能直接用。
 
-### 3. 管理已安装的包
-- 在"已安装"页面查看所有包
-- 启用/禁用包
-- 查看工具调用统计
+### 2. 手动 MCP 包
 
-### 4. 配置应用设置
-- 在"设置"页面调整主题、语言等选项
-- 配置自启动和系统托盘选项
-- 管理遥测和统计设置
+如果你想要的 MCP 还没收录在我们市场里，也可以手动添加。在"已安装"标签页点击"手动添加 MCP"，按照对话框提示就能搞定。
 
 ## 🛠️ 开发指南
 
@@ -94,108 +82,6 @@
    ```bash
    npm run start
    ```
-
-### 构建和打包
-
-```bash
-# 代码检查
-npm run lint
-
-# 打包应用程序
-npm run package
-
-# 创建安装包
-npm run make
-
-# 发布到 GitHub
-npm run publish
-```
-
-## 🏗️ 项目架构
-
-### 核心组件
-
-- **主进程 (`src/main.ts`)**: Electron 应用生命周期管理
-- **渲染进程 (`src/renderer/`)**: React 用户界面
-- **预加载脚本 (`src/preload.ts`)**: 安全的 IPC 通信桥梁
-
-### MCP 管理系统
-
-```
-src/mcp/
-├── services/
-│   ├── mcpClientManager.ts    # MCP 客户端管理
-│   ├── toolRegistry.ts        # 工具注册表
-│   └── sessionManager.ts      # 会话管理
-├── interfaces/                # 类型定义
-└── utils/                     # 工具函数
-```
-
-### UI 组件结构
-
-```
-src/renderer/
-├── components/
-│   ├── layout/                # 布局组件
-│   ├── mcp/                   # MCP 相关组件
-│   └── ui/                    # 基础 UI 组件
-├── pages/                     # 页面组件
-├── hooks/                     # 自定义 Hooks
-└── services/                  # 前端服务
-```
-
-## 🔧 配置
-
-### MCP 包配置
-
-MCP 包支持三种连接方式：
-
-#### 1. WebSocket 连接
-```json
-{
-  "identifier": "my-websocket-mcp",
-  "name": "My WebSocket MCP",
-  "enabled": true,
-  "config": {
-    "url": "ws://localhost:8080"
-  }
-}
-```
-
-#### 2. HTTP/SSE 连接
-```json
-{
-  "identifier": "my-http-mcp",
-  "name": "My HTTP MCP",
-  "enabled": true,
-  "config": {
-    "url": "https://api.example.com/mcp"
-  }
-}
-```
-
-#### 3. 本地进程
-```json
-{
-  "identifier": "my-local-mcp",
-  "name": "My Local MCP",
-  "enabled": true,
-  "config": {
-    "command": "python /path/to/mcp-server.py",
-    "environment": {
-      "API_KEY": "your-api-key"
-    }
-  }
-}
-```
-
-### 应用设置
-
-应用配置存储在平台特定位置：
-- **Windows**: `%APPDATA%/mcp-more/config.json`
-- **macOS**: `~/Library/Preferences/mcp-more/config.json`
-- **Linux**: `~/.config/mcp-more/config.json`
-
 ## 🤝 贡献
 
 欢迎贡献代码！请遵循以下步骤：
@@ -220,7 +106,6 @@ MCP 包支持三种连接方式：
 ## 📞 支持
 
 - 🐛 [报告问题](https://github.com/toosean/mcp-more/issues)
-- 💬 [讨论和建议](https://github.com/toosean/mcp-more/discussions)
 - 📧 联系作者: toosean@gmail.com
 
 ---
