@@ -212,7 +212,7 @@ export class McpClientManager {
     autoOAuth: boolean = false
   ): Promise<void> {
 
-    log.error(`Connecting MCP client: ${clientInstance.mcp.identifier}`);
+    log.debug(`Connecting MCP client: ${clientInstance.mcp.identifier}`);
     
     try {
       await clientInstance.client.connect(clientInstance.transport);

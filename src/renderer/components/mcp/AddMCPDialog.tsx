@@ -27,6 +27,9 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
   const isRemoteMCP = editingMCP?.config?.url && editingMCP?.source !== 'json';
   const isJSONMCP = editingMCP?.source === 'json';
 
+  // Loading state
+  const [isLoading, setIsLoading] = useState(false);
+
   // OAuth configuration state
   const [oauthConfig, setOauthConfig] = useState<Partial<Mcp['oauth']>>(
     editingMCP?.oauth || {}
@@ -88,6 +91,9 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
 
   const handleLocalMCPSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isLoading) return;
+
     const formData = new FormData(e.target as HTMLFormElement);
     const name = formData.get('local-name') as string;
     const command = formData.get('local-path') as string;
@@ -113,6 +119,8 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
       });
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const result = await installMcpManually({
@@ -144,11 +152,16 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
         description: 'Failed to save MCP configuration',
         variant: 'destructive'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRemoteMCPSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isLoading) return;
+
     const formData = new FormData(e.target as HTMLFormElement);
     const name = formData.get('remote-name') as string;
     const url = formData.get('remote-url') as string;
@@ -172,6 +185,8 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
       });
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const result = await installMcpManually({
@@ -202,12 +217,17 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
         description: 'Failed to save MCP configuration',
         variant: 'destructive'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
 
   const handleJSONImport = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleJSONImport');
+    if (isLoading) return;
+
     const formData = new FormData(e.target as HTMLFormElement);
     const jsonText = formData.get('json-config') as string;
 
@@ -219,6 +239,8 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
       });
       return;
     }
+
+    setIsLoading(true);
 
     try {
       // Parse JSON to get the name for validation
@@ -241,6 +263,16 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
         mcpName = jsonConfig.name;
       } else {
         mcpName = Object.keys(jsonConfig)[0] || 'imported-mcp';
+      }
+
+      const firstServer = jsonConfig.mcpServers[Object.keys(jsonConfig.mcpServers)[0]];
+      if(!firstServer.url && !firstServer.serverUrl && !firstServer.command){
+        toast({
+          title: t('common.error'),
+          description: t('addMCP.errors.urlRequired') || 'URL or command is required',
+          variant: 'destructive'
+        });
+        return;
       }
 
       const result = await installMcpManually({
@@ -275,6 +307,8 @@ export default function AddMCPDialog({ open, onOpenChange, onMcpAddedOrUpdated, 
         description: errorMessage,
         variant: 'destructive'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -377,8 +411,8 @@ KEY2=value2`}
                   rows={2}
                 />
               </div>
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
-                {isEditing ? t('addMCP.buttons.updateLocal') : t('addMCP.buttons.addLocal')}
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
+                {isLoading ? t('common.loading') || 'Submitting...' : (isEditing ? t('addMCP.buttons.updateLocal') : t('addMCP.buttons.addLocal'))}
               </Button>
             </form>
           </TabsContent>
@@ -406,8 +440,8 @@ KEY2=value2`}
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
-                {isEditing ? t('addMCP.buttons.updateRemote') : t('addMCP.buttons.addRemote')}
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
+                {isLoading ? t('common.loading') || 'Submitting...' : (isEditing ? t('addMCP.buttons.updateRemote') : t('addMCP.buttons.addRemote'))}
               </Button>
             </form>
           </TabsContent>
@@ -421,8 +455,8 @@ KEY2=value2`}
                   name="json-config"
                   placeholder={`{
   "mcpServers": {
-    "playwright": {
-      "url": "http://localhost:8931/mcp"
+    "Mcp name": {
+      "url": "http://themcpserver/mcp"
     }
   }
 }`}
@@ -432,8 +466,8 @@ KEY2=value2`}
                   required
                 />
               </div>
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
-                {isEditing ? t('addMCP.buttons.updateJson') : t('addMCP.buttons.importJson')}
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
+                {isLoading ? t('common.loading') || 'Submitting...' : (isEditing ? t('addMCP.buttons.updateJson') : t('addMCP.buttons.importJson'))}
               </Button>
             </form>
           </TabsContent>

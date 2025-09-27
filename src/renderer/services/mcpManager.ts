@@ -83,12 +83,14 @@ export function useMcpManager() {
           };
         }
         
-        const [key, mcpJsonData] = mcpEntries[0];        
+        const [key, mcpJsonData] = mcpEntries[0];       
+        const mcpName = name || mcpJsonData.name || editingMCP?.name;
+        const mcpUrl = mcpJsonData.url || mcpJsonData.serverUrl || editingMCP?.config.url || null;
         if (isEditing && editingMCP) {
           updatedMCP = {
             ...editingMCP,
-            name: mcpJsonData.name || editingMCP.name,
-            code: mcpJsonData.name.replace(/\s+/g, '_'),
+            name: mcpName,
+            code: mcpName.replace(/\s+/g, '_'),
             description: mcpJsonData.description || editingMCP.description,
             author: mcpJsonData.author || editingMCP.author,
             version: mcpJsonData.version || editingMCP.version,
@@ -96,7 +98,7 @@ export function useMcpManager() {
             updated: new Date().toISOString(),
             enabled: mcpJsonData.enabled !== false,
             config: {
-              url: mcpJsonData.url || null,
+              url: mcpUrl,
               command: mcpJsonData.command,
               args: mcpJsonData.args,
               env: mcpJsonData.env || mcpJsonData.environment || {},
@@ -106,9 +108,9 @@ export function useMcpManager() {
         } else {
           updatedMCP = {
             source: 'json',
-            code: mcpJsonData.name.replace(/\s+/g, '_'),
+            code: mcpName.replace(/\s+/g, '_'),
             identifier: mcpJsonData.identifier || mcpId,
-            name: mcpJsonData.name || key,
+            name: mcpName,
             description: mcpJsonData.description || null,
             author: mcpJsonData.author || null,
             version: mcpJsonData.version || null,
@@ -118,7 +120,7 @@ export function useMcpManager() {
             enabled: mcpJsonData.enabled !== false,
             status: 'stopped' as const,
             config: {
-              url: mcpJsonData.url || null,
+              url: mcpUrl,
               command: mcpJsonData.command,
               args: mcpJsonData.args,
               env: mcpJsonData.env || mcpJsonData.environment || {},
