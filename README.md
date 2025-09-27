@@ -6,6 +6,7 @@ A modern desktop application for managing **Model Context Protocol (MCP)** serve
 
 Tired of configuring the same MCP over and over again across different clients like Claude Desktop, Codex, and Gemini? Editing .json files, managing tokens, handling login states - it's such a hassle. With MCP More, configure once and use everywhere. Simple and efficient.
 
+> 🚧 The project is currently in preview stage. You may encounter some minor bugs or incomplete features. We welcome everyone to submit issues and PRs to help make it better together! 🎉
 
 [English](./README.md) | [简体中文 (Chinese)](./README.zh-CN.md)
 

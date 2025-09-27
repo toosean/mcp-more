@@ -6,6 +6,7 @@
 
 也许您平时在用 Claude Desktop、Codex、Gemini 这些 MCP 客户端的时候，每次发现个很棒的 MCP，都要在各个客户端里重复配置一遍，改 .json 文件、管理 Token、登录状态，真是又麻烦又浪费时间。有了 MCP More，只需要配置一次，所有客户端都能直接用，简单高效。
 
+> 🚧 项目目前处于预览阶段，可能还会遇到一些小 BUG 和不完善的地方，欢迎大家积极提 issue 和 PR，一起让它变得更好！🎉
 
 [English](./README.md) | [简体中文 (Chinese)](./README.zh-CN.md)
 
