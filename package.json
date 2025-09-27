@@ -2,7 +2,7 @@
   "name": "mcp-more",
   "productName": "mcp-more",
   "version": "1.2.3",
-  "description": "My Electron application description",
+  "description": "A modern desktop application for managing Model Context Protocol (MCP) servers.",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
