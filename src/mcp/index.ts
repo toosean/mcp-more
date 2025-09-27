@@ -17,9 +17,6 @@ export async function startMCPServer(): Promise<void> {
 
         // 启动 MCP 客户端
         await mcpClientManager.initializeClients();
-
-        // 缓存所有工具
-        await mcpClientManager.cacheAllTools();
         
         log.info('MCP system started successfully');
     } catch (error) {

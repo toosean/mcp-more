@@ -283,6 +283,24 @@ export class McpClientManager {
     }
   }
 
+
+  private async postClientConnected(clientInstance: McpClientInstance): Promise<void> {
+    log.debug(`MCP client postClientConnected: ${clientInstance.mcp.identifier}`);
+
+    
+    await this.cacheAllTools();
+    await toolRegistry.refreshToolRegisters();
+
+    const mcp = this.getMcpByIdentifier(clientInstance.mcp.identifier);
+    if (mcp) {
+      mcp.latestError = null;
+      mcp.latestErrorDetail = null;
+      mcp.status = 'running';
+      this.updateMcpConfig(clientInstance.mcp.identifier, mcp);
+      this.scheduleTokenRefresh(clientInstance.mcp.identifier);
+    }
+  }
+
   /**
    * 初始化所有已启用的 MCP 客户端
    */
@@ -305,6 +323,8 @@ export class McpClientManager {
         await this.connectClient(clientInstance);
         this.clients.push(clientInstance);
         initializedCount++;
+
+        await this.postClientConnected(clientInstance);
       } catch (error) {
         log.error(`Failed to initialize MCP client: ${mcp.identifier}`, error);
       }
@@ -534,16 +554,7 @@ export class McpClientManager {
         log.info(`MCP client started: ${mcp.identifier}`);
       }
 
-      await this.cacheAllTools();
-      await toolRegistry.refreshToolRegisters();
-
-      if (mcp) {
-        mcp.latestError = null;
-        mcp.latestErrorDetail = null;
-        mcp.status = 'running';
-        this.updateMcpConfig(mcpIdentifier, mcp);
-        this.scheduleTokenRefresh(mcpIdentifier);
-      }
+      await this.postClientConnected(client);
 
     } catch (error) {
 
