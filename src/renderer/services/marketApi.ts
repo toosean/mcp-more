@@ -64,7 +64,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     const data = await response.json();
     return data;
   } catch (error) {
-    window.logAPI.error(`API request failed for ${endpoint}:`, error);
+    window.logAPI.error(`API request failed for ${API_BASE_URL}${endpoint}:`, error);
     throw error;
   }
 }
