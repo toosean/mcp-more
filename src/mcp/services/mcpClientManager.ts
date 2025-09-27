@@ -14,7 +14,7 @@ import { MetadataDiscoveryService } from './oauth/metadataDiscovery';
 import { OAuthStateMachine } from './oauth/oauth-state-machine';
 import { is401Error } from './oauth/oauthUtils';
 import { JSONSchema7 } from "json-schema";
-import { ToolAnnotations } from "@modelcontextprotocol/sdk/types";
+import { ErrorCode, ToolAnnotations } from "@modelcontextprotocol/sdk/types";
 import { FormFieldConfig } from "@/components/DynamicForm";
 
 export class McpStartNeedsAuthError extends Error{
@@ -215,6 +215,12 @@ export class McpClientManager {
     log.debug(`Connecting MCP client: ${clientInstance.mcp.identifier}`);
     
     try {
+
+      clientInstance.client.onclose = () => {
+        log.error(`clientInstance.client.onclose->MCP client closed: ${clientInstance.mcp.identifier}`);
+        this.postClientClosed(clientInstance);
+      };
+
       await clientInstance.client.connect(clientInstance.transport);
       log.info(`MCP client connected: ${clientInstance.mcp.identifier}`);
     } catch (error) {
@@ -251,6 +257,29 @@ export class McpClientManager {
       }
 
       throw error;
+    }
+  }
+
+  private async postClientClosed(clientInstance: McpClientInstance): Promise<void> {
+    
+    log.debug(`MCP client postClientClosed: ${clientInstance.mcp.identifier}`);
+    this.clients = this.clients.filter(client => client.mcp.identifier !== clientInstance.mcp.identifier);
+
+
+    await this.cacheAllTools();
+    await toolRegistry.refreshToolRegisters();
+
+    // 停止 token 自动刷新
+    this.clearTokenRefreshTimer(clientInstance.mcp.identifier);
+
+    log.info(`MCP client stopped: ${clientInstance.mcp.identifier}`);
+
+    const mcp = this.getMcpByIdentifier(clientInstance.mcp.identifier);
+    if (mcp) {
+      mcp.latestError = null;
+      mcp.latestErrorDetail = null;
+      mcp.status = 'stopped';
+      this.updateMcpConfig(clientInstance.mcp.identifier, mcp);
     }
   }
 
@@ -346,18 +375,35 @@ export class McpClientManager {
     }[] = [];
 
     for (const clientInstance of clientInstances) {
-      const clientTools = await this.listTools(clientInstance.mcp);
-      clientTools.tools.forEach((tool) => {
-        scopedTools.push({
-          clientInstance,
-          name: tool.name,
-          wrapperName: `${clientInstance.mcp.code}__${tool.name}`,
-          title: tool.title,
-          description: tool.description,
-          inputSchema: tool.inputSchema as JSONSchema7,
-          annotations: tool.annotations
+
+      const mcp = configManager.getMcpByIdentifier(clientInstance.mcp.identifier);
+      if(mcp && !mcp.enabled) {
+        log.debug(`MCP is not enabled: ${clientInstance.mcp.identifier}`);
+        continue;
+      }
+
+      log.debug(`Listing tools for MCP: ${clientInstance.mcp.identifier}`);
+      try {
+        const clientTools = await this.listTools(clientInstance.mcp);
+        clientTools.tools.forEach((tool) => {
+          scopedTools.push({
+            clientInstance,
+            name: tool.name,
+            wrapperName: `${clientInstance.mcp.code}__${tool.name}`,
+            title: tool.title,
+            description: tool.description,
+            inputSchema: tool.inputSchema as JSONSchema7,
+            annotations: tool.annotations
+          });
         });
-      });
+      } catch (error) {
+        if (error && error.code === ErrorCode.ConnectionClosed) {
+          log.warn(`List tools failed, because MCP client connection closed: ${clientInstance.mcp.identifier}`);
+        } else {
+          log.error(`Failed to list tools for MCP: ${clientInstance.mcp.identifier}`, error);
+        }
+        continue;
+      }
     }
 
     // 按照 scopedTools.name 来统计工具出现的次数
@@ -467,6 +513,7 @@ export class McpClientManager {
 
       // 设置状态为 starting
       mcp.status = 'starting';
+      mcp.enabled = true;
       this.updateMcpConfig(mcpIdentifier, mcp);
 
       // 先检查客户端是否已存在且已连接
@@ -493,7 +540,6 @@ export class McpClientManager {
       if (mcp) {
         mcp.latestError = null;
         mcp.latestErrorDetail = null;
-        mcp.enabled = true;
         mcp.status = 'running';
         this.updateMcpConfig(mcpIdentifier, mcp);
         this.scheduleTokenRefresh(mcpIdentifier);
@@ -549,25 +595,18 @@ export class McpClientManager {
       }
 
       // 断开连接
-      await client.client.close();
-
-      this.clients = this.clients.filter(client => client.mcp.identifier !== mcp.identifier);
-
-      await this.cacheAllTools();
-      await toolRegistry.refreshToolRegisters();
-
-      // 停止 token 自动刷新
-      this.clearTokenRefreshTimer(mcpIdentifier);
-
-      log.info(`MCP client stopped: ${mcp.identifier}`);
-
-      if (mcp) {
-        mcp.latestError = null;
-        mcp.latestErrorDetail = null;
-        mcp.enabled = false;
-        mcp.status = 'stopped';
-        this.updateMcpConfig(mcpIdentifier, mcp);
+      try{
+        await client.client.close();
+      } catch (error) {
+        log.error(`Failed to close MCP client: ${mcp.identifier}`, error);
+        if (error && typeof error.message === 'string' && error.message.includes('MCP error -32000: Connection closed')) {
+          log.warn(`Close MCP client failed, because MCP client connection closed: ${mcp.identifier}`, error.message);
+        } else {
+          log.error(`Failed to close MCP client: ${mcp.identifier}`, error);
+        }
       }
+
+      this.postClientClosed(client);
 
     } catch (error) {
 

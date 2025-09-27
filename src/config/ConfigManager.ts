@@ -1,7 +1,7 @@
 import Store from 'electron-store';
 import log from 'electron-log';
 import { app } from 'electron';
-import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig, OAuthTokens, OAuthClientInfo, Profile } from './types';
+import { AppConfig, defaultConfig, createDefaultConfig, PartialAppConfig, OAuthTokens, OAuthClientInfo, Profile, Mcp } from './types';
 import { secureStorage } from './SecureStorage';
 import { mcpClientManager } from '../mcp/services/mcpClientManager';
 
@@ -208,6 +208,15 @@ export class ConfigManager {
     }
 
     return validatedConfig;
+  }
+
+  /**
+   * 根据 MCP 标识符获取 MCP
+   */
+  getMcpByIdentifier(mcpIdentifier: string): Mcp | undefined {
+    const mcpConfig = this.getSection('mcp');
+    const installedMcps = mcpConfig.installedMcps;
+    return installedMcps.find(mcp => mcp.identifier === mcpIdentifier);
   }
 
   /**

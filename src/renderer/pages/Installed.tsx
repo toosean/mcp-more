@@ -467,21 +467,21 @@ export default function Installed() {
           onMcpAddedOrUpdated={handleMCPAddedOrUpdated}
           editingMCP={editingMCP}
         />
-        <Button variant="outline" onClick={handleStartAll}>
+        {/* <Button variant="outline" onClick={handleStartAll}>
           <Play className="h-4 w-4 mr-2" />
           {t('installed.actions.startAll')}
         </Button>
         <Button variant="outline" onClick={handleStopAll}>
           <Square className="h-4 w-4 mr-2" />
           {t('installed.actions.stopAll')}
-        </Button>
+        </Button> */}
       </div>
 
       {/* Installed MCPs Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">{t('installed.sections.yourMCPs')}</h2>
-          {updatesAvailable > 0 ? (
+          {/* {updatesAvailable > 0 ? (
             <Badge variant="default" className="bg-orange-500 hover:bg-orange-600">
               {updatesAvailable} {updatesAvailable > 1 ? t('installed.updates.availablePlural') : t('installed.updates.available')}
             </Badge>
@@ -489,7 +489,7 @@ export default function Installed() {
             <Badge variant="secondary">
               {t('installed.updates.allUpToDate')}
             </Badge>
-          )}
+          )} */}
         </div>
 
         {mcps.length === 0 ? (

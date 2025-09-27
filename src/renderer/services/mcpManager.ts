@@ -425,9 +425,14 @@ export function useMcpManager() {
     // 从配置中移除 MCP
     installedMcps = installedMcps.filter(mcp => mcp.identifier !== identifier);
 
-    updateConfig({
+    // remove from profiles
+    const profiles = config.mcp.profiles;
+    const updatedProfiles = profiles.filter(profile => profile.mcpIdentifiers.includes(identifier));
+
+    await updateConfig({
       mcp: {
         ...config.mcp,
+        profiles: updatedProfiles,
         installedMcps: installedMcps,
       },
     });

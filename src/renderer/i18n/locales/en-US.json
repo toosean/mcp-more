@@ -604,7 +604,7 @@
     }
   },
   "profiles": {
-    "title": "Profile Management",
+    "title": "Profiles",
     "description": "Manage your MCP client profiles and configurations",
     "searchPlaceholder": "Search profiles...",
     "createProfile": "Create Profile",
