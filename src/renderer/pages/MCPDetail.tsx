@@ -34,6 +34,7 @@ import { useRuntimeInstallDialog } from '@/hooks/use-runtime-install-dialog';
 import { RuntimeInfo } from '@/types/global';
 import { useOAuthConfirmDialog } from '@/hooks/use-oauth-confirm-dialog';
 import MCPConfigurationDialog from '@/components/mcp/MCPConfigurationDialog';
+import MCPDetailSkeleton from '@/components/mcp/MCPDetailSkeleton';
 import { FormFieldConfig } from '@/components/DynamicForm';
 
 export default function MCPDetail() {
@@ -161,14 +162,7 @@ export default function MCPDetail() {
   };
 
   if (loading) {
-    return (
-      <div className="flex-1 p-6 flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>{t('mcpDetail.loading')}</span>
-        </div>
-      </div>
-    );
+    return <MCPDetailSkeleton />;
   }
 
   if (!mcp && !loading) {
