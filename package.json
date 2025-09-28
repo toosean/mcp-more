@@ -1,7 +1,7 @@
 {
   "name": "mcp-more",
   "productName": "mcp-more",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "A modern desktop application for managing Model Context Protocol (MCP) servers.",
   "main": ".vite/build/main.js",
   "scripts": {
