@@ -740,6 +740,15 @@
     "noMcpServers": "No MCP servers installed",
     "noMcpServersHint": "Install MCP servers from the Market first"
   },
+  "mcp": {
+    "status": {
+      "running": "Running",
+      "stopped": "Stopped",
+      "starting": "Starting",
+      "stopping": "Stopping",
+      "unknown": "Unknown"
+    }
+  },
   "mcpManager": {
     "errors": {
       "duplicateName": "MCP with name \"{{name}}\" already exists",

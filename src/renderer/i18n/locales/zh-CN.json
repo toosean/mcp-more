@@ -603,6 +603,15 @@
       "check": "查看"
     }
   },
+  "mcp": {
+    "status": {
+      "running": "运行中",
+      "stopped": "已停止",
+      "starting": "启动中",
+      "stopping": "停止中",
+      "unknown": "未知"
+    }
+  },
   "mcpManager": {
     "errors": {
       "duplicateName": "名称为 \"{{name}}\" 的 MCP 已存在",

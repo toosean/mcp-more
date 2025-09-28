@@ -60,13 +60,18 @@ import {
   Building,
   Car,
   Plane,
-  Rocket
+  Rocket,
+  Power,
+  PowerOff,
+  Loader2,
+  StopCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useConfig } from '@/hooks/use-config';
 import { Mcp, Profile } from 'src/config/types';
+import AvatarImage from '@/components/ui/AvatarImage';
 
 // Available icon mapping
 const AVAILABLE_ICONS = {
@@ -105,6 +110,48 @@ const getIconComponent = (iconName?: string) => {
     return Settings; // Default icon
   }
   return AVAILABLE_ICONS[iconName as keyof typeof AVAILABLE_ICONS];
+};
+
+// 获取 MCP 状态指示器
+const getMcpStatusIndicator = (status?: string, t?: any) => {
+  switch (status) {
+    case 'running':
+      return {
+        icon: Power,
+        className: 'text-green-500',
+        bgClassName: 'bg-green-50',
+        label: t?.('mcp.status.running') || 'Running'
+      };
+    case 'stopped':
+      return {
+        icon: PowerOff,
+        className: 'text-gray-500',
+        bgClassName: 'bg-gray-50',
+        label: t?.('mcp.status.stopped') || 'Stopped'
+      };
+    case 'starting':
+      return {
+        icon: Loader2,
+        className: 'text-blue-500',
+        animateClassName: 'animate-spin',
+        bgClassName: 'bg-blue-50',
+        label: t?.('mcp.status.starting') || 'Starting'
+      };
+    case 'stopping':
+      return {
+        icon: StopCircle,
+        className: 'text-orange-500',
+        bgClassName: 'bg-orange-50',
+        label: t?.('mcp.status.stopping') || 'Stopping'
+      };
+    default:
+      return {
+        icon: PowerOff,
+        className: 'text-gray-400',
+        bgClassName: 'bg-gray-50',
+        label: t?.('mcp.status.unknown') || 'Unknown'
+      };
+  }
 };
 
 export default function Profiles() {
@@ -683,6 +730,9 @@ export default function Profiles() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {availableMcps.map((mcp) => {
                       const isAssigned = selectedProfile.mcpIdentifiers.includes(mcp.identifier);
+                      const statusIndicator = getMcpStatusIndicator(mcp.status, t);
+                      const StatusIcon = statusIndicator.icon;
+                      
                       return (
                         <Card
                           key={mcp.identifier}
@@ -694,23 +744,35 @@ export default function Profiles() {
                           onClick={() => toggleMcpAssignment(mcp.identifier)}
                         >
                           <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className='flex-1'>
-                                  {isAssigned ? (
-                                    <CheckCircle className="h-5 w-5 text-primary" />
-                                  ) : (
-                                    <Circle className="h-5 w-5 text-muted-foreground" />
-                                  )}
-                                </div>
-                                <div>
+                            <div className="flex items-start gap-3">
+                              {/* Avatar */}
+                              <div className="flex-shrink-0">
+                                <AvatarImage
+                                  avatarPath={mcp.authorAvatarPath}
+                                  alt={`${mcp.author || 'Unknown'} avatar`}
+                                  className="w-10 h-10 rounded-full object-cover bg-muted"
+                                />
+                              </div>
+                              
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
                                   <h4 className="font-medium">{mcp.name}</h4>
-                                  <p className="text-sm text-muted-foreground" title={mcp.description || t('common.noDescription')}>
-                                    {(mcp.description && mcp.description.length > 40)
-                                      ? mcp.description.slice(0, 40) + '...'
-                                      : (mcp.description || t('common.noDescription'))}
-                                  </p>
+                                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${statusIndicator.bgClassName}`}>
+                                    <StatusIcon className={`h-3 w-3 ${statusIndicator.className} ${statusIndicator.animateClassName}`} />
+                                    <span className={statusIndicator.className}>{statusIndicator.label}</span>
+                                  </div>
                                 </div>
+                                <p className="text-sm text-muted-foreground" title={mcp.description || t('common.noDescription')}>
+                                  {(mcp.description && mcp.description.length > 40)
+                                    ? mcp.description.slice(0, 40) + '...'
+                                    : (mcp.description || t('common.noDescription'))}
+                                </p>
+                                {mcp.author && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {t('installed.time.by')} {mcp.author}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </CardContent>
