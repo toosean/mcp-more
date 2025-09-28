@@ -5,6 +5,7 @@ import { Play, Square, Edit, Settings, Folder, Globe, Loader2, AlertTriangle, Pa
 import { useI18n } from '@/hooks/use-i18n';
 import { DisplayMCP } from '@/types/mcp';
 import MCPActionsDropdown from './MCPActionsDropdown';
+import AvatarImage from '@/components/ui/AvatarImage';
 
 interface InstalledMCPCardProps {
   mcp: DisplayMCP;
@@ -134,116 +135,132 @@ export default function InstalledMCPCard({
   return (
     <Card className="bg-gradient-card border-border/50">
       <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold">{mcp.name}</h3>
-              <Badge
-                variant={
-                  mcp.status === 'running' ? 'default' :
-                  mcp.status === 'starting' || mcp.status === 'stopping' ? 'secondary' :
-                  'outline'
-                }
-                className={
-                  mcp.status === 'starting' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                  mcp.status === 'stopping' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                  ''
-                }
-              >
-                {t(`installed.status.${mcp.status}`)}
-              </Badge>
-              {mcp.version && (
-                <Badge variant="outline" className="text-xs">
-                  v{mcp.version}
-                </Badge>
-              )}
-              <Badge
-                variant="outline"
-                className={`text-xs flex items-center gap-1 ${sourceInfo.color} ${sourceInfo.bgColor} ${sourceInfo.borderColor}`}
-              >
-                <SourceIcon className="h-3 w-3" />
-                {sourceInfo.label}
-              </Badge>
-            </div>
-
-            <p className="text-sm text-muted-foreground">
-              {mcp.description}
-            </p>
-
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              {mcp.author && <span>{t('installed.time.by')} {mcp.author}</span>}
-              {mcp.lastUpdated && (
-                <span title={getFullDate(mcp.lastUpdated)}>
-                  {t('installed.time.updated')} {formatDate(mcp.lastUpdated)}
-                </span>
-              )}
-              {mcp.installed && (
-                <span title={getFullDate(mcp.installed)}>
-                  {t('installed.time.installed')} {formatDate(mcp.installed)}
-                </span>
-              )}
-            </div>
+        <div className="flex items-start gap-4">
+          {/* 头像区域 */}
+          <div className="flex-shrink-0">
+            <AvatarImage
+              avatarPath={mcp.authorAvatarPath}
+              alt={`${mcp.author || 'Unknown'} avatar`}
+              className="w-12 h-12 rounded-full object-cover bg-muted"
+            />
           </div>
 
-          <div className="flex gap-2 ml-4">
-            <Button
-              variant={mcp.status === 'running' ? 'destructive' : 'default'}
-              size="sm"
-              onClick={() => onToggleStatus(mcp.identifier)}
-              disabled={isLoading || mcp.status === 'starting' || mcp.status === 'stopping'}
-              className={mcp.status === 'running'
-                ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-              }
-            >
-              {isLoading || mcp.status === 'starting' || mcp.status === 'stopping' ? (
-                <>
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  {mcp.status === 'starting' ? t('installed.status.startingAction') :
-                   mcp.status === 'stopping' ? t('installed.status.stoppingAction') :
-                   mcp.status === 'running' ? t('installed.status.stoppingAction') : t('installed.status.startingAction')}
-                </>
-              ) : mcp.status === 'running' ? (
-                <>
-                  <Square className="h-3 w-3 mr-1" />
-                  {t('installed.status.stop')}
-                </>
-              ) : (
-                <>
-                  <Play className="h-3 w-3 mr-1" />
-                  {t('installed.status.start')}
-                </>
-              )}
-            </Button>
+          {/* 主要内容区域 */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold">{mcp.name}</h3>
+                  <Badge
+                    variant={
+                      mcp.status === 'running' ? 'default' :
+                      mcp.status === 'starting' || mcp.status === 'stopping' ? 'secondary' :
+                      'outline'
+                    }
+                    className={
+                      mcp.status === 'starting' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                      mcp.status === 'stopping' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
+                      ''
+                    }
+                  >
+                    {t(`installed.status.${mcp.status}`)}
+                  </Badge>
+                  {mcp.version && (
+                    <Badge variant="outline" className="text-xs">
+                      v{mcp.version}
+                    </Badge>
+                  )}
+                  <Badge
+                    variant="outline"
+                    className={`text-xs flex items-center gap-1 ${sourceInfo.color} ${sourceInfo.bgColor} ${sourceInfo.borderColor}`}
+                  >
+                    <SourceIcon className="h-3 w-3" />
+                    {sourceInfo.label}
+                  </Badge>
+                </div>
 
-            {(mcp.source === 'manual' || mcp.source === 'json') && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(mcp.identifier)}
-              >
-                <Edit className="h-3 w-3 mr-1" />
-                {t('installed.buttons.edit')}
-              </Button>
-            )}
+                <p className="text-sm text-muted-foreground">
+                  {mcp.description}
+                </p>
 
-            {(mcpsWithInputs?.has(mcp.identifier)) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onConfigure(mcp)}
-              >
-                <Settings className="h-3 w-3 mr-1" />
-                {t('installed.buttons.config')}
-              </Button>
-            )}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  {mcp.author && (
+                    <span>{t('installed.time.by')} {mcp.author}</span>
+                  )}
+                  {mcp.lastUpdated && (
+                    <span title={getFullDate(mcp.lastUpdated)}>
+                      {t('installed.time.updated')} {formatDate(mcp.lastUpdated)}
+                    </span>
+                  )}
+                  {mcp.installed && (
+                    <span title={getFullDate(mcp.installed)}>
+                      {t('installed.time.installed')} {formatDate(mcp.installed)}
+                    </span>
+                  )}
+                </div>
+              </div>
 
-            <MCPActionsDropdown
-              mcp={mcp}
-              onDetail={onDetail}
-              onInspect={onInspect}
-              onDelete={onDelete}
-            />
+              <div className="flex gap-2 ml-4">
+                <Button
+                  variant={mcp.status === 'running' ? 'destructive' : 'default'}
+                  size="sm"
+                  onClick={() => onToggleStatus(mcp.identifier)}
+                  disabled={isLoading || mcp.status === 'starting' || mcp.status === 'stopping'}
+                  className={mcp.status === 'running'
+                    ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
+                  }
+                >
+                  {isLoading || mcp.status === 'starting' || mcp.status === 'stopping' ? (
+                    <>
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      {mcp.status === 'starting' ? t('installed.status.startingAction') :
+                       mcp.status === 'stopping' ? t('installed.status.stoppingAction') :
+                       mcp.status === 'running' ? t('installed.status.stoppingAction') : t('installed.status.startingAction')}
+                    </>
+                  ) : mcp.status === 'running' ? (
+                    <>
+                      <Square className="h-3 w-3 mr-1" />
+                      {t('installed.status.stop')}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3 w-3 mr-1" />
+                      {t('installed.status.start')}
+                    </>
+                  )}
+                </Button>
+
+                {(mcp.source === 'manual' || mcp.source === 'json') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEdit(mcp.identifier)}
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    {t('installed.buttons.edit')}
+                  </Button>
+                )}
+
+                {(mcpsWithInputs?.has(mcp.identifier)) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onConfigure(mcp)}
+                  >
+                    <Settings className="h-3 w-3 mr-1" />
+                    {t('installed.buttons.config')}
+                  </Button>
+                )}
+
+                <MCPActionsDropdown
+                  mcp={mcp}
+                  onDetail={onDetail}
+                  onInspect={onInspect}
+                  onDelete={onDelete}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

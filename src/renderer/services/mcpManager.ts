@@ -93,6 +93,7 @@ export function useMcpManager() {
             code: mcpName.replace(/\s+/g, '_'),
             description: mcpJsonData.description || editingMCP.description,
             author: mcpJsonData.author || editingMCP.author,
+            authorAvatarPath: editingMCP.authorAvatarPath, // 保持现有头像路径
             version: mcpJsonData.version || editingMCP.version,
             license: mcpJsonData.license || editingMCP.license,
             updated: new Date().toISOString(),
@@ -113,6 +114,7 @@ export function useMcpManager() {
             name: mcpName,
             description: mcpJsonData.description || null,
             author: mcpJsonData.author || null,
+            authorAvatarPath: null, // JSON 安装时没有头像
             version: mcpJsonData.version || null,
             updated: mcpJsonData.updated || null,
             license: mcpJsonData.license || null,
@@ -152,6 +154,7 @@ export function useMcpManager() {
             code: name.replace(/\s+/g, '_'),
             description: null,
             author: null,
+            authorAvatarPath: null, // 手动安装时没有头像
             version: null,
             updated: null,
             license: null,
@@ -274,6 +277,21 @@ export function useMcpManager() {
     }
 
     const mcpConfig = await parseMcpJson(installConfig.configuration);
+
+    // 下载头像到本地
+    let authorAvatarPath: string | null = null;
+    const mcpDetail = mcp as MarketMcpDetail;
+    if (mcpDetail.authorAvatar) {
+      try {
+        authorAvatarPath = await window.avatarAPI.download(mcp.identifier, mcpDetail.authorAvatar);
+        if (authorAvatarPath) {
+          window.logAPI.info(`Avatar downloaded for ${mcp.identifier}: ${authorAvatarPath}`);
+        }
+      } catch (error) {
+        window.logAPI.warn(`Failed to download avatar for ${mcp.identifier}:`, error);
+      }
+    }
+
     const newMcp = {
       source: 'market' as const,
       identifier: mcp.identifier,
@@ -281,6 +299,7 @@ export function useMcpManager() {
       code: mcp.code,
       description: mcp.description,
       author: mcp.author,
+      authorAvatarPath: authorAvatarPath,
       version: mcp.version,
       updated: mcp.updatedAt,
       license: mcp.license,
@@ -413,6 +432,15 @@ export function useMcpManager() {
 
     // 停止 MCP 客户端
     await window.mcpAPI.stopMcp(identifier);
+
+    // 删除本地头像文件
+    if (installedMcp.authorAvatarPath) {
+      try {
+        await window.avatarAPI.delete(installedMcp.authorAvatarPath);
+      } catch (error) {
+        window.logAPI.warn(`Failed to delete avatar for MCP ${identifier}:`, error);
+      }
+    }
 
     // 清除所有 OAuth 相关的敏感数据
     try {

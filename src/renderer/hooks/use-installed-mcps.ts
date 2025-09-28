@@ -106,6 +106,7 @@ export function useInstalledMcps() {
             name: mcp.name || 'Unknown MCP',
             description: mcp.description ?? null,
             author: mcp.author,
+            authorAvatarPath: mcp.authorAvatarPath,
             version: mcp.version,
             downloads: null as number | null,
             rating: null as number | null,

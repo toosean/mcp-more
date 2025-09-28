@@ -66,6 +66,7 @@ export interface Mcp {
   code: string;
   description: string | null;
   author: string | null;
+  authorAvatarPath: string | null; // 本地头像文件路径
   version: string | null;
   updated: string | null;
   license: string | null;

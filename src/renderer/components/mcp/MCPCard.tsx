@@ -167,11 +167,23 @@ export default function MCPCard({
     <Card className="group transition-all duration-300 hover:shadow-card hover:shadow-glow/10 bg-gradient-card border-border/50">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg leading-tight">{mcp.name}</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground">
-              {t('mcpCard.info.by')} {mcp.author || t('mcpCard.info.unknown')} • {t('mcpCard.info.version')}{mcp.version || t('mcpDetail.info.na')}
-            </CardDescription>
+          <div className="flex items-start gap-3">
+            {mcp.authorAvatar && (
+              <img
+                src={mcp.authorAvatar}
+                alt={`${mcp.author || 'Unknown'} avatar`}
+                className="w-8 h-8 rounded-full object-cover bg-muted flex-shrink-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
+            <div className="space-y-1 min-w-0 flex-1">
+              <CardTitle className="text-lg leading-tight">{mcp.name}</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                {t('mcpCard.info.by')} {mcp.author || t('mcpCard.info.unknown')} • {t('mcpCard.info.version')}{mcp.version || t('mcpDetail.info.na')}
+              </CardDescription>
+            </div>
           </div>
           {mcp.rating > 0 && (<div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Star className="h-3 w-3 fill-current text-yellow-500" />

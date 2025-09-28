@@ -120,6 +120,12 @@ declare global {
     shellAPI: {
       openExternal(url: string): Promise<void>;
     };
+    avatarAPI: {
+      download(identifier: string, avatarUrl: string): Promise<string | null>;
+      delete(filePath: string): Promise<void>;
+      exists(filePath: string): Promise<boolean>;
+      getDataURL(filePath: string): Promise<string | null>;
+    };
     updaterAPI: {
       // 取消下载
       cancelDownload(): Promise<{ success: boolean; error?: string }>;

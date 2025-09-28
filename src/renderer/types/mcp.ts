@@ -3,6 +3,7 @@ export interface DisplayMCP {
   name: string;
   description: string | null;
   author: string | null;
+  authorAvatarPath: string | null;
   version: string | null;
   downloads: number | null;
   rating: number | null;

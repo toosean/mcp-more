@@ -297,13 +297,25 @@ export default function MCPDetail() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            {mcp.name}
-          </h1>
-          <p className="text-muted-foreground">
-            by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'} • {`${mcp.identifier}`}
-          </p>
+        <div className="flex items-start gap-4">
+          {mcp.authorAvatar && (
+            <img
+              src={mcp.authorAvatar}
+              alt={`${mcp.author || 'Unknown'} avatar`}
+              className="w-16 h-16 rounded-full object-cover bg-muted flex-shrink-0 mt-1"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          )}
+          <div className="space-y-1 min-w-0 flex-1">
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              {mcp.name}
+            </h1>
+            <p className="text-muted-foreground">
+              by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'} • {`${mcp.identifier}`}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -510,7 +522,19 @@ export default function MCPDetail() {
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">Author</span>
                   </div>
-                  <span className="text-sm font-medium">{mcp.author || 'Unknown'}</span>
+                  <div className="flex items-center gap-2">
+                    {mcp.authorAvatar && (
+                      <img
+                        src={mcp.authorAvatar}
+                        alt={`${mcp.author || 'Unknown'} avatar`}
+                        className="w-5 h-5 rounded-full object-cover bg-muted"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <span className="text-sm font-medium">{mcp.author || 'Unknown'}</span>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between">

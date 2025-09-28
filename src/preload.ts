@@ -309,6 +309,14 @@ interface UpdaterAPI {
   onError(callback: (error: string) => void): () => void;
 }
 
+// 头像 API 实现
+const avatarAPI = {
+  download: (identifier: string, avatarUrl: string) => ipcRenderer.invoke('avatar:download', identifier, avatarUrl),
+  delete: (filePath: string) => ipcRenderer.invoke('avatar:delete', filePath),
+  exists: (filePath: string) => ipcRenderer.invoke('avatar:exists', filePath),
+  getDataURL: (filePath: string) => ipcRenderer.invoke('avatar:getDataURL', filePath),
+};
+
 // 更新 API 实现
 const updaterAPI: UpdaterAPI = {
   simulateUpdate: () => ipcRenderer.invoke('updater:simulate-update'),
@@ -359,4 +367,5 @@ contextBridge.exposeInMainWorld('eventAPI', eventAPI);
 contextBridge.exposeInMainWorld('mcpAPI', mcpAPI);
 contextBridge.exposeInMainWorld('runtimeAPI', runtimeAPI);
 contextBridge.exposeInMainWorld('shellAPI', shellAPI);
+contextBridge.exposeInMainWorld('avatarAPI', avatarAPI);
 contextBridge.exposeInMainWorld('updaterAPI', updaterAPI);

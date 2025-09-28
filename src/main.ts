@@ -8,6 +8,7 @@ import { setupWindowControlIpcHandlers } from './window/ipc-handlers';
 import { setupMCPIpcHandlers } from './mcp/ipc-handlers';
 import { setupUpdaterIpcHandlers } from './updater/ipc-handlers';
 import { setupRuntimeIpcHandlers } from './runtime/ipc-handlers';
+import { setupAvatarIpcHandlers } from './avatar/ipc-handlers';
 import { updateManager } from './updater';
 import { windowManager } from './window';
 import { menuManager } from './menu';
@@ -120,7 +121,10 @@ app.whenReady().then(async () => {
   
   // 设置运行时 IPC 处理器
   setupRuntimeIpcHandlers();
-  
+
+  // 设置头像 IPC 处理器
+  setupAvatarIpcHandlers();
+
   // 设置更新 IPC 处理器
   setupUpdaterIpcHandlers();
   

@@ -22,6 +22,8 @@ export interface MarketMcp {
   logoUrl: string | null;
   /** 作者信息 */
   author: string | null;
+  /** 作者头像 */
+  authorAvatar: string | null;
   /** 版本号 */
   version: string | null;
   /** 发布时间 */
