@@ -181,7 +181,7 @@ export default function MCPCard({
             <div className="space-y-1 min-w-0 flex-1">
               <CardTitle className="text-lg leading-tight">{mcp.name}</CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
-                {t('mcpCard.info.by')} {mcp.author || t('mcpCard.info.unknown')} • {t('mcpCard.info.version')}{mcp.version || t('mcpDetail.info.na')}
+                {t('mcpCard.info.by')} {mcp.author || t('mcpCard.info.unknown')}{mcp.version && ` • ${t('mcpCard.info.version')}${mcp.version}`}
               </CardDescription>
             </div>
           </div>

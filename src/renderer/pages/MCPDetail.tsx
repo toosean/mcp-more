@@ -307,7 +307,7 @@ export default function MCPDetail() {
               {mcp.name}
             </h1>
             <p className="text-muted-foreground">
-              by {mcp.author || 'Unknown'} • v{mcp.version || 'N/A'} • {`${mcp.identifier}`}
+              by {mcp.author || 'Unknown'}{mcp.version && ` • v${mcp.version}`} • {`${mcp.identifier}`}
             </p>
           </div>
         </div>
@@ -499,7 +499,7 @@ export default function MCPDetail() {
               )}
 
               <div className="text-center text-sm text-muted-foreground">
-                Version {mcp.version || 'N/A'} • {(mcp.downloads || 0).toLocaleString()} downloads
+                {mcp.version && `Version ${mcp.version} • `}{(mcp.downloads || 0).toLocaleString()} downloads
               </div>
             </CardContent>
           </Card>
@@ -531,13 +531,15 @@ export default function MCPDetail() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Version</span>
+                {mcp.version && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Version</span>
+                    </div>
+                    <Badge variant="outline">{mcp.version}</Badge>
                   </div>
-                  <Badge variant="outline">{mcp.version || 'N/A'}</Badge>
-                </div>
+                )}
 
                 {mcp.rating && (<div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
