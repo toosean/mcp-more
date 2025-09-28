@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import MCPCard from '@/components/mcp/MCPCard';
+import MCPCardSkeleton from '@/components/mcp/MCPCardSkeleton';
 import { TrendingUp, Loader2, Search, Star } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
@@ -54,16 +55,6 @@ export default function Market() {
     navigate('/browse');
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 p-6 flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>{t('market.loading')}</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 p-6 space-y-6">
@@ -86,12 +77,19 @@ export default function Market() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {trendingPackages.map((mcp) => (
-            <MCPCard
-              key={mcp.identifier}
-              mcp={mcp}
-            />
-          ))}
+          {loading ? (
+            // Show skeletons during loading
+            Array.from({ length: 3 }, (_, index) => (
+              <MCPCardSkeleton key={`trending-skeleton-${index}`} />
+            ))
+          ) : (
+            trendingPackages.map((mcp) => (
+              <MCPCard
+                key={mcp.identifier}
+                mcp={mcp}
+              />
+            ))
+          )}
         </div>
       </div>
 
@@ -104,7 +102,13 @@ export default function Market() {
           </div>
         </div>
         
-        {packages.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }, (_, index) => (
+              <MCPCardSkeleton key={`featured-skeleton-${index}`} />
+            ))}
+          </div>
+        ) : packages.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
               {t('market.noPackages')}

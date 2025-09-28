@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MCPCard from '@/components/mcp/MCPCard';
+import MCPCardSkeleton from '@/components/mcp/MCPCardSkeleton';
 import { Filter, Loader2, ArrowLeft, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useI18n } from '@/hooks/use-i18n';
@@ -162,16 +163,6 @@ export default function Browse() {
     navigate(-1);
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 p-6 flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>{t('browse.loading')}</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 p-6 space-y-6">
@@ -289,7 +280,13 @@ export default function Browse() {
             </Badge>
           </div>
           
-          {packages.length === 0 ? (
+          {loading || searchLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {Array.from({ length: 4 }, (_, index) => (
+                <MCPCardSkeleton key={`package-skeleton-${index}`} />
+              ))}
+            </div>
+          ) : packages.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 {searchQuery ? t('browse.noSearchResults') : t('browse.noPackages')}
