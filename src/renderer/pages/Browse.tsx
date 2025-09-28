@@ -39,7 +39,10 @@ export default function Browse() {
 
   // 初始化数据加载
   useEffect(() => {
-    loadInitialData();
+    const queryFromUrl = searchParams.get('query') || '';
+    setSearchQuery(queryFromUrl);
+    setInputValue(queryFromUrl);
+    loadPackages(true);
   }, []);
 
   // 监听 URL 参数变化，更新搜索状态
@@ -50,60 +53,48 @@ export default function Browse() {
       setInputValue(queryFromUrl);
       setCurrentPage(1);
     }
-  }, [searchParams]);
+  }, [searchParams, searchQuery]);
 
   // 搜索和筛选变化时重新加载数据
   useEffect(() => {
-    loadPackages();
-  }, [searchQuery, selectedCategoryId, sortBy, currentPage]);
-
-  const loadInitialData = async () => {
-    try {
-      setLoading(true);
-      const [packagesRes, categoriesRes] = await Promise.all([
-        getMarketMcps({ page: 1, pageSize: 20 }),
-        getMarketCategories()
-      ]);
-      
-      if (packagesRes.success) {
-        setPackages(packagesRes.result.list);
-        // Calculate total pages based on pageSize
-        setTotalPages(Math.ceil(packagesRes.result.total / 20));
-
-        // summ category count
-        setTotalCount(categoriesRes.result.list.filter(c=>c.count).reduce((acc, category) => acc + category.count, 0));
-      }
-      
-      if (categoriesRes.success) {
-        setCategories(categoriesRes.result.list);
-      }
-    } catch (error) {
-      console.error('Failed to load browse data:', error);
-      toast({
-        title: t('common.error'),
-        description: t('browse.errors.loadData'),
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+    if (!loading) {
+      loadPackages();
     }
-  };
+  }, [searchQuery, selectedCategoryId, sortBy, currentPage, loading]);
 
-  const loadPackages = async () => {
+
+  const loadPackages = async (isInitialLoad = false) => {
     try {
-      setSearchLoading(true);
-      
-      const response = await getMarketMcps({
-        page: currentPage,
+      if (isInitialLoad) {
+        setLoading(true);
+      } else {
+        setSearchLoading(true);
+      }
+
+      const requestParams = {
+        page: isInitialLoad ? 1 : currentPage,
         pageSize: 20,
         query: searchQuery || undefined,
         category: selectedCategoryId || undefined,
         sortBy: sortBy
-      });
-      
-      if (response.success) {
-        setPackages(response.result.list);
-        setTotalPages(Math.ceil(response.result.total / 20));
+      };
+
+      // 在初始加载时同时获取包和分类数据
+      const promises = [getMarketMcps(requestParams)];
+      if (isInitialLoad || !categories.length) {
+        promises.push(getMarketCategories());
+      }
+
+      const [packagesRes, categoriesRes] = await Promise.all(promises);
+
+      if (packagesRes.success) {
+        setPackages(packagesRes.result.list);
+        setTotalPages(Math.ceil(packagesRes.result.total / 20));
+      }
+
+      if (categoriesRes?.success) {
+        setCategories(categoriesRes.result.list);
+        setTotalCount(categoriesRes.result.list.filter(c=>c.count).reduce((acc, category) => acc + category.count, 0));
       }
     } catch (error) {
       console.error('Failed to load packages:', error);
@@ -113,10 +104,13 @@ export default function Browse() {
         variant: "destructive"
       });
     } finally {
-      setSearchLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+      } else {
+        setSearchLoading(false);
+      }
     }
   };
-
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -305,6 +299,7 @@ export default function Browse() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {packages.map((mcp) => (
                 <MCPCard
+                  key={mcp.id}
                   mcp={mcp}
                 />
               ))}
