@@ -9,6 +9,7 @@ import { setupMCPIpcHandlers } from './mcp/ipc-handlers';
 import { setupUpdaterIpcHandlers } from './updater/ipc-handlers';
 import { setupRuntimeIpcHandlers } from './runtime/ipc-handlers';
 import { setupAvatarIpcHandlers } from './avatar/ipc-handlers';
+import { setupMcpAppIpcHandlers } from './mcp-app/ipc-handlers';
 import { updateManager } from './updater';
 import { windowManager } from './window';
 import { menuManager } from './menu';
@@ -127,6 +128,9 @@ app.whenReady().then(async () => {
 
   // 设置更新 IPC 处理器
   setupUpdaterIpcHandlers();
+
+  // 设置 MCP 应用管理 IPC 处理器
+  setupMcpAppIpcHandlers();
   
   log.info('Starting MCP Server...');
   startMCPServer();

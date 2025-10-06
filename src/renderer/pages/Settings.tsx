@@ -178,6 +178,10 @@ export default function Settings() {
     navigate('/setup-guide');
   };
 
+  const handleQuickSetup = () => {
+    navigate('/quick-setup');
+  };
+
   const handleExportConfig = async () => {
     try {
       const configData = await window.configAPI.exportConfig();
@@ -373,22 +377,14 @@ export default function Settings() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* <Button onClick={handleDetectClient} className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
+            <Button onClick={handleQuickSetup} className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
               <Zap className="h-4 w-4 mr-2" />
-              {t('settings.quickSetup.detectClient')}
-            </Button> */}
-            <Button onClick={handleQuickGuide} className="bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none">
+              {t('settings.quickSetup.quickSetup')}
+            </Button>
+            <Button onClick={handleQuickGuide} variant="outline" className="flex-1 sm:flex-none">
               <BookOpen className="h-4 w-4 mr-2" />
               {t('settings.quickSetup.quickGuide')}
             </Button>
-            {/* <Button variant="outline" onClick={handleExportConfig} className="flex-1 sm:flex-none">
-              <Download className="h-4 w-4 mr-2" />
-              {t('settings.quickSetup.exportConfig')}
-            </Button>
-            <Button variant="outline" onClick={handleImportConfig} className="flex-1 sm:flex-none">
-              <Upload className="h-4 w-4 mr-2" />
-              {t('settings.quickSetup.importConfig')}
-            </Button> */}
           </div>
         </CardContent>
       </Card>

@@ -8,12 +8,10 @@ import {
   Package,
   Settings,
   Search,
-  Code,
-  Terminal,
-  Wrench,
   FileStack
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import QuickSetupSection from './QuickSetupSection';
 
 import logoProd from '@/assets/logo.png';
 import logoDev from '@/assets/logo-dev.png';
@@ -35,12 +33,6 @@ const getNavigation = (t: any, enableProfile: boolean = false) => {
   return baseNavigation;
 };
 
-const getQuickSetupItems = (t: any) => [
-  { name: t('sidebar.quickSetup.claudeCode'), icon: Code },
-  { name: t('sidebar.quickSetup.cursor'), icon: Terminal },
-  { name: t('sidebar.quickSetup.other'), icon: Wrench },
-];
-
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,7 +43,6 @@ export default function Sidebar() {
   const enableProfile = generalConfig?.enableProfile || false;
 
   const navigation = getNavigation(t, enableProfile);
-  const quickSetupItems = getQuickSetupItems(t);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,22 +132,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Quick Setup Section */}
-      {/* <div className="p-4 border-t border-border">
-        <div className="text-xs font-medium text-muted-foreground mb-2">
-          {t('settings.quickSetup.title')}
-        </div>
-        <div className="space-y-1">
-          {quickSetupItems.map((item) => (
-            <button
-              key={item.name}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors w-full text-left text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <item.icon className="h-4 w-4" />
-              {item.name}
-            </button>
-          ))}
-        </div>
-      </div> */}
+      <QuickSetupSection />
 
     </div>
   );

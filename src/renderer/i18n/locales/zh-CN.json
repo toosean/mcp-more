@@ -82,6 +82,7 @@
     "quickSetup": {
       "title": "配置 MCP 客户端",
       "description": "跟随以下指引，轻松完成您的 MCP 客户端设置",
+      "quickSetup": "快速设置",
       "detectClient": "检测本地 MCP Client",
       "quickGuide": "设置向导",
       "exportConfig": "导出配置",
@@ -235,7 +236,7 @@
   },
   "installed": {
     "title": "已安装",
-    "description": "管理您已安装的 MCP 包",
+    "description": "管理您已安装的 MCP",
     "source": {
       "manual": "手动添加",
       "market": "市场安装"
@@ -512,6 +513,8 @@
     "appName": "MCP More",
     "tagline": "更好地使用更多 MCP",
     "quickSetup": {
+      "title": "快速设置",
+      "setup": "快速设置",
       "claudeCode": "Claude Code",
       "cursor": "Cursor",
       "other": "其他"
@@ -645,6 +648,21 @@
       "notNow": "稍后处理"
     }
   },
+  "quickSetup": {
+    "title": "快速设置",
+    "subtitle": "自动检测并配置您的 MCP 客户端",
+    "reDetect": "重新检测",
+    "installed": "已检测",
+    "notFound": "未检测到",
+    "detecting": "检测中",
+    "version": "版本",
+    "quickSetupButton": "一键配置",
+    "settingUp": "配置中",
+    "openConfig": "打开配置",
+    "manualSetup": "手动设置",
+    "defaultSetup": "默认配置",
+    "selectProfile": "配置特定档案"
+  },
   "profiles": {
     "title": "配置档案",
     "description": "管理您的 MCP 客户端配置档案",
@@ -770,9 +788,6 @@
       "updateMcpFailed": {
         "description": "更新 MCP 分配失败"
       }
-    },
-    "info": {
-      "profileUrl": "配置档案 URL"
     },
     "labels": {
       "selected": "已选择",

@@ -82,6 +82,7 @@
     "quickSetup": {
       "title": "Setup MCP Client",
       "description": "Follow the guide below to easily set up your MCP client",
+      "quickSetup": "Quick Setup",
       "detectClient": "Detect Local MCP Client",
       "quickGuide": "Setup Guide",
       "exportConfig": "Export Config",
@@ -235,7 +236,7 @@
   },
   "installed": {
     "title": "Installed",
-    "description": "Manage your installed MCP packages",
+    "description": "Manage your installed MCP",
     "source": {
       "manual": "Manual",
       "market": "Market"
@@ -512,6 +513,8 @@
     "appName": "MCP More",
     "tagline": "Use More MCPs Better",
     "quickSetup": {
+      "title": "Quick Setup",
+      "setup": "Quick Setup",
       "claudeCode": "Claude Code",
       "cursor": "Cursor",
       "other": "Other"
@@ -602,6 +605,21 @@
       "notInstalled": "Runtime {{name}} not installed",
       "check": "Check"
     }
+  },
+  "quickSetup": {
+    "title": "Quick Setup",
+    "subtitle": "Automatically detect and configure your MCP clients",
+    "reDetect": "Re-detect",
+    "installed": "Detected",
+    "notFound": "Not Detected",
+    "detecting": "Detecting",
+    "version": "Version",
+    "quickSetupButton": "Quick Setup",
+    "settingUp": "Setting up",
+    "openConfig": "Open Config",
+    "manualSetup": "Manual Setup",
+    "defaultSetup": "Default Setup",
+    "selectProfile": "Select Profile"
   },
   "profiles": {
     "title": "Profiles",
@@ -728,9 +746,6 @@
       "updateMcpFailed": {
         "description": "Failed to update MCP assignment"
       }
-    },
-    "info": {
-      "profileUrl": "Profile URL"
     },
     "labels": {
       "selected": "Selected",

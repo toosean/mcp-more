@@ -5,6 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import log from 'electron-log/renderer';
 import { AppConfig, PartialAppConfig, Profile } from './config/types';
 import { RuntimeInfo } from './runtime/RuntimeManager';
+import { ConfiguredMCPServer, MCPAppDetectionResult, MCPAppInfo, MCPAppSetupResult, MCPMoreSetupConfig } from './mcp-app/interfaces/types';
 
 // 配置渲染进程的 electron-log
 log.transports.console.level = 'debug';
@@ -218,6 +219,21 @@ interface McpAPI {
   clearOAuthData(mcpId: string): Promise<void>;
 }
 
+
+
+// 定义 MCP App API 接口
+interface MCPAppAPI {
+  detectAllApps(): Promise<MCPAppDetectionResult[]>;
+  detectApp(appId: string): Promise<MCPAppDetectionResult>;
+  getInstalledApps(limit?: number): Promise<MCPAppDetectionResult[]>;
+  getSupportedApps(): Promise<MCPAppInfo[]>;
+  setupApp(appId: string, config: MCPMoreSetupConfig): Promise<MCPAppSetupResult>;
+  openConfigDirectory(appId: string): Promise<void>;
+  backupAppConfig(appId: string): Promise<string | null>;
+  isAppConfigured(appId: string, alias: string): Promise<boolean>;
+  getAppConfiguredServers(appId: string): Promise<ConfiguredMCPServer[]>;
+}
+
 // 窗口控制 API 实现
 const windowControlAPI: WindowControlAPI = {
   minimize: () => ipcRenderer.invoke('window:minimize'),
@@ -285,6 +301,19 @@ const shellAPI: ShellAPI = {
 interface ShellAPI {
   openExternal(url: string): Promise<void>;
 }
+
+// MCP App API 实现
+const mcpAppAPI: MCPAppAPI = {
+  detectAllApps: () => ipcRenderer.invoke('mcp-app:detect-all-apps'),
+  detectApp: (appId: string) => ipcRenderer.invoke('mcp-app:detect-app', appId),
+  getInstalledApps: (limit?: number) => ipcRenderer.invoke('mcp-app:get-installed-apps', limit),
+  getSupportedApps: () => ipcRenderer.invoke('mcp-app:get-supported-apps'),
+  setupApp: (appId: string, config: MCPMoreSetupConfig) => ipcRenderer.invoke('mcp-app:setup-app', appId, config),
+  openConfigDirectory: (appId: string) => ipcRenderer.invoke('mcp-app:open-config-directory', appId),
+  backupAppConfig: (appId: string) => ipcRenderer.invoke('mcp-app:backup-app-config', appId),
+  isAppConfigured: (appId: string, alias: string) => ipcRenderer.invoke('mcp-app:is-app-configured', appId, alias),
+  getAppConfiguredServers: (appId: string) => ipcRenderer.invoke('mcp-app:get-app-configured-servers', appId),
+};
 
 // 定义更新 API 接口
 interface UpdaterAPI {
@@ -369,3 +398,4 @@ contextBridge.exposeInMainWorld('runtimeAPI', runtimeAPI);
 contextBridge.exposeInMainWorld('shellAPI', shellAPI);
 contextBridge.exposeInMainWorld('avatarAPI', avatarAPI);
 contextBridge.exposeInMainWorld('updaterAPI', updaterAPI);
+contextBridge.exposeInMainWorld('mcpAppAPI', mcpAppAPI);

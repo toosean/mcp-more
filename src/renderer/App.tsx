@@ -15,6 +15,7 @@ import Installed from "./pages/Installed";
 import Profiles from "./pages/Profiles";
 import Settings from "./pages/Settings";
 import SetupGuide from "./pages/SetupGuide";
+import QuickSetup from "./pages/QuickSetup";
 import MCPDetail from "./pages/MCPDetail";
 import NotFound from "./pages/NotFound";
 import DynamicFormTest from "./pages/DynamicFormTest";
@@ -56,6 +57,7 @@ const App = () => {
               <Route path="/profiles" element={<Layout><Profiles /></Layout>} />
               <Route path="/settings" element={<Layout><Settings /></Layout>} />
               <Route path="/setup-guide" element={<Layout><SetupGuide /></Layout>} />
+              <Route path="/quick-setup" element={<Layout><QuickSetup /></Layout>} />
               <Route path="/form-test" element={<Layout><DynamicFormTest /></Layout>} />
               <Route path="/mcp/:org/:id" element={<Layout><MCPDetail /></Layout>} />
               <Route path="*" element={<NotFound />} />

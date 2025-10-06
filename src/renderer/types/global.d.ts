@@ -1,4 +1,10 @@
-import { AppConfig, PartialAppConfig } from '../../config/types';
+import { AppConfig, PartialAppConfig, Profile } from '../../config/types';
+import {
+  MCPAppDetectionResult,
+  MCPAppInfo,
+  MCPAppSetupResult,
+  MCPMoreSetupConfig
+} from '../../mcp-app/interfaces/types';
 
 export interface McpServerStatus {
   status: 'healthy' | 'stopped' | 'error';
@@ -116,6 +122,17 @@ declare global {
       callTool(mcpId: string, toolName: string, parameters: any): Promise<any>;
       // triggerOAuthFlow(mcpId: string): Promise<boolean>;
       clearOAuthData(mcpId: string): Promise<void>;
+    };
+    mcpAppAPI: {
+      detectAllApps(): Promise<MCPAppDetectionResult[]>;
+      detectApp(appId: string): Promise<MCPAppDetectionResult>;
+      getInstalledApps(limit?: number): Promise<MCPAppDetectionResult[]>;
+      getSupportedApps(): Promise<MCPAppInfo[]>;
+      setupApp(appId: string, config: MCPMoreSetupConfig): Promise<MCPAppSetupResult>;
+      openConfigDirectory(appId: string): Promise<void>;
+      backupAppConfig(appId: string): Promise<string | null>;
+      isAppConfigured(appId: string, alias: string): Promise<boolean>;
+      getAppConfiguredServers(appId: string): Promise<Array<{ alias: string; url: string }>>;
     };
     shellAPI: {
       openExternal(url: string): Promise<void>;

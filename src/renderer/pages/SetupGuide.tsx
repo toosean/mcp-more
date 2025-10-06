@@ -179,7 +179,7 @@ export default function SetupGuide() {
     });
   };
 
-  const mcpMoreAlias = "x";
+  const mcpMoreAlias = "mm";
   const selectedProfile = profiles.find(p => p.id === selectedProfileId);
 
   // 生成基于 profile 的 URL
