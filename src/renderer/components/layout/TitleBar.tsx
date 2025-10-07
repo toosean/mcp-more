@@ -138,44 +138,42 @@ export default function TitleBar() {
           </div>
           
           {/* macOS布局：居中的标题和Logo */}
-          <div 
+          <div
             className="flex items-center gap-2"
             style={{ WebkitAppRegion: 'drag' } as any}
           >
-            <img 
-              src={icon} 
+            <img
+              src={icon}
               alt="MCP More"
               className="w-4 h-4 flex-shrink-0"
             />
             <span className="text-sm font-medium text-foreground">
               MCP More
-              {isDevelopment && (
-                <span className="ml-2 text-xs px-2 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 rounded">
-                  {t('titleBar.devMode.customTitleBar')}
-                </span>
-              )}
+              <span className="ml-2 text-xs px-2 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 rounded">
+                Preview
+              </span>
+              
             </span>
           </div>
         </>
       ) : (
         <>
           {/* Windows布局：左侧标题和Logo */}
-          <div 
+          <div
             className="flex-1 flex items-center px-4 h-full gap-2"
             style={{ WebkitAppRegion: 'drag' } as any}
           >
-            <img 
+            <img
               src={icon}
               alt="MCP More"
               className="w-5 h-5 flex-shrink-0"
             />
             <span className="text-sm font-medium text-foreground">
               MCP More
-              {isDevelopment && (
-                <span className="ml-2 text-xs px-2 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 rounded">
-                  {t('titleBar.devMode.customTitleBar')}
-                </span>
-              )}
+              <span className="ml-2 text-xs px-2 py-0.5 bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 rounded">
+                Preview
+              </span>
+
             </span>
           </div>
           

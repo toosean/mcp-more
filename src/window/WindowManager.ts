@@ -23,13 +23,14 @@ export class WindowManager {
     log.debug('Creating main window...');
     // 创建浏览器窗口选项
     const windowOptions: any = {
+      title: 'MCP More (Preview) - Use More MCPs Better',
       width: 1200,
       height: 800,
       minWidth: 800,
       minHeight: 600,
       show: false, // 初始不显示，等待启动配置
       // 开发模式下显示原生标题栏，生产模式下使用自定义标题栏
-      frame: process.env.NODE_ENV === 'development', 
+      frame: process.env.NODE_ENV === 'development',
       fullscreenable: false, // 禁用全屏模式
       icon: iconPng,
       webPreferences: {
@@ -82,7 +83,7 @@ export class WindowManager {
     this.tray = new Tray(trayIcon);
 
     // 设置托盘提示文本
-    this.tray.setToolTip('MCP More - MCP 包管理器');
+    this.tray.setToolTip('MCP More (Preview) - Use More MCPs Better');
 
     // 设置托盘菜单
     const contextMenu = Menu.buildFromTemplate([
