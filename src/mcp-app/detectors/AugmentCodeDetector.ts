@@ -1,7 +1,5 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import log from 'electron-log';
 import { app } from 'electron';
 import {
@@ -12,19 +10,19 @@ import {
   ConfiguredMCPServer
 } from '../interfaces/types';
 
-const execAsync = promisify(exec);
-
 /**
- * Cursor 检测器
- * Cursor 是基于 VS Code 的 AI 代码编辑器，配置文件格式与 VS Code 类似
+ * Augment Code 检测器
+ * Augment Code 是一个 AI 编程助手，支持通过设置面板配置 MCP 服务器
+ * 注意：Augment Code 主要通过其 UI 配置，此检测器提供基础支持
  */
-export class CursorDetector implements MCPAppDetector {
-  readonly appId = 'cursor';
-  readonly appName = 'Cursor';
-  readonly priority = 80;
+export class AugmentCodeDetector implements MCPAppDetector {
+  readonly appId = 'augment-code';
+  readonly appName = 'Augment Code';
+  readonly priority = 65;
 
   /**
-   * 获取配置文件路径（用户全局配置）
+   * 获取配置文件路径
+   * Augment Code 的配置位置可能因版本和安装方式而异
    */
   async getConfigPath(): Promise<string | null> {
     const homeDir = app.getPath('home');
@@ -33,54 +31,65 @@ export class CursorDetector implements MCPAppDetector {
     let configPath: string;
 
     if (platform === 'win32') {
-      // Windows: %APPDATA%\Cursor\User\settings.json
+      // Windows: %APPDATA%\Augment\settings.json (推测)
       const appData = app.getPath('appData');
-      configPath = path.join(appData, 'Cursor', 'User', 'settings.json');
+      configPath = path.join(appData, 'Augment', 'settings.json');
     } else if (platform === 'darwin') {
-      // macOS: ~/Library/Application Support/Cursor/User/settings.json
-      configPath = path.join(homeDir, 'Library', 'Application Support', 'Cursor', 'User', 'settings.json');
+      // macOS: ~/Library/Application Support/Augment/settings.json (推测)
+      configPath = path.join(homeDir, 'Library', 'Application Support', 'Augment', 'settings.json');
     } else {
-      // Linux: ~/.config/Cursor/User/settings.json
-      configPath = path.join(homeDir, '.config', 'Cursor', 'User', 'settings.json');
+      // Linux: ~/.config/Augment/settings.json (推测)
+      configPath = path.join(homeDir, '.config', 'Augment', 'settings.json');
     }
 
     return configPath;
   }
 
   /**
-   * 检测 Cursor 是否安装
+   * 检测 Augment Code 是否安装
+   * 通过检查配置目录是否存在来判断
    */
   async detect(): Promise<MCPAppDetectionResult> {
     try {
-      // 尝试运行 cursor --version 命令，设置 3 秒超时
-      const { stdout } = await execAsync('cursor --version', { timeout: 3000 });
-      const lines = stdout.trim().split('\n');
-      const version = lines[0]?.trim(); // 第一行是版本号
-
-      // 获取配置文件路径
       const configPath = await this.getConfigPath();
 
-      return {
-        appId: this.appId,
-        appName: this.appName,
-        installed: true,
-        version,
-        configPath: configPath || undefined,
-      };
+      if (!configPath) {
+        return {
+          appId: this.appId,
+          appName: this.appName,
+          installed: false,
+          error: 'Could not determine config path'
+        };
+      }
+
+      // 检查配置目录是否存在
+      const configDir = path.dirname(configPath);
+      try {
+        await fs.access(configDir);
+
+        // 配置目录存在，说明 Augment Code 已安装
+        return {
+          appId: this.appId,
+          appName: this.appName,
+          installed: true,
+          configPath
+        };
+      } catch (error) {
+        // 配置目录不存在，说明 Augment Code 未安装
+        return {
+          appId: this.appId,
+          appName: this.appName,
+          installed: false,
+          error: 'Augment Code config directory not found'
+        };
+      }
     } catch (error) {
-      log.debug(`Cursor not detected:`, error);
-
-      // 检查是否是超时错误
-      const isTimeout = error instanceof Error && error.message.includes('timeout');
-      const errorMessage = isTimeout
-        ? 'Command timeout - Cursor may not be responding'
-        : 'Cursor CLI not found in PATH';
-
+      log.error('Augment Code detection failed:', error);
       return {
         appId: this.appId,
         appName: this.appName,
         installed: false,
-        error: errorMessage
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -101,16 +110,9 @@ export class CursorDetector implements MCPAppDetector {
       }
 
       const configContent = await fs.readFile(configPath, 'utf-8');
-
-      // Cursor 的配置文件可能包含注释，需要处理
-      // 简单处理：移除 // 和 /* */ 注释
-      // const cleanedContent = configContent
-      //   .replace(/\/\/.*$/gm, '')  // 移除单行注释
-      //   .replace(/\/\*[\s\S]*?\*\//g, '');  // 移除多行注释
-
       return JSON.parse(configContent);
     } catch (error) {
-      log.error('Failed to read Cursor config:', error);
+      log.error('Failed to read Augment Code config:', error);
       throw error;
     }
   }
@@ -131,10 +133,10 @@ export class CursorDetector implements MCPAppDetector {
 
       // 写入配置文件
       await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
-      log.info(`Cursor config written to: ${configPath}`);
+      log.info(`Augment Code config written to: ${configPath}`);
       return true;
     } catch (error) {
-      log.error('Failed to write Cursor config:', error);
+      log.error('Failed to write Augment Code config:', error);
       return false;
     }
   }
@@ -160,35 +162,37 @@ export class CursorDetector implements MCPAppDetector {
 
       // 复制文件
       await fs.copyFile(configPath, backupPath);
-      log.info(`Cursor config backed up to: ${backupPath}`);
+      log.info(`Augment Code config backed up to: ${backupPath}`);
       return backupPath;
     } catch (error) {
-      log.error('Failed to backup Cursor config:', error);
+      log.error('Failed to backup Augment Code config:', error);
       return null;
     }
   }
 
   /**
-   * 一键配置 Cursor
+   * 一键配置 Augment Code
+   * 注意：Augment Code 推荐通过其 UI 设置面板配置 MCP 服务器
+   * 此方法提供基础的配置文件写入支持
    */
   async setup(mcpMoreConfig: MCPMoreSetupConfig): Promise<MCPAppSetupResult> {
     const logs: string[] = [];
 
     try {
       // 1. 检测是否安装
-      logs.push('Detecting Cursor installation...');
+      logs.push('Detecting Augment Code installation...');
       const detection = await this.detect();
       if (!detection.installed) {
-        logs.push(`Cursor not installed - ${detection.error || 'CLI command not found'}`);
+        logs.push(`Augment Code not installed - ${detection.error || 'Config directory not found'}`);
         return {
           success: false,
           appId: this.appId,
-          message: 'Cursor is not installed',
-          error: 'Cursor CLI not found',
+          message: 'Augment Code is not installed',
+          error: 'Augment Code config directory not found. Note: Augment Code is recommended to be configured through its UI Settings Panel',
           logs
         };
       }
-      logs.push(`Cursor detected (version: ${detection.version || 'unknown'})`);
+      logs.push('Augment Code detected');
 
       // 2. 备份现有配置
       const configPath = await this.getConfigPath();
@@ -224,7 +228,7 @@ export class CursorDetector implements MCPAppDetector {
         url: mcpMoreConfig.url
       };
 
-      // 7. 写入配置
+      // 6. 写入配置
       logs.push('Writing configuration to file...');
       const writeSuccess = await this.writeConfig(existingConfig);
       if (!writeSuccess) {
@@ -239,19 +243,19 @@ export class CursorDetector implements MCPAppDetector {
       }
       logs.push('Configuration written successfully');
 
-      logs.push('Cursor setup completed! Please reload Cursor window for changes to take effect');
+      logs.push('Augment Code setup completed! You may also configure MCP servers through Augment Settings Panel -> Import from JSON');
 
       return {
         success: true,
         appId: this.appId,
-        message: 'Cursor configured successfully',
+        message: 'Augment Code configured successfully (recommended to verify in Augment Settings Panel)',
         configPath: configPath || undefined,
         backupPath: backupPath || undefined,
-        needsRestart: true,  // Cursor 需要重新加载窗口
+        needsRestart: false,
         logs
       };
     } catch (error) {
-      log.error('Cursor setup failed:', error);
+      log.error('Augment Code setup failed:', error);
       logs.push(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return {
         success: false,
@@ -271,7 +275,7 @@ export class CursorDetector implements MCPAppDetector {
       const config = await this.readConfig();
       return config !== null && config.mcpServers !== undefined;
     } catch (error) {
-      log.error('Cursor verification failed:', error);
+      log.error('Augment Code verification failed:', error);
       return false;
     }
   }
@@ -287,7 +291,7 @@ export class CursorDetector implements MCPAppDetector {
       }
       return alias in config.mcpServers;
     } catch (error) {
-      log.error('Failed to check Cursor configuration:', error);
+      log.error('Failed to check Augment Code configuration:', error);
       return false;
     }
   }
@@ -322,6 +326,3 @@ export class CursorDetector implements MCPAppDetector {
     }
   }
 }
-
-
-

@@ -243,7 +243,7 @@ export default function SetupGuide() {
           },
           {
             title: '2. 编辑配置文件',
-            content: '打开配置文件，添加以下 MCP 服务器配置：',
+            content: '打开配置文件，在 mcpServers 对象中添加 MCP More 服务器配置：',
             config: mcpConfigJsonString
           },
           {
@@ -252,7 +252,7 @@ export default function SetupGuide() {
           },
           {
             title: '4. 验证配置',
-            content: '在 Claude 中输入消息，如果配置成功，您将看到 MCP 工具可用的提示。'
+            content: '在 Claude 中输入消息，如果配置成功，您将在聊天界面看到 MCP 工具可用的提示图标。'
           }
         ]
       },
@@ -263,20 +263,20 @@ export default function SetupGuide() {
         steps: [
           {
             title: '1. 使用命令行添加 MCP 服务器',
-            content: '使用 Claude Code CLI 添加 MCP More 服务器：',
+            content: '使用 Claude Code CLI 添加 MCP More 服务器（HTTP transport）：',
             config: `claude mcp add-json ${mcpMoreAlias} '${JSON.stringify({
-              "url": "${generateMcpUrl(selectedProfileId)}"
+              "url": generateMcpUrl(selectedProfileId)
             })}'`
           },
           {
-            title: '2. 验证服务器配置',
-            content: '列出所有已配置的 MCP 服务器：',
-            config: 'claude mcp list'
+            title: '2. 或手动编辑配置文件',
+            content: '在 ~/.config/claude-code/mcp_servers.json 中添加配置：',
+            config: mcpConfigJsonString
           },
           {
-            title: '3. 测试服务器连接',
-            content: '测试 MCP More 服务器连接：',
-            config: `claude mcp test ${mcpMoreAlias}`
+            title: '3. 验证服务器配置',
+            content: '列出所有已配置的 MCP 服务器：',
+            config: 'claude mcp list'
           },
           {
             title: '4. 项目级配置（可选）',
@@ -297,21 +297,21 @@ export default function SetupGuide() {
         description: '为 Cursor AI 编辑器配置 MCP 服务器支持',
         steps: [
           {
-            title: '1. 安装 MCP 扩展',
-            content: '在 Cursor 扩展商店中搜索并安装 "MCP Client" 扩展。'
+            title: '1. 打开 MCP 设置',
+            content: '进入 Cursor Settings -> MCP -> Add new MCP Server。'
           },
           {
-            title: '2. 打开设置',
-            content: '按 Ctrl/Cmd + , 打开设置，搜索 "MCP" 相关设置。'
-          },
-          {
-            title: '3. 配置服务器',
-            content: '在 MCP 设置中添加服务器配置：',
+            title: '2. 配置服务器',
+            content: '为服务器命名（如 "MCP More"），选择配置类型。如果 Cursor 支持 HTTP transport，使用以下配置：',
             config: mcpConfigJsonString
           },
           {
-            title: '4. 重载窗口',
-            content: '按 Ctrl/Cmd + Shift + P，执行 "Developer: Reload Window" 重载编辑器。'
+            title: '3. 保存并验证',
+            content: '点击 Save 保存配置。您可以点击 Edit 来验证或修改配置。'
+          },
+          {
+            title: '4. 重载窗口（如需要）',
+            content: '如果服务器未自动连接，按 Ctrl/Cmd + Shift + P，执行 "Developer: Reload Window" 重载编辑器。'
           }
         ]
       },
@@ -321,24 +321,25 @@ export default function SetupGuide() {
         description: '为 Visual Studio Code 配置 MCP 服务器集成',
         steps: [
           {
-            title: '1. 安装扩展',
-            content: '从 VS Code 扩展商店安装 "Model Context Protocol" 扩展。'
+            title: '1. 确保安装 MCP 扩展',
+            content: '确认已安装支持 MCP 的 GitHub Copilot 扩展或其他 MCP 客户端扩展。'
           },
           {
-            title: '2. 配置工作区',
-            content: '在项目根目录创建 .vscode/settings.json 文件：',
-            config: `{
-  "mcp.servers": {
-    "${mcpMoreAlias}": {
-      "url": "${generateMcpUrl(selectedProfileId)}"
-    }
-  },
-  "mcp.enableAutoStart": true
-}`
+            title: '2. 使用 CLI 添加（推荐）',
+            content: '使用 VS Code CLI 添加 MCP More 服务器：',
+            config: `code --add-mcp '${JSON.stringify({
+              "name": mcpMoreAlias,
+              "url": generateMcpUrl(selectedProfileId)
+            })}'`
           },
           {
-            title: '3. 验证连接',
-            content: '查看输出面板的 "MCP" 频道，确认服务器连接状态。'
+            title: '3. 或手动配置工作区',
+            content: '在项目根目录创建或编辑 .vscode/settings.json 文件，添加：',
+            config: mcpConfigJsonString
+          },
+          {
+            title: '4. 验证连接',
+            content: '查看输出面板的 "MCP" 或 "GitHub Copilot" 频道，确认 MCP More 服务器连接状态。'
           }
         ]
       },
@@ -348,12 +349,12 @@ export default function SetupGuide() {
         description: '为 Augment Code AI 编程助手配置 MCP 服务器连接',
         steps: [
           {
-            title: '1. 打开 Augment 设置面板',
-            content: '在 Augment 面板右上角打开选项菜单，点击 Settings 选项。'
+            title: '1. 打开 Augment 设置',
+            content: '在 Augment 面板右上角打开选项菜单，点击 Settings。'
           },
           {
             title: '2. 选择配置方式',
-            content: 'Augment Code 提供三种配置 MCP 服务器的方式：Easy MCP（推荐）、设置面板手动配置、JSON 导入配置。'
+            content: 'Augment Code 支持三种配置方式：Easy MCP（推荐）、手动配置、JSON 导入。'
           },
           {
             title: '3. 使用 JSON 导入配置',
@@ -361,8 +362,8 @@ export default function SetupGuide() {
             config: mcpConfigJsonString
           },
           {
-            title: '4. 验证配置',
-            content: '配置完成后，您可以在设置面板中编辑或删除服务器，确认 MCP More 服务器连接正常。'
+            title: '4. 保存并验证',
+            content: '保存配置后，在设置面板中确认 MCP More 服务器显示为已连接状态。'
           }
         ]
       },
@@ -371,15 +372,39 @@ export default function SetupGuide() {
         description: '适用于其他支持 MCP 协议的客户端和工具',
         clients: [
           {
-            name: '标准配置',
-            description: '适用于大多数工具：',
+            name: '标准配置（通用）',
+            description: '适用于大多数支持 MCP 的工具（如 Windsurf、Warp 等）：',
             config: mcpConfigJsonString,
           },
           {
-            name: '自定义客户端',
-            description: '使用 MCP SDK 构建的自定义客户端',
-            configPath: '按客户端文档配置',
-            config: `// 示例：Node.js MCP 客户端
+            name: 'LM Studio',
+            description: '打开 Program 侧边栏 -> Install -> Edit mcp.json，添加：',
+            config: mcpConfigJsonString,
+          },
+          {
+            name: 'Qodo Gen',
+            description: '在 VS Code 或 IntelliJ 中打开 Qodo Gen 聊天面板 -> Connect more tools -> + Add new MCP，粘贴：',
+            config: mcpConfigJsonString,
+          },
+          {
+            name: 'opencode',
+            description: '编辑 ~/.config/opencode/opencode.json 文件：',
+            config: `{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "${mcpMoreAlias}": {
+      "type": "remote",
+      "url": "${generateMcpUrl(selectedProfileId)}",
+      "enabled": true
+    }
+  }
+}`,
+          },
+          {
+            name: '自定义 MCP 客户端（HTTP SDK）',
+            description: '使用 MCP SDK 构建的自定义客户端（HTTP Transport）：',
+            configPath: '代码示例',
+            config: `// Node.js MCP 客户端示例
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
@@ -429,7 +454,7 @@ await client.connect(transport);`
           },
           {
             title: '2. Edit Configuration File',
-            content: 'Open the configuration file and add the following MCP server configuration:',
+            content: 'Open the configuration file and add MCP More server configuration to the mcpServers object:',
             config: mcpConfigJsonString
           },
           {
@@ -438,7 +463,7 @@ await client.connect(transport);`
           },
           {
             title: '4. Verify Configuration',
-            content: 'Type a message in Claude. If configured successfully, you should see prompts indicating MCP tools are available.'
+            content: 'Type a message in Claude. If configured successfully, you should see an indicator in the chat interface showing MCP tools are available.'
           }
         ]
       },
@@ -449,20 +474,20 @@ await client.connect(transport);`
         steps: [
           {
             title: '1. Add MCP Server via Command Line',
-            content: 'Use Claude Code CLI to add MCP More server:',
+            content: 'Use Claude Code CLI to add MCP More server (HTTP transport):',
             config: `claude mcp add-json ${mcpMoreAlias} '${JSON.stringify({
-              "url": "${generateMcpUrl(selectedProfileId)}"
+              "url": generateMcpUrl(selectedProfileId)
             })}'`
           },
           {
-            title: '2. Verify Server Configuration',
-            content: 'List all configured MCP servers:',
-            config: 'claude mcp list'
+            title: '2. Or Edit Configuration File Manually',
+            content: 'Add configuration to ~/.config/claude-code/mcp_servers.json:',
+            config: mcpConfigJsonString
           },
           {
-            title: '3. Test Server Connection',
-            content: 'Test MCP More server connection:',
-            config: `claude mcp test ${mcpMoreAlias}`
+            title: '3. Verify Server Configuration',
+            content: 'List all configured MCP servers:',
+            config: 'claude mcp list'
           },
           {
             title: '4. Project-level Configuration (Optional)',
@@ -483,21 +508,21 @@ await client.connect(transport);`
         description: 'Configure MCP server support for Cursor AI editor',
         steps: [
           {
-            title: '1. Install MCP Extension',
-            content: 'Search and install "MCP Client" extension from the Cursor extension marketplace.'
+            title: '1. Open MCP Settings',
+            content: 'Go to Cursor Settings -> MCP -> Add new MCP Server.'
           },
           {
-            title: '2. Open Settings',
-            content: 'Press Ctrl/Cmd + , to open settings, search for "MCP" related settings.'
-          },
-          {
-            title: '3. Configure Servers',
-            content: 'Add server configuration in MCP settings:',
+            title: '2. Configure Server',
+            content: 'Name the server (e.g., "MCP More") and select configuration type. If Cursor supports HTTP transport, use the following configuration:',
             config: mcpConfigJsonString
           },
           {
-            title: '4. Reload Window',
-            content: 'Press Ctrl/Cmd + Shift + P, execute "Developer: Reload Window" to reload the editor.'
+            title: '3. Save and Verify',
+            content: 'Click Save to save the configuration. You can click Edit to verify or modify the configuration.'
+          },
+          {
+            title: '4. Reload Window (If Needed)',
+            content: 'If the server does not connect automatically, press Ctrl/Cmd + Shift + P, execute "Developer: Reload Window" to reload the editor.'
           }
         ]
       },
@@ -507,24 +532,25 @@ await client.connect(transport);`
         description: 'Configure MCP server integration for Visual Studio Code',
         steps: [
           {
-            title: '1. Install Extension',
-            content: 'Install the "Model Context Protocol" extension from VS Code extension marketplace.'
+            title: '1. Ensure MCP Extension is Installed',
+            content: 'Confirm that GitHub Copilot extension or other MCP client extension that supports MCP is installed.'
           },
           {
-            title: '2. Configure Workspace',
-            content: 'Create .vscode/settings.json file in project root:',
-            config: `{
-  "mcp.servers": {
-    "${mcpMoreAlias}": {
-      "url": "${generateMcpUrl(selectedProfileId)}"
-    }
-  },
-  "mcp.enableAutoStart": true
-}`
+            title: '2. Add via CLI (Recommended)',
+            content: 'Use VS Code CLI to add MCP More server:',
+            config: `code --add-mcp '${JSON.stringify({
+              "name": mcpMoreAlias,
+              "url": generateMcpUrl(selectedProfileId)
+            })}'`
           },
           {
-            title: '3. Verify Connection',
-            content: 'Check the "MCP" channel in the output panel to confirm server connection status.'
+            title: '3. Or Configure Workspace Manually',
+            content: 'Create or edit .vscode/settings.json file in project root and add:',
+            config: mcpConfigJsonString
+          },
+          {
+            title: '4. Verify Connection',
+            content: 'Check the "MCP" or "GitHub Copilot" channel in the output panel to confirm MCP More server connection status.'
           }
         ]
       },
@@ -534,12 +560,12 @@ await client.connect(transport);`
         description: 'Configure MCP server connections for Augment Code AI programming assistant',
         steps: [
           {
-            title: '1. Open Augment Settings Panel',
-            content: 'Open the options menu in the upper right of the Augment panel and click the Settings option.'
+            title: '1. Open Augment Settings',
+            content: 'Open the options menu in the upper right of the Augment panel and click Settings.'
           },
           {
             title: '2. Choose Configuration Method',
-            content: 'Augment Code provides three ways to configure MCP servers: Easy MCP (recommended), Settings Panel manual configuration, and JSON import configuration.'
+            content: 'Augment Code supports three configuration methods: Easy MCP (recommended), manual configuration, and JSON import.'
           },
           {
             title: '3. Use JSON Import Configuration',
@@ -547,8 +573,8 @@ await client.connect(transport);`
             config: mcpConfigJsonString
           },
           {
-            title: '4. Verify Configuration',
-            content: 'After configuration, you can edit or remove servers in the settings panel to confirm that the MCP More server connection is working properly.'
+            title: '4. Save and Verify',
+            content: 'After saving the configuration, confirm in the settings panel that the MCP More server shows as connected.'
           }
         ]
       },
@@ -557,15 +583,39 @@ await client.connect(transport);`
         description: 'For other clients and tools that support MCP protocol',
         clients: [
           {
-            name: 'Standard config',
-            description: 'works in most of the tools:',
+            name: 'Standard Configuration (Universal)',
+            description: 'Works in most MCP-compatible tools (e.g., Windsurf, Warp, etc.):',
             config: mcpConfigJsonString,
           },
           {
-            name: 'Custom Client',
-            description: 'Custom client built with MCP SDK',
-            configPath: 'Configure according to client documentation',
-            config: `// Example: Node.js MCP Client
+            name: 'LM Studio',
+            description: 'Go to Program sidebar -> Install -> Edit mcp.json, add:',
+            config: mcpConfigJsonString,
+          },
+          {
+            name: 'Qodo Gen',
+            description: 'Open Qodo Gen chat panel in VS Code or IntelliJ -> Connect more tools -> + Add new MCP, paste:',
+            config: mcpConfigJsonString,
+          },
+          {
+            name: 'opencode',
+            description: 'Edit ~/.config/opencode/opencode.json file:',
+            config: `{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "${mcpMoreAlias}": {
+      "type": "remote",
+      "url": "${generateMcpUrl(selectedProfileId)}",
+      "enabled": true
+    }
+  }
+}`,
+          },
+          {
+            name: 'Custom MCP Client (HTTP SDK)',
+            description: 'Custom client built with MCP SDK (HTTP Transport):',
+            configPath: 'Code Example',
+            config: `// Node.js MCP Client Example
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 

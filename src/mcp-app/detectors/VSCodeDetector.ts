@@ -211,21 +211,17 @@ export class VSCodeDetector implements MCPAppDetector {
         logs.push('Existing configuration loaded successfully');
       }
 
-      // 4. 确保 mcp.servers 对象存在
-      if (!existingConfig['mcp.servers']) {
-        logs.push('Creating mcp.servers configuration section');
-        existingConfig['mcp.servers'] = {};
+      // 4. 确保 mcpServers 对象存在
+      if (!existingConfig.mcpServers) {
+        logs.push('Creating mcpServers configuration section');
+        existingConfig.mcpServers = {};
       }
 
       // 5. 添加或更新 MCP More 配置
       logs.push(`Adding MCP More configuration (alias: ${mcpMoreConfig.alias}, URL: ${mcpMoreConfig.url})`);
-      existingConfig['mcp.servers'][mcpMoreConfig.alias] = {
+      existingConfig.mcpServers[mcpMoreConfig.alias] = {
         url: mcpMoreConfig.url
       };
-
-      // 6. 启用自动启动
-      logs.push('Enabling MCP auto-start');
-      existingConfig['mcp.enableAutoStart'] = true;
 
       // 7. 写入配置
       logs.push('Writing configuration to file...');
@@ -272,7 +268,7 @@ export class VSCodeDetector implements MCPAppDetector {
   async verify(): Promise<boolean> {
     try {
       const config = await this.readConfig();
-      return config !== null && config['mcp.servers'] !== undefined;
+      return config !== null && config.mcpServers !== undefined;
     } catch (error) {
       log.error('VS Code verification failed:', error);
       return false;
@@ -285,10 +281,10 @@ export class VSCodeDetector implements MCPAppDetector {
   async isConfigured(alias: string): Promise<boolean> {
     try {
       const config = await this.readConfig();
-      if (!config || !config['mcp.servers']) {
+      if (!config || !config.mcpServers) {
         return false;
       }
-      return alias in config['mcp.servers'];
+      return alias in config.mcpServers;
     } catch (error) {
       log.error('Failed to check VS Code configuration:', error);
       return false;
@@ -301,14 +297,14 @@ export class VSCodeDetector implements MCPAppDetector {
   async getConfiguredMCPMoreServers(): Promise<ConfiguredMCPServer[]> {
     try {
       const config = await this.readConfig();
-      if (!config || !config['mcp.servers']) {
+      if (!config || !config.mcpServers) {
         return [];
       }
 
       const mcpMoreServers: ConfiguredMCPServer[] = [];
 
       // 遍历所有配置的 MCP 服务器
-      for (const [alias, serverConfig] of Object.entries(config['mcp.servers'])) {
+      for (const [alias, serverConfig] of Object.entries(config.mcpServers)) {
         if (serverConfig && typeof serverConfig === 'object' && 'url' in serverConfig) {
           const url = serverConfig.url as string;
           // 检查 URL 是否匹配 localhost pattern（MCP More 服务器）

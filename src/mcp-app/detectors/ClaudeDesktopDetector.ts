@@ -170,8 +170,9 @@ export class ClaudeDesktopDetector implements MCPAppDetector {
   /**
    * 一键配置 Claude Desktop
    *
-   * 注意：Claude Desktop 使用 command+args 格式配置 MCP 服务器
-   * 对于 MCP More（基于 HTTP/SSE 的服务器），我们需要配置一个客户端来桥接
+   * 注意：Claude Desktop 支持两种配置格式：
+   * 1. command+args 格式（用于 stdio transport）
+   * 2. url 格式（用于 HTTP/SSE transport，MCP More 使用此格式）
    */
   async setup(mcpMoreConfig: MCPMoreSetupConfig): Promise<MCPAppSetupResult> {
     const logs: string[] = [];
@@ -221,23 +222,14 @@ export class ClaudeDesktopDetector implements MCPAppDetector {
       }
 
       // 5. 添加或更新 MCP More 配置
-      // 注意：Claude Desktop 使用 command+args 格式
-      // 这里假设 MCP More 提供了一个客户端工具来桥接 stdio 和 HTTP
+      // 使用 URL 格式配置（HTTP transport）
       logs.push(`Adding MCP More configuration (alias: ${mcpMoreConfig.alias}, URL: ${mcpMoreConfig.url})`);
 
-      // 解析 URL 以构建配置
-      const url = new URL(mcpMoreConfig.url);
-
       existingConfig.mcpServers[mcpMoreConfig.alias] = {
-        command: 'npx',
-        args: [
-          '-y',
-          '@modelcontextprotocol/client-sse',
-          mcpMoreConfig.url
-        ]
+        url: mcpMoreConfig.url
       };
 
-      logs.push('MCP More server configuration added');
+      logs.push('MCP More server configuration added (HTTP transport)');
 
       // 6. 写入配置
       logs.push('Writing configuration to file...');
@@ -310,8 +302,10 @@ export class ClaudeDesktopDetector implements MCPAppDetector {
   /**
    * 获取所有已配置的 MCP More 服务器
    *
-   * 对于 Claude Desktop，我们需要检查 args 中是否包含 localhost URL
-   * 因为 Claude Desktop 使用 command+args 格式而不是直接的 URL 配置
+   * Claude Desktop 支持两种配置格式：
+   * 1. url 格式：{ "url": "http://localhost:7195/mcp" }
+   * 2. command+args 格式：{ "command": "...", "args": [...] }
+   * 我们同时检查这两种格式
    */
   async getConfiguredMCPMoreServers(): Promise<ConfiguredMCPServer[]> {
     try {
@@ -324,10 +318,22 @@ export class ClaudeDesktopDetector implements MCPAppDetector {
 
       // 遍历所有配置的 MCP 服务器
       for (const [alias, serverConfig] of Object.entries(config.mcpServers)) {
-        if (serverConfig && typeof serverConfig === 'object' && 'args' in serverConfig) {
-          const args = serverConfig.args;
+        if (!serverConfig || typeof serverConfig !== 'object') {
+          continue;
+        }
 
-          // 检查 args 数组中是否包含 localhost URL
+        // 检查 URL 格式（优先，MCP More 使用此格式）
+        if ('url' in serverConfig) {
+          const url = serverConfig.url as string;
+          if (url && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+            mcpMoreServers.push({ alias, url });
+            continue;
+          }
+        }
+
+        // 检查 command+args 格式（兼容旧配置）
+        if ('args' in serverConfig) {
+          const args = serverConfig.args;
           if (Array.isArray(args)) {
             for (const arg of args) {
               if (typeof arg === 'string' && (arg.includes('localhost') || arg.includes('127.0.0.1'))) {

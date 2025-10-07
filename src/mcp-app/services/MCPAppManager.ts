@@ -13,9 +13,12 @@ import {
 import { VSCodeDetector } from '../detectors/VSCodeDetector';
 import { CursorDetector } from '../detectors/CursorDetector';
 import { ClaudeDesktopDetector } from '../detectors/ClaudeDesktopDetector';
+import { ClaudeCodeDetector } from '../detectors/ClaudeCodeDetector';
+import { WindsurfDetector } from '../detectors/WindsurfDetector';
+import { AugmentCodeDetector } from '../detectors/AugmentCodeDetector';
 
 /**
- * 支持的 MCP 应用列表
+ * 支持的 MCP 应用列表（按优先级排序）
  */
 const SUPPORTED_MCP_APPS: MCPAppInfo[] = [
   {
@@ -31,22 +34,28 @@ const SUPPORTED_MCP_APPS: MCPAppInfo[] = [
     description: 'Cursor AI Editor'
   },
   {
+    appId: 'windsurf',
+    appName: 'Windsurf',
+    priority: 75,
+    description: 'Windsurf AI Editor by Codeium'
+  },
+  {
     appId: 'claude-desktop',
     appName: 'Claude Desktop',
     priority: 70,
     description: 'Claude Desktop Application'
   },
   {
+    appId: 'augment-code',
+    appName: 'Augment Code',
+    priority: 65,
+    description: 'Augment Code AI Assistant'
+  },
+  {
     appId: 'vscode',
     appName: 'VS Code',
     priority: 60,
     description: 'Visual Studio Code with MCP extension'
-  },
-  {
-    appId: 'augment-code',
-    appName: 'Augment Code',
-    priority: 50,
-    description: 'Augment Code AI Assistant'
   }
 ];
 
@@ -60,10 +69,13 @@ export class MCPAppManager implements IMCPAppManager {
   constructor() {
     log.info('MCPAppManager initialized');
 
-    // 注册检测器
-    this.registerDetector(new VSCodeDetector());
+    // 注册检测器（按优先级顺序）
+    this.registerDetector(new ClaudeCodeDetector());
     this.registerDetector(new CursorDetector());
+    this.registerDetector(new WindsurfDetector());
     this.registerDetector(new ClaudeDesktopDetector());
+    this.registerDetector(new AugmentCodeDetector());
+    this.registerDetector(new VSCodeDetector());
 
     log.info(`Registered ${this.detectors.size} detectors`);
   }
