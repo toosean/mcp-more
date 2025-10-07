@@ -619,7 +619,20 @@
     "openConfig": "Open Config",
     "manualSetup": "Manual Setup",
     "defaultSetup": "Default Setup",
-    "selectProfile": "Select Profile"
+    "selectProfile": "Select Profile",
+    "defaultProfile": "Default",
+    "notConfigured": "Not configured",
+    "configured": "Configured",
+    "configuredLabel": "Configured: ",
+    "setupDialogDescription": "Choose configuration options to set up this MCP client",
+    "detectionFailed": "Detection failed",
+    "openFailed": "Failed to open",
+    "reconfigure": "Reconfigure",
+    "noProfiles": "No profiles available",
+    "setupLogsTitle": "Setup Logs",
+    "setupLogsDescription": "Detailed logs of the setup process",
+    "settingUpProgress": "Setting up...",
+    "noLogs": "No logs available"
   },
   "profiles": {
     "title": "Profiles",

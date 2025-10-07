@@ -12,6 +12,7 @@ import {
 } from '../interfaces/types';
 import { VSCodeDetector } from '../detectors/VSCodeDetector';
 import { CursorDetector } from '../detectors/CursorDetector';
+import { ClaudeDesktopDetector } from '../detectors/ClaudeDesktopDetector';
 
 /**
  * 支持的 MCP 应用列表
@@ -62,6 +63,7 @@ export class MCPAppManager implements IMCPAppManager {
     // 注册检测器
     this.registerDetector(new VSCodeDetector());
     this.registerDetector(new CursorDetector());
+    this.registerDetector(new ClaudeDesktopDetector());
 
     log.info(`Registered ${this.detectors.size} detectors`);
   }

@@ -119,7 +119,7 @@ export default function QuickSetup() {
               // 默认配置（无 profile）
               return {
                 profileId: null,
-                profileName: currentLanguage === 'zh-CN' ? '默认' : 'Default',
+                profileName: t('quickSetup.defaultProfile'),
                 alias: server.alias,
                 url: server.url,
                 icon: 'Settings'
@@ -165,7 +165,7 @@ export default function QuickSetup() {
     } catch (error) {
       console.error('Failed to detect apps:', error);
       toast({
-        title: currentLanguage === 'zh-CN' ? '检测失败' : 'Detection failed',
+        title: t('quickSetup.detectionFailed'),
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive'
       });
@@ -188,7 +188,7 @@ export default function QuickSetup() {
         if (profileId === null) {
           return {
             profileId: null,
-            profileName: currentLanguage === 'zh-CN' ? '默认' : 'Default',
+            profileName: t('quickSetup.defaultProfile'),
             alias: server.alias,
             url: server.url,
             icon: 'Settings'
@@ -231,7 +231,7 @@ export default function QuickSetup() {
     } catch (error) {
       console.error('Failed to open config directory:', error);
       toast({
-        title: currentLanguage === 'zh-CN' ? '打开失败' : 'Failed to open',
+        title: t('quickSetup.openFailed'),
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive'
       });
@@ -311,7 +311,7 @@ export default function QuickSetup() {
                         {app.isConfigured && (
                           <Badge variant="outline" className="border-blue-500 text-blue-700 dark:text-blue-400">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
-                            {currentLanguage === 'zh-CN' ? '已配置' : 'Configured'}
+                            {t('quickSetup.configured')}
                           </Badge>
                         )}
                       </>
@@ -327,7 +327,7 @@ export default function QuickSetup() {
                     {app.configuredProfiles && app.configuredProfiles.length > 0 && (
                       <div className="mt-1 text-xs">
                         <span className="text-muted-foreground">
-                          {currentLanguage === 'zh-CN' ? '已配置：' : 'Configured: '}
+                          {t('quickSetup.configuredLabel')}
                         </span>
                         {app.configuredProfiles.map((profile, index) => {
                           const IconComponent = getIconComponent(profile.icon);
@@ -373,7 +373,6 @@ export default function QuickSetup() {
                 isSetupInProgress={setupInProgress && currentAppId === app.appId}
                 isDisabled={app.detecting || !app.installed || app.error === 'Detector not implemented yet'}
                 profiles={profiles}
-                currentLanguage={currentLanguage}
                 onSetup={(profileId) => handleQuickSetup(app.appId, profileId)}
                 setupButtonText={t('quickSetup.quickSetupButton')}
                 settingUpText={t('quickSetup.settingUp')}
@@ -391,7 +390,6 @@ export default function QuickSetup() {
         appName={currentSetupApp}
         logs={setupLogs}
         isSetupInProgress={setupInProgress}
-        currentLanguage={currentLanguage}
       />
     </div>
   );

@@ -8,13 +8,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Profile } from 'src/config/types';
 import { getIconComponent } from '@/utils/profile-icons';
+import { useI18n } from '@/hooks/use-i18n';
 
 interface AppSetupButtonProps {
   isConfigured: boolean;
   isSetupInProgress: boolean;
   isDisabled?: boolean;
   profiles: Profile[];
-  currentLanguage: string;
   onSetup: (profileId?: string) => void;
   setupButtonText?: string;
   reconfigureText?: string;
@@ -29,7 +29,6 @@ export default function AppSetupButton({
   isSetupInProgress,
   isDisabled = false,
   profiles,
-  currentLanguage,
   onSetup,
   setupButtonText,
   reconfigureText,
@@ -38,11 +37,13 @@ export default function AppSetupButton({
   noProfilesText,
   className = ''
 }: AppSetupButtonProps) {
-  const defaultSetupText = currentLanguage === 'zh-CN' ? '一键配置' : 'Quick Setup';
-  const defaultReconfigureText = currentLanguage === 'zh-CN' ? '重新配置' : 'Reconfigure';
-  const defaultSettingUpText = currentLanguage === 'zh-CN' ? '配置中' : 'Setting up';
-  const defaultSelectProfileText = currentLanguage === 'zh-CN' ? '配置特定档案' : 'Configure specific profile';
-  const defaultNoProfilesText = currentLanguage === 'zh-CN' ? '暂无 Profile' : 'No profiles available';
+  const { t } = useI18n();
+
+  const defaultSetupText = t('quickSetup.quickSetupButton');
+  const defaultReconfigureText = t('quickSetup.reconfigure');
+  const defaultSettingUpText = t('quickSetup.settingUp');
+  const defaultSelectProfileText = t('quickSetup.selectProfile');
+  const defaultNoProfilesText = t('quickSetup.noProfiles');
 
   if (isSetupInProgress) {
     return (

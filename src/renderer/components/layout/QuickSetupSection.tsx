@@ -119,7 +119,7 @@ export default function QuickSetupSection() {
               // 默认配置（无 profile）
               return {
                 profileId: null,
-                profileName: currentLanguage === 'zh-CN' ? '默认' : 'Default',
+                profileName: t('quickSetup.defaultProfile'),
                 alias: server.alias,
                 url: server.url,
                 icon: 'Settings'
@@ -212,7 +212,7 @@ export default function QuickSetupSection() {
                   ) : (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs">
                       <FolderOpen className="w-3 h-3" />
-                      {currentLanguage === 'zh-CN' ? '未配置' : 'Not configured'}
+                      {t('quickSetup.notConfigured')}
                     </span>
                   )}
                 </div>
@@ -239,9 +239,7 @@ export default function QuickSetupSection() {
               )}
             </DialogTitle>
             <DialogDescription>
-              {currentLanguage === 'zh-CN'
-                ? '选择配置选项以设置此 MCP 客户端'
-                : 'Choose configuration options to set up this MCP client'}
+              {t('quickSetup.setupDialogDescription')}
             </DialogDescription>
           </DialogHeader>
 
@@ -264,7 +262,7 @@ export default function QuickSetupSection() {
                 {selectedApp.configuredProfiles && selectedApp.configuredProfiles.length > 0 && (
                   <div className="text-sm">
                     <span className="text-muted-foreground">
-                      {currentLanguage === 'zh-CN' ? '已配置：' : 'Configured: '}
+                      {t('quickSetup.configuredLabel')}
                     </span>
                     {selectedApp.configuredProfiles.map((profile, index) => {
                       const IconComponent = getIconComponent(profile.icon);
@@ -288,7 +286,6 @@ export default function QuickSetupSection() {
                   isConfigured={selectedApp.isConfigured || false}
                   isSetupInProgress={setupInProgress}
                   profiles={profiles}
-                  currentLanguage={currentLanguage}
                   onSetup={handleQuickSetup}
                   setupButtonText={t('quickSetup.defaultSetup')}
                   settingUpText={t('quickSetup.settingUp')}
@@ -307,7 +304,6 @@ export default function QuickSetupSection() {
         appName={currentSetupApp}
         logs={setupLogs}
         isSetupInProgress={setupInProgress}
-        currentLanguage={currentLanguage}
       />
     </>
   );

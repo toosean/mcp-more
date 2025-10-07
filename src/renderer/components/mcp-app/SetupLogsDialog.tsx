@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useI18n } from '@/hooks/use-i18n';
 
 interface SetupLogsDialogProps {
   open: boolean;
@@ -15,7 +16,6 @@ interface SetupLogsDialogProps {
   appName: string;
   logs: string[];
   isSetupInProgress: boolean;
-  currentLanguage: string;
 }
 
 export default function SetupLogsDialog({
@@ -23,20 +23,19 @@ export default function SetupLogsDialog({
   onOpenChange,
   appName,
   logs,
-  isSetupInProgress,
-  currentLanguage
+  isSetupInProgress
 }: SetupLogsDialogProps) {
+  const { t } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {currentLanguage === 'zh-CN' ? '配置日志' : 'Setup Logs'} - {appName}
+            {t('quickSetup.setupLogsTitle')} - {appName}
           </DialogTitle>
           <DialogDescription>
-            {currentLanguage === 'zh-CN'
-              ? '以下是配置过程的详细日志信息'
-              : 'Detailed logs of the setup process'}
+            {t('quickSetup.setupLogsDescription')}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-96 w-full rounded-md border p-4">
@@ -52,10 +51,10 @@ export default function SetupLogsDialog({
                 {isSetupInProgress ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {currentLanguage === 'zh-CN' ? '正在配置...' : 'Setting up...'}
+                    {t('quickSetup.settingUpProgress')}
                   </>
                 ) : (
-                  currentLanguage === 'zh-CN' ? '暂无日志' : 'No logs available'
+                  t('quickSetup.noLogs')
                 )}
               </div>
             )}
@@ -63,7 +62,7 @@ export default function SetupLogsDialog({
         </ScrollArea>
         <div className="flex justify-end">
           <Button onClick={() => onOpenChange(false)}>
-            {currentLanguage === 'zh-CN' ? '关闭' : 'Close'}
+            {t('common.close')}
           </Button>
         </div>
       </DialogContent>

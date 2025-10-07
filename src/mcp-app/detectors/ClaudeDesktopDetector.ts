@@ -1,7 +1,5 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import log from 'electron-log';
 import { app } from 'electron';
 import {
@@ -12,19 +10,17 @@ import {
   ConfiguredMCPServer
 } from '../interfaces/types';
 
-const execAsync = promisify(exec);
-
 /**
- * Cursor 检测器
- * Cursor 是基于 VS Code 的 AI 代码编辑器，配置文件格式与 VS Code 类似
+ * Claude Desktop 检测器
+ * Claude Desktop 使用独立的配置文件格式（claude_desktop_config.json）
  */
-export class CursorDetector implements MCPAppDetector {
-  readonly appId = 'cursor';
-  readonly appName = 'Cursor';
-  readonly priority = 80;
+export class ClaudeDesktopDetector implements MCPAppDetector {
+  readonly appId = 'claude-desktop';
+  readonly appName = 'Claude Desktop';
+  readonly priority = 70;
 
   /**
-   * 获取配置文件路径（用户全局配置）
+   * 获取 Claude Desktop 配置文件路径
    */
   async getConfigPath(): Promise<string | null> {
     const homeDir = app.getPath('home');
@@ -33,54 +29,64 @@ export class CursorDetector implements MCPAppDetector {
     let configPath: string;
 
     if (platform === 'win32') {
-      // Windows: %APPDATA%\Cursor\User\settings.json
+      // Windows: %APPDATA%\Claude\claude_desktop_config.json
       const appData = app.getPath('appData');
-      configPath = path.join(appData, 'Cursor', 'User', 'settings.json');
+      configPath = path.join(appData, 'Claude', 'claude_desktop_config.json');
     } else if (platform === 'darwin') {
-      // macOS: ~/Library/Application Support/Cursor/User/settings.json
-      configPath = path.join(homeDir, 'Library', 'Application Support', 'Cursor', 'User', 'settings.json');
+      // macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
+      configPath = path.join(homeDir, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
     } else {
-      // Linux: ~/.config/Cursor/User/settings.json
-      configPath = path.join(homeDir, '.config', 'Cursor', 'User', 'settings.json');
+      // Linux: ~/.config/Claude/claude_desktop_config.json (推测)
+      configPath = path.join(homeDir, '.config', 'Claude', 'claude_desktop_config.json');
     }
 
     return configPath;
   }
 
   /**
-   * 检测 Cursor 是否安装
+   * 检测 Claude Desktop 是否安装
    */
   async detect(): Promise<MCPAppDetectionResult> {
     try {
-      // 尝试运行 cursor --version 命令，设置 3 秒超时
-      const { stdout } = await execAsync('cursor --version', { timeout: 3000 });
-      const lines = stdout.trim().split('\n');
-      const version = lines[0]?.trim(); // 第一行是版本号
-
-      // 获取配置文件路径
       const configPath = await this.getConfigPath();
 
-      return {
-        appId: this.appId,
-        appName: this.appName,
-        installed: true,
-        version,
-        configPath: configPath || undefined,
-      };
+      if (!configPath) {
+        return {
+          appId: this.appId,
+          appName: this.appName,
+          installed: false,
+          error: 'Could not determine config path'
+        };
+      }
+
+      // 检查配置目录是否存在
+      const configDir = path.dirname(configPath);
+      try {
+        await fs.access(configDir);
+
+        // 配置目录存在，说明 Claude Desktop 已安装
+        return {
+          appId: this.appId,
+          appName: this.appName,
+          installed: true,
+          configPath
+        };
+      } catch (error) {
+        // 配置目录不存在，说明 Claude Desktop 未安装
+        return {
+          appId: this.appId,
+          appName: this.appName,
+          installed: false,
+          error: 'Claude Desktop config directory not found'
+        };
+      }
     } catch (error) {
-      log.debug(`Cursor not detected:`, error);
-
-      // 检查是否是超时错误
-      const isTimeout = error instanceof Error && error.message.includes('timeout');
-      const errorMessage = isTimeout
-        ? 'Command timeout - Cursor may not be responding'
-        : 'Cursor CLI not found in PATH';
-
+      log.error('Claude Desktop detection failed:', error);
       return {
         appId: this.appId,
         appName: this.appName,
         installed: false,
-        error: errorMessage
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -101,16 +107,9 @@ export class CursorDetector implements MCPAppDetector {
       }
 
       const configContent = await fs.readFile(configPath, 'utf-8');
-
-      // Cursor 的配置文件可能包含注释，需要处理
-      // 简单处理：移除 // 和 /* */ 注释
-      // const cleanedContent = configContent
-      //   .replace(/\/\/.*$/gm, '')  // 移除单行注释
-      //   .replace(/\/\*[\s\S]*?\*\//g, '');  // 移除多行注释
-
       return JSON.parse(configContent);
     } catch (error) {
-      log.error('Failed to read Cursor config:', error);
+      log.error('Failed to read Claude Desktop config:', error);
       throw error;
     }
   }
@@ -131,10 +130,10 @@ export class CursorDetector implements MCPAppDetector {
 
       // 写入配置文件
       await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
-      log.info(`Cursor config written to: ${configPath}`);
+      log.info(`Claude Desktop config written to: ${configPath}`);
       return true;
     } catch (error) {
-      log.error('Failed to write Cursor config:', error);
+      log.error('Failed to write Claude Desktop config:', error);
       return false;
     }
   }
@@ -160,35 +159,38 @@ export class CursorDetector implements MCPAppDetector {
 
       // 复制文件
       await fs.copyFile(configPath, backupPath);
-      log.info(`Cursor config backed up to: ${backupPath}`);
+      log.info(`Claude Desktop config backed up to: ${backupPath}`);
       return backupPath;
     } catch (error) {
-      log.error('Failed to backup Cursor config:', error);
+      log.error('Failed to backup Claude Desktop config:', error);
       return null;
     }
   }
 
   /**
-   * 一键配置 Cursor
+   * 一键配置 Claude Desktop
+   *
+   * 注意：Claude Desktop 使用 command+args 格式配置 MCP 服务器
+   * 对于 MCP More（基于 HTTP/SSE 的服务器），我们需要配置一个客户端来桥接
    */
   async setup(mcpMoreConfig: MCPMoreSetupConfig): Promise<MCPAppSetupResult> {
     const logs: string[] = [];
 
     try {
       // 1. 检测是否安装
-      logs.push('Detecting Cursor installation...');
+      logs.push('Detecting Claude Desktop installation...');
       const detection = await this.detect();
       if (!detection.installed) {
-        logs.push(`Cursor not installed - ${detection.error || 'CLI command not found'}`);
+        logs.push(`Claude Desktop not installed - ${detection.error || 'Config directory not found'}`);
         return {
           success: false,
           appId: this.appId,
-          message: 'Cursor is not installed',
-          error: 'Cursor CLI not found',
+          message: 'Claude Desktop is not installed',
+          error: 'Claude Desktop config directory not found',
           logs
         };
       }
-      logs.push(`Cursor detected (version: ${detection.version || 'unknown'})`);
+      logs.push('Claude Desktop detected');
 
       // 2. 备份现有配置
       const configPath = await this.getConfigPath();
@@ -212,23 +214,32 @@ export class CursorDetector implements MCPAppDetector {
         logs.push('Existing configuration loaded successfully');
       }
 
-      // 4. 确保 mcp.servers 对象存在
-      if (!existingConfig['mcp.servers']) {
-        logs.push('Creating mcp.servers configuration section');
-        existingConfig['mcp.servers'] = {};
+      // 4. 确保 mcpServers 对象存在
+      if (!existingConfig.mcpServers) {
+        logs.push('Creating mcpServers configuration section');
+        existingConfig.mcpServers = {};
       }
 
       // 5. 添加或更新 MCP More 配置
+      // 注意：Claude Desktop 使用 command+args 格式
+      // 这里假设 MCP More 提供了一个客户端工具来桥接 stdio 和 HTTP
       logs.push(`Adding MCP More configuration (alias: ${mcpMoreConfig.alias}, URL: ${mcpMoreConfig.url})`);
-      existingConfig['mcp.servers'][mcpMoreConfig.alias] = {
-        url: mcpMoreConfig.url
+
+      // 解析 URL 以构建配置
+      const url = new URL(mcpMoreConfig.url);
+
+      existingConfig.mcpServers[mcpMoreConfig.alias] = {
+        command: 'npx',
+        args: [
+          '-y',
+          '@modelcontextprotocol/client-sse',
+          mcpMoreConfig.url
+        ]
       };
 
-      // 6. 启用自动启动
-      logs.push('Enabling MCP auto-start');
-      existingConfig['mcp.enableAutoStart'] = true;
+      logs.push('MCP More server configuration added');
 
-      // 7. 写入配置
+      // 6. 写入配置
       logs.push('Writing configuration to file...');
       const writeSuccess = await this.writeConfig(existingConfig);
       if (!writeSuccess) {
@@ -243,19 +254,19 @@ export class CursorDetector implements MCPAppDetector {
       }
       logs.push('Configuration written successfully');
 
-      logs.push('Cursor setup completed! Please reload Cursor window for changes to take effect');
+      logs.push('Claude Desktop setup completed! Please restart Claude Desktop for changes to take effect');
 
       return {
         success: true,
         appId: this.appId,
-        message: 'Cursor configured successfully',
+        message: 'Claude Desktop configured successfully',
         configPath: configPath || undefined,
         backupPath: backupPath || undefined,
-        needsRestart: true,  // Cursor 需要重新加载窗口
+        needsRestart: true,  // Claude Desktop 需要重启才能生效
         logs
       };
     } catch (error) {
-      log.error('Cursor setup failed:', error);
+      log.error('Claude Desktop setup failed:', error);
       logs.push(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return {
         success: false,
@@ -273,9 +284,9 @@ export class CursorDetector implements MCPAppDetector {
   async verify(): Promise<boolean> {
     try {
       const config = await this.readConfig();
-      return config !== null && config['mcp.servers'] !== undefined;
+      return config !== null && config.mcpServers !== undefined;
     } catch (error) {
-      log.error('Cursor verification failed:', error);
+      log.error('Claude Desktop verification failed:', error);
       return false;
     }
   }
@@ -286,35 +297,44 @@ export class CursorDetector implements MCPAppDetector {
   async isConfigured(alias: string): Promise<boolean> {
     try {
       const config = await this.readConfig();
-      if (!config || !config['mcp.servers']) {
+      if (!config || !config.mcpServers) {
         return false;
       }
-      return alias in config['mcp.servers'];
+      return alias in config.mcpServers;
     } catch (error) {
-      log.error('Failed to check Cursor configuration:', error);
+      log.error('Failed to check Claude Desktop configuration:', error);
       return false;
     }
   }
 
   /**
-   * 获取所有已配置的 MCP More 服务器（通过 localhost URL pattern 匹配）
+   * 获取所有已配置的 MCP More 服务器
+   *
+   * 对于 Claude Desktop，我们需要检查 args 中是否包含 localhost URL
+   * 因为 Claude Desktop 使用 command+args 格式而不是直接的 URL 配置
    */
   async getConfiguredMCPMoreServers(): Promise<ConfiguredMCPServer[]> {
     try {
       const config = await this.readConfig();
-      if (!config || !config['mcp.servers']) {
+      if (!config || !config.mcpServers) {
         return [];
       }
 
       const mcpMoreServers: ConfiguredMCPServer[] = [];
 
       // 遍历所有配置的 MCP 服务器
-      for (const [alias, serverConfig] of Object.entries(config['mcp.servers'])) {
-        if (serverConfig && typeof serverConfig === 'object' && 'url' in serverConfig) {
-          const url = serverConfig.url as string;
-          // 检查 URL 是否匹配 localhost pattern（MCP More 服务器）
-          if (url && (url.includes('localhost') || url.includes('127.0.0.1'))) {
-            mcpMoreServers.push({ alias, url });
+      for (const [alias, serverConfig] of Object.entries(config.mcpServers)) {
+        if (serverConfig && typeof serverConfig === 'object' && 'args' in serverConfig) {
+          const args = serverConfig.args;
+
+          // 检查 args 数组中是否包含 localhost URL
+          if (Array.isArray(args)) {
+            for (const arg of args) {
+              if (typeof arg === 'string' && (arg.includes('localhost') || arg.includes('127.0.0.1'))) {
+                mcpMoreServers.push({ alias, url: arg });
+                break;
+              }
+            }
           }
         }
       }
@@ -326,6 +346,3 @@ export class CursorDetector implements MCPAppDetector {
     }
   }
 }
-
-
-

@@ -661,7 +661,20 @@
     "openConfig": "打开配置",
     "manualSetup": "手动设置",
     "defaultSetup": "默认配置",
-    "selectProfile": "配置特定档案"
+    "selectProfile": "配置特定档案",
+    "defaultProfile": "默认",
+    "notConfigured": "未配置",
+    "configured": "已配置",
+    "configuredLabel": "已配置：",
+    "setupDialogDescription": "选择配置选项以设置此 MCP 客户端",
+    "detectionFailed": "检测失败",
+    "openFailed": "打开失败",
+    "reconfigure": "重新配置",
+    "noProfiles": "暂无 Profile",
+    "setupLogsTitle": "配置日志",
+    "setupLogsDescription": "以下是配置过程的详细日志信息",
+    "settingUpProgress": "正在配置...",
+    "noLogs": "暂无日志"
   },
   "profiles": {
     "title": "配置档案",
