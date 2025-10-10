@@ -9,6 +9,7 @@ import {
   MCPMoreSetupConfig,
   ConfiguredMCPServer
 } from '../interfaces/types';
+import { isMCPMoreServerUrl } from './utils';
 
 /**
  * Claude Desktop 检测器
@@ -325,7 +326,7 @@ export class ClaudeDesktopDetector implements MCPAppDetector {
         // 检查 URL 格式（优先，MCP More 使用此格式）
         if ('url' in serverConfig) {
           const url = serverConfig.url as string;
-          if (url && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+          if (isMCPMoreServerUrl(url)) {
             mcpMoreServers.push({ alias, url });
             continue;
           }
@@ -336,7 +337,7 @@ export class ClaudeDesktopDetector implements MCPAppDetector {
           const args = serverConfig.args;
           if (Array.isArray(args)) {
             for (const arg of args) {
-              if (typeof arg === 'string' && (arg.includes('localhost') || arg.includes('127.0.0.1'))) {
+              if (typeof arg === 'string' && isMCPMoreServerUrl(arg)) {
                 mcpMoreServers.push({ alias, url: arg });
                 break;
               }

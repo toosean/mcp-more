@@ -11,6 +11,7 @@ import {
   MCPMoreSetupConfig,
   ConfiguredMCPServer
 } from '../interfaces/types';
+import { isMCPMoreServerUrl } from './utils';
 
 const execAsync = promisify(exec);
 
@@ -28,21 +29,9 @@ export class CursorDetector implements MCPAppDetector {
    */
   async getConfigPath(): Promise<string | null> {
     const homeDir = app.getPath('home');
-    const platform = process.platform;
 
-    let configPath: string;
-
-    if (platform === 'win32') {
-      // Windows: %APPDATA%\Cursor\User\settings.json
-      const appData = app.getPath('appData');
-      configPath = path.join(appData, 'Cursor', 'User', 'settings.json');
-    } else if (platform === 'darwin') {
-      // macOS: ~/Library/Application Support/Cursor/User/settings.json
-      configPath = path.join(homeDir, 'Library', 'Application Support', 'Cursor', 'User', 'settings.json');
-    } else {
-      // Linux: ~/.config/Cursor/User/settings.json
-      configPath = path.join(homeDir, '.config', 'Cursor', 'User', 'settings.json');
-    }
+    // Cursor 的 MCP 配置文件位于 ~/.cursor/mcp.json（所有平台统一）
+    const configPath = path.join(homeDir, '.cursor', 'mcp.json');
 
     return configPath;
   }
@@ -102,12 +91,7 @@ export class CursorDetector implements MCPAppDetector {
 
       const configContent = await fs.readFile(configPath, 'utf-8');
 
-      // Cursor 的配置文件可能包含注释，需要处理
-      // 简单处理：移除 // 和 /* */ 注释
-      // const cleanedContent = configContent
-      //   .replace(/\/\/.*$/gm, '')  // 移除单行注释
-      //   .replace(/\/\*[\s\S]*?\*\//g, '');  // 移除多行注释
-
+      // ~/.cursor/mcp.json 是标准 JSON 文件
       return JSON.parse(configContent);
     } catch (error) {
       log.error('Failed to read Cursor config:', error);
@@ -308,8 +292,8 @@ export class CursorDetector implements MCPAppDetector {
       for (const [alias, serverConfig] of Object.entries(config.mcpServers)) {
         if (serverConfig && typeof serverConfig === 'object' && 'url' in serverConfig) {
           const url = serverConfig.url as string;
-          // 检查 URL 是否匹配 localhost pattern（MCP More 服务器）
-          if (url && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+          // 检查 URL 是否匹配 MCP More 服务器（localhost + 配置的端口）
+          if (isMCPMoreServerUrl(url)) {
             mcpMoreServers.push({ alias, url });
           }
         }

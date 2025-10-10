@@ -9,6 +9,7 @@ import {
   MCPMoreSetupConfig,
   ConfiguredMCPServer
 } from '../interfaces/types';
+import { isMCPMoreServerUrl } from './utils';
 
 /**
  * Augment Code 检测器
@@ -312,8 +313,8 @@ export class AugmentCodeDetector implements MCPAppDetector {
       for (const [alias, serverConfig] of Object.entries(config.mcpServers)) {
         if (serverConfig && typeof serverConfig === 'object' && 'url' in serverConfig) {
           const url = serverConfig.url as string;
-          // 检查 URL 是否匹配 localhost pattern（MCP More 服务器）
-          if (url && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+          // 检查 URL 是否匹配 MCP More 服务器（localhost + 配置的端口）
+          if (isMCPMoreServerUrl(url)) {
             mcpMoreServers.push({ alias, url });
           }
         }
